@@ -1,0 +1,87 @@
+
+<main class="login-page">
+  <section class="login-card">
+    <header class="login-header">
+      <p class="brand">DOST–PTRI</p>
+      <h1>Silk Supply and Delivery</h1>
+      <h2>Communication System</h2>
+      <div class="gold-line"></div>
+    </header>
+
+    <div class="welcome">
+      <h3>Welcome Back!</h3>
+      <p>Sign in to continue to your account.</p>
+    </div>
+
+    <form (ngSubmit)="onSignIn()" #loginForm="ngForm">
+      <label class="input-box">
+        <span class="field-icon" aria-hidden="true">✉</span>
+        <input
+          type="email"
+          name="email"
+          [(ngModel)]="email"
+          placeholder="Email Address"
+          autocomplete="username"
+          required
+        />
+      </label>
+
+      <label class="input-box">
+        <span class="field-icon" aria-hidden="true">♙</span>
+        <input
+          [type]="showPassword ? 'text' : 'password'"
+          name="password"
+          [(ngModel)]="password"
+          placeholder="Password"
+          autocomplete="current-password"
+          required
+        />
+        <button
+          class="toggle-password"
+          type="button"
+          (click)="showPassword = !showPassword"
+          [attr.aria-label]="showPassword ? 'Hide password' : 'Show password'"
+        >
+          {{ showPassword ? 'Hide' : 'Show' }}
+        </button>
+      </label>
+
+      <div class="form-options">
+        <label class="remember-option">
+          <input type="checkbox" name="rememberMe" [(ngModel)]="rememberMe" />
+          <span>Remember me</span>
+        </label>
+
+        <button type="button" class="text-link" (click)="onForgotPassword()">
+          Forgot password?
+        </button>
+      </div>
+
+      @if (errorMessage) {
+        <p class="error-message" role="alert">{{ errorMessage }}</p>
+      }
+
+      <button
+        class="sign-in-button"
+        type="submit"
+        [disabled]="loading || loginForm.invalid"
+      >
+        {{ loading ? 'Signing in...' : '➜  Sign In' }}
+      </button>
+    </form>
+
+    <div class="divider">
+      <span></span>
+      <small>OR</small>
+      <span></span>
+    </div>
+
+    <button class="contact-button" type="button" (click)="onContactAdmin()">
+      ♙ &nbsp; Contact Administrator
+    </button>
+
+    <p class="footer-note">
+      Philippine Textile Research Institute
+    </p>
+  </section>
+</main>
