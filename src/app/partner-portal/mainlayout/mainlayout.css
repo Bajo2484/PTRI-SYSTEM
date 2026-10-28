@@ -1,0 +1,267 @@
+
+:host {
+  display: block;
+  min-height: 100vh;
+  font-family: Arial, Helvetica, sans-serif;
+  color: #26352c;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.partner-layout {
+  display: flex;
+  min-height: 100vh;
+  background: #f5f7f5;
+}
+
+/* SIDEBAR */
+.sidebar {
+  width: 250px;
+  min-width: 250px;
+  background: #244b38;
+  color: #ffffff;
+  display: flex;
+  flex-direction: column;
+  padding: 24px 16px 18px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 8px 25px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.brand-logo {
+  width: 45px;
+  height: 45px;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #244b38;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 13px;
+  flex-shrink: 0;
+}
+
+.brand-text h2 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.brand-text p {
+  margin: 5px 0 0;
+  color: #d5e3d9;
+  font-size: 11px;
+}
+
+.portal-label {
+  margin: 27px 10px 12px;
+  color: #b9d0c0;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+}
+
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sidebar-nav a {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  min-height: 45px;
+  padding: 0 13px;
+  border-radius: 7px;
+  color: #e3ece6;
+  text-decoration: none;
+  font-size: 13px;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.sidebar-nav a:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+}
+
+.sidebar-nav a.active {
+  background: #ffffff;
+  color: #244b38;
+  font-weight: 700;
+}
+
+.nav-icon {
+  width: 20px;
+  text-align: center;
+  font-size: 18px;
+}
+
+.sidebar-footer {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  margin-top: auto;
+  padding: 18px 8px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.partner-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: #dce8df;
+  color: #244b38;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+}
+
+.partner-info h4 {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.partner-info p {
+  margin: 5px 0 0;
+  font-size: 11px;
+  color: #c7d8cd;
+}
+
+/* MAIN AREA */
+.main-area {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.topbar {
+  min-height: 91px;
+  background: #ffffff;
+  border-bottom: 1px solid #e5eae6;
+  padding: 18px 30px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.page-heading h1 {
+  margin: 0;
+  color: #244b38;
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.page-heading p {
+  margin: 7px 0 0;
+  color: #78847c;
+  font-size: 12px;
+}
+
+.logout-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 15px;
+  border: 1px solid #dce4de;
+  border-radius: 7px;
+  background: #ffffff;
+  color: #385343;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.logout-btn:hover {
+  background: #edf3ee;
+}
+
+.logout-btn span {
+  font-size: 17px;
+}
+
+.content-area {
+  flex: 1;
+  padding: 28px 30px;
+}
+
+/* RESPONSIVE */
+@media (max-width: 900px) {
+  .sidebar {
+    width: 220px;
+    min-width: 220px;
+  }
+
+  .topbar {
+    padding: 18px 20px;
+  }
+
+  .content-area {
+    padding: 22px 20px;
+  }
+}
+
+@media (max-width: 650px) {
+  .partner-layout {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    width: 100%;
+    min-width: 0;
+    padding: 16px;
+  }
+
+  .brand {
+    padding-bottom: 16px;
+  }
+
+  .portal-label {
+    margin-top: 18px;
+  }
+
+  .sidebar-nav {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .sidebar-nav a {
+    padding: 10px;
+    font-size: 12px;
+  }
+
+  .sidebar-footer {
+    margin-top: 18px;
+  }
+
+  .topbar {
+    align-items: flex-start;
+    padding: 18px 16px;
+  }
+
+  .page-heading h1 {
+    font-size: 19px;
+  }
+
+  .page-heading p {
+    line-height: 1.5;
+  }
+
+  .content-area {
+    padding: 18px 16px;
+  }
+}

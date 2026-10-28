@@ -1,0 +1,143 @@
+
+<div
+  class="farmer-layout"
+  [class.sidebar-expanded]="sidebarExpanded"
+  [class.menu-open]="menuOpen"
+>
+  <!-- Top Header -->
+  <header class="topbar">
+    <div class="topbar-left">
+      <button
+        class="menu-toggle"
+        type="button"
+        (click)="toggleMenu()"
+        aria-label="Toggle navigation menu"
+        [attr.aria-expanded]="menuOpen"
+      >
+        @if (menuOpen) {
+          <i-lucide [img]="icons.X" [size]="23" [strokeWidth]="2"></i-lucide>
+        } @else {
+          <i-lucide [img]="icons.Menu" [size]="23" [strokeWidth]="2"></i-lucide>
+        }
+      </button>
+
+      <div class="brand">
+        <div class="brand-logo">PTRI</div>
+        <div class="brand-text">
+          <h2>DOST–PTRI</h2>
+          <p>Silk Supply System</p>
+        </div>
+      </div>
+    </div>
+
+    <button class="logout-btn" type="button" (click)="logout()">
+      <i-lucide [img]="icons.LogOut" [size]="18" [strokeWidth]="2"></i-lucide>
+      <span class="logout-label">Log Out</span>
+    </button>
+  </header>
+
+  <!-- Overlay -->
+  <button
+    class="sidebar-overlay"
+    type="button"
+    aria-label="Close navigation menu"
+    (click)="closeMenu()"
+    tabindex="-1"
+  ></button>
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-heading">
+      <span class="portal-label">FARMER PORTAL</span>
+
+      <button
+        class="expand-toggle"
+        type="button"
+        (click)="toggleSidebar()"
+        [attr.aria-label]="sidebarExpanded ? 'Collapse sidebar' : 'Expand sidebar'"
+        [attr.aria-expanded]="sidebarExpanded"
+      >
+        @if (sidebarExpanded) {
+          <i-lucide [img]="icons.ChevronLeft" [size]="20"></i-lucide>
+        } @else {
+          <i-lucide [img]="icons.ChevronRight" [size]="20"></i-lucide>
+        }
+      </button>
+    </div>
+
+    <nav class="sidebar-nav" aria-label="Farmer navigation">
+      <a
+        routerLink="/farmer/dashboard"
+        routerLinkActive="active"
+        [routerLinkActiveOptions]="{ exact: true }"
+        (click)="closeMenu()"
+        title="Home"
+      >
+        <i-lucide class="nav-icon" [img]="icons.House" [size]="21" [strokeWidth]="1.8"></i-lucide>
+        <span class="nav-label">Home</span>
+      </a>
+
+      <a
+        routerLink="/farmer/production"
+        routerLinkActive="active"
+        (click)="closeMenu()"
+        title="My Production"
+      >
+        <i-lucide class="nav-icon" [img]="icons.Sprout" [size]="21" [strokeWidth]="1.8"></i-lucide>
+        <span class="nav-label">My Production</span>
+      </a>
+
+      <a
+        routerLink="/farmer/orders"
+        routerLinkActive="active"
+        (click)="closeMenu()"
+        title="My Orders"
+      >
+        <i-lucide class="nav-icon" [img]="icons.Package" [size]="21" [strokeWidth]="1.8"></i-lucide>
+        <span class="nav-label">My Orders</span>
+      </a>
+
+      <a
+        routerLink="/farmer/deliveries"
+        routerLinkActive="active"
+        (click)="closeMenu()"
+        title="Deliveries"
+      >
+        <i-lucide class="nav-icon" [img]="icons.Truck" [size]="21" [strokeWidth]="1.8"></i-lucide>
+        <span class="nav-label">Deliveries</span>
+      </a>
+
+      <a
+        routerLink="/farmer/messages"
+        routerLinkActive="active"
+        (click)="closeMenu()"
+        title="Messages"
+      >
+        <i-lucide class="nav-icon" [img]="icons.MessageCircle" [size]="21" [strokeWidth]="1.8"></i-lucide>
+        <span class="nav-label">Messages</span>
+      </a>
+
+      <a
+        routerLink="/farmer/profile"
+        routerLinkActive="active"
+        (click)="closeMenu()"
+        title="My Profile"
+      >
+        <i-lucide class="nav-icon" [img]="icons.UserRound" [size]="21" [strokeWidth]="1.8"></i-lucide>
+        <span class="nav-label">My Profile</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <i-lucide class="footer-icon" [img]="icons.Sprout" [size]="21"></i-lucide>
+      <span class="nav-label">Farmer Account</span>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main-area">
+    <div class="page-content">
+      <router-outlet></router-outlet>
+    </div>
+  </main>
+</div>

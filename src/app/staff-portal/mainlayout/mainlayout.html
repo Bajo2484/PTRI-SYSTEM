@@ -1,0 +1,90 @@
+<div class="staff-layout">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-logo">PTRI</div>
+      <div class="brand-text">
+        <h2>DOST–PTRI</h2>
+        <p>Silk Supply System</p>
+      </div>
+    </div>
+
+    <div class="portal-label">STAFF PORTAL</div>
+
+    <nav class="sidebar-nav">
+      <a routerLink="/staff/dashboard" routerLinkActive="active">
+        <span class="nav-icon">▦</span>
+        <span>Dashboard</span>
+      </a>
+
+      <a routerLink="/staff/partners" routerLinkActive="active">
+        <span class="nav-icon">♙</span>
+        <span>Partner Management</span>
+      </a>
+
+      <a routerLink="/staff/farmers" routerLinkActive="active">
+        <span class="nav-icon">♧</span>
+        <span>Farmer Management</span>
+      </a>
+
+      <a routerLink="/staff/messages" routerLinkActive="active">
+  <span class="nav-icon">✉</span>
+  <span>Messages</span>
+</a>
+
+<a routerLink="/staff/farmer-production" routerLinkActive="active">
+  <span class="nav-icon">🌿</span>
+  <span>Farmer Production</span>
+</a>
+
+
+      <a routerLink="/staff/orders" routerLinkActive="active">
+        <span class="nav-icon">▤</span>
+        <span>Silk Orders</span>
+      </a>
+
+      <a routerLink="/staff/deliveries" routerLinkActive="active">
+        <span class="nav-icon">⇄</span>
+        <span>Supply & Delivery</span>
+      </a>
+
+      <a routerLink="/staff/reports" routerLinkActive="active">
+        <span class="nav-icon">▥</span>
+        <span>Reports</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="staff-avatar">S</div>
+      <div class="staff-info">
+        <h4>Staff Account</h4>
+        <p>PTRI Staff</p>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main Area -->
+  <div class="main-area">
+
+    <!-- Topbar -->
+    <header class="topbar">
+      <div class="page-heading">
+        <h1>Staff Portal</h1>
+        <p>Silk Supply and Delivery Communication System</p>
+      </div>
+
+      <button class="logout-btn" type="button" (click)="logout()">
+        <span>↪</span>
+        Logout
+      </button>
+    </header>
+
+    <!-- Page Content -->
+    <main class="content-area">
+      <router-outlet></router-outlet>
+    </main>
+
+  </div>
+
+</div>

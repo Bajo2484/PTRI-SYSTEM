@@ -1,0 +1,74 @@
+<p>mainlayout works!</p>
+
+<div class="partner-layout">
+  <aside class="sidebar">
+
+    <div class="brand">
+      <div class="brand-logo">PTRI</div>
+      <div class="brand-text">
+        <h2>DOST–PTRI</h2>
+        <p>Silk Supply System</p>
+      </div>
+    </div>
+
+    <div class="portal-label">PARTNER PORTAL</div>
+
+    <nav class="sidebar-nav">
+      <a
+        routerLink="/partner/dashboard"
+        routerLinkActive="active"
+        [routerLinkActiveOptions]="{ exact: true }"
+      >
+        <span class="nav-icon">▦</span>
+        <span>Dashboard</span>
+      </a>
+
+      <a routerLink="/partner/orders" routerLinkActive="active">
+        <span class="nav-icon">▤</span>
+        <span>My Orders</span>
+      </a>
+
+      <a routerLink="/partner/deliveries" routerLinkActive="active">
+        <span class="nav-icon">⇄</span>
+        <span>Deliveries</span>
+      </a>
+
+      <a routerLink="/partner/messages" routerLinkActive="active">
+        <span class="nav-icon">✉</span>
+        <span>Messages</span>
+      </a>
+
+      <a routerLink="/partner/profile" routerLinkActive="active">
+        <span class="nav-icon">♙</span>
+        <span>My Profile</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="partner-avatar">P</div>
+      <div class="partner-info">
+        <h4>Partner Account</h4>
+        <p>PTRI Partner</p>
+      </div>
+    </div>
+
+  </aside>
+
+  <div class="main-area">
+    <header class="topbar">
+      <div class="page-heading">
+        <h1>Partner Portal</h1>
+        <p>Silk Supply and Delivery Communication System</p>
+      </div>
+
+      <button class="logout-btn" type="button" (click)="logout()">
+        <span>↪</span>
+        Logout
+      </button>
+    </header>
+
+    <main class="content-area">
+      <router-outlet></router-outlet>
+    </main>
+  </div>
+</div>

@@ -1,0 +1,272 @@
+:host {
+  display: block;
+  min-height: 100vh;
+  font-family: Arial, Helvetica, sans-serif;
+  color: #26352d;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.staff-layout {
+  display: flex;
+  min-height: 100vh;
+  background: #f5f7f5;
+}
+
+/* Sidebar */
+.sidebar {
+  width: 255px;
+  min-height: 100vh;
+  background: #244b38;
+  color: #ffffff;
+  display: flex;
+  flex-direction: column;
+  padding: 25px 16px 18px;
+  flex-shrink: 0;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 8px 28px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.16);
+}
+
+.brand-logo {
+  width: 46px;
+  height: 46px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #ffffff;
+  color: #244b38;
+  border-radius: 10px;
+  font-weight: 800;
+  font-size: 14px;
+  letter-spacing: 1px;
+}
+
+.brand-text h2 {
+  margin: 0 0 5px;
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.brand-text p {
+  margin: 0;
+  color: #d4e2d8;
+  font-size: 11px;
+}
+
+.portal-label {
+  margin: 28px 10px 12px;
+  color: #b9d0c1;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+}
+
+/* Navigation */
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sidebar-nav a {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 13px 12px;
+  border-radius: 8px;
+  color: #e3ece6;
+  text-decoration: none;
+  font-size: 13px;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.sidebar-nav a:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+}
+
+.sidebar-nav a.active {
+  background: #ffffff;
+  color: #244b38;
+  font-weight: 700;
+}
+
+.nav-icon {
+  width: 20px;
+  text-align: center;
+  font-size: 19px;
+}
+
+/* Staff information */
+.sidebar-footer {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  margin-top: auto;
+  padding: 18px 8px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.16);
+}
+
+.staff-avatar {
+  width: 38px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: #dce9df;
+  color: #244b38;
+  font-weight: 700;
+}
+
+.staff-info h4 {
+  margin: 0 0 4px;
+  font-size: 12px;
+}
+
+.staff-info p {
+  margin: 0;
+  color: #c7d9cd;
+  font-size: 11px;
+}
+
+/* Main Area */
+.main-area {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Topbar */
+.topbar {
+  min-height: 94px;
+  padding: 20px 32px;
+  background: #ffffff;
+  border-bottom: 1px solid #e6ebe7;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.page-heading h1 {
+  margin: 0 0 6px;
+  color: #244b38;
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.page-heading p {
+  margin: 0;
+  color: #7b887f;
+  font-size: 12px;
+}
+
+.logout-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border: 1px solid #dce4de;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #365643;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.logout-btn:hover {
+  background: #edf3ee;
+}
+
+.logout-btn span {
+  font-size: 17px;
+}
+
+/* Page Content */
+.content-area {
+  flex: 1;
+  padding: 30px 32px;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .sidebar {
+    width: 220px;
+  }
+
+  .topbar {
+    padding: 20px;
+  }
+
+  .content-area {
+    padding: 24px 20px;
+  }
+}
+
+@media (max-width: 650px) {
+  .staff-layout {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    width: 100%;
+    min-height: auto;
+    padding: 16px;
+  }
+
+  .brand {
+    padding-bottom: 16px;
+  }
+
+  .portal-label {
+    margin-top: 18px;
+  }
+
+  .sidebar-nav {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .sidebar-nav a {
+    padding: 11px 8px;
+    font-size: 11px;
+  }
+
+  .sidebar-footer {
+    margin-top: 20px;
+  }
+
+  .topbar {
+    min-height: 80px;
+    padding: 16px;
+  }
+
+  .page-heading h1 {
+    font-size: 18px;
+  }
+
+  .page-heading p {
+    font-size: 10px;
+  }
+
+  .logout-btn {
+    padding: 9px 11px;
+  }
+
+  .content-area {
+    padding: 18px 14px;
+  }
+}
