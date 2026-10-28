@@ -1,1 +1,667 @@
-<p>farmer-management works!</p>
+
+<div class="farmers-page">
+  <!-- Page Header -->
+  <header class="page-header">
+    <div class="header-copy">
+      <h1>Farmer Management</h1>
+      <p>Manage registered farmers and review their supply commitments.</p>
+    </div>
+
+    <button class="primary-btn" type="button" (click)="openAddModal()">
+      <i-lucide name="plus" [size]="18"></i-lucide>
+      <span>Add Farmer</span>
+    </button>
+  </header>
+
+  <!-- Summary Cards -->
+  <section class="summary-grid">
+    <article class="summary-card">
+      <div class="summary-icon farmers-icon">
+        <i-lucide name="users" [size]="22"></i-lucide>
+      </div>
+      <div class="summary-content">
+        <p>Registered Farmers</p>
+        <h2>{{ farmers.length }}</h2>
+        <span>Farmers in the system</span>
+      </div>
+    </article>
+
+    <article class="summary-card">
+      <div class="summary-icon commitments-icon">
+        <i-lucide name="package-check" [size]="22"></i-lucide>
+      </div>
+      <div class="summary-content">
+        <p>Active Commitments</p>
+        <h2>
+          {{ activeCommitments | number }} kg
+        </h2>
+        <span>Supply from active farmers</span>
+      </div>
+    </article>
+
+    <article class="summary-card">
+      <div class="summary-icon supply-icon">
+        <i-lucide name="wheat" [size]="22"></i-lucide>
+      </div>
+      <div class="summary-content">
+        <p>Total Committed Supply</p>
+        <h2>{{ totalCommittedSupply | number }} kg</h2>
+        <span>Farmer-reported commitments</span>
+      </div>
+    </article>
+  </section>
+
+  <!-- Farmer Records -->
+  <section class="farmers-panel">
+    <div class="panel-heading">
+      <div>
+        <h2>Registered Farmers</h2>
+        <p>View farmer information and manage their commitments.</p>
+      </div>
+      <span class="record-count">
+        {{ filteredFarmers.length }} records
+      </span>
+    </div>
+
+    <!-- Search and Filter -->
+    <div class="filter-bar">
+      <div class="search-box">
+        <i-lucide name="search" [size]="18"></i-lucide>
+        <input
+          type="text"
+          placeholder="Search farmer, farm, contact..."
+          [(ngModel)]="searchTerm"
+          (ngModelChange)="onSearchChange()"
+          aria-label="Search farmers"
+        />
+
+        @if (searchTerm) {
+          <button
+            type="button"
+            class="clear-search-btn"
+            (click)="searchTerm = ''; onSearchChange()"
+            aria-label="Clear search"
+          >
+            <i-lucide name="x" [size]="16"></i-lucide>
+          </button>
+        }
+      </div>
+
+      <div class="status-filter">
+        <i-lucide name="list-filter" [size]="17"></i-lucide>
+        <select
+          [(ngModel)]="selectedStatus"
+          (ngModelChange)="onStatusChange()"
+          aria-label="Filter by farmer status"
+        >
+          <option value="All Status">All Status</option>
+          <option value="Active">Active</option>
+          <option value="Pending">Pending</option>
+          <option value="Inactive">Inactive</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Farmers Table -->
+    <div class="table-wrapper">
+      <table class="farmers-table">
+        <thead>
+          <tr>
+            <th>Farmer</th>
+            <th>Contact Information</th>
+            <th>Supply Commitment</th>
+            <th>Status</th>
+            <th class="actions-heading">Actions</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          @for (farmer of paginatedFarmers; track farmer.id) {
+            <tr>
+              <td>
+                <div class="farmer-cell">
+                  <div class="farmer-avatar">
+                    {{ farmer.fullName.charAt(0).toUpperCase() }}
+                  </div>
+                  <div class="farmer-info">
+                    <strong>{{ farmer.fullName }}</strong>
+                    <span>
+                      <i-lucide name="map-pin" [size]="13"></i-lucide>
+                      {{ farmer.locality }}
+                    </span>
+                  </div>
+                </div>
+              </td>
+
+              <td>
+                <div class="contact-cell">
+                  <span>
+                    <i-lucide name="phone" [size]="14"></i-lucide>
+                    {{ farmer.phone }}
+                  </span>
+                  <span>
+                    <i-lucide name="mail" [size]="14"></i-lucide>
+                    {{ farmer.email || 'No email provided' }}
+                  </span>
+                </div>
+              </td>
+
+              <td>
+                <div class="supply-cell">
+                  <strong>
+                    {{ farmer.supplyCommitment | number }} kg
+                  </strong>
+                  <span>Committed quantity</span>
+                </div>
+              </td>
+
+              <td>
+                <span
+                  class="status-badge"
+                  [ngClass]="{
+                    'status-active': farmer.status === 'Active',
+                    'status-pending': farmer.status === 'Pending',
+                    'status-inactive': farmer.status === 'Inactive'
+                  }"
+                >
+                  <span class="status-dot"></span>
+                  {{ farmer.status }}
+                </span>
+              </td>
+
+              <td>
+                <div class="action-buttons">
+                  <button
+                    type="button"
+                    class="icon-btn view-btn"
+                    title="View farmer details"
+                    aria-label="View farmer details"
+                    (click)="openViewModal(farmer)"
+                  >
+                    <i-lucide name="eye" [size]="17"></i-lucide>
+                  </button>
+
+                  <button
+                    type="button"
+                    class="icon-btn edit-btn"
+                    title="Edit farmer"
+                    aria-label="Edit farmer"
+                    (click)="openEditModal(farmer)"
+                  >
+                    <i-lucide name="pencil" [size]="17"></i-lucide>
+                  </button>
+
+                  <button
+                    type="button"
+                    class="icon-btn message-btn"
+                    title="Message farmer"
+                    aria-label="Message farmer"
+                    (click)="messageFarmer(farmer)"
+                  >
+                    <i-lucide name="message-circle" [size]="17"></i-lucide>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="5">
+                <div class="empty-state">
+                  <div class="empty-icon">
+                    <i-lucide name="users" [size]="28"></i-lucide>
+                  </div>
+                  <h3>No farmers found</h3>
+                  <p>
+                    {{
+                      searchTerm || selectedStatus !== 'All Status'
+                        ? 'Try adjusting your search or status filter.'
+                        : 'Add a farmer to start managing supply commitments.'
+                    }}
+                  </p>
+
+                  @if (!searchTerm && selectedStatus === 'All Status') {
+                    <button
+                      type="button"
+                      class="primary-btn"
+                      (click)="openAddModal()"
+                    >
+                      <i-lucide name="plus" [size]="17"></i-lucide>
+                      Add Farmer
+                    </button>
+                  }
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    <footer class="table-footer">
+      <p>
+        Showing
+        <strong>
+          {{
+            filteredFarmers.length === 0
+              ? 0
+              : (currentPage - 1) * pageSize + 1
+          }}
+        </strong>
+        to
+        <strong>
+          {{
+            currentPage * pageSize > filteredFarmers.length
+              ? filteredFarmers.length
+              : currentPage * pageSize
+          }}
+        </strong>
+        of <strong>{{ filteredFarmers.length }}</strong> farmers
+      </p>
+
+      <div class="pagination">
+        <button
+          type="button"
+          class="pagination-btn"
+          [disabled]="currentPage === 1"
+          (click)="goToPage(currentPage - 1)"
+          aria-label="Previous page"
+        >
+          <i-lucide name="chevron-left" [size]="17"></i-lucide>
+        </button>
+
+        <span class="page-number">
+          {{ currentPage }} / {{ totalPages }}
+        </span>
+
+        <button
+          type="button"
+          class="pagination-btn"
+          [disabled]="currentPage === totalPages"
+          (click)="goToPage(currentPage + 1)"
+          aria-label="Next page"
+        >
+          <i-lucide name="chevron-right" [size]="17"></i-lucide>
+        </button>
+      </div>
+    </footer>
+  </section>
+
+  <!-- Supply Information Note -->
+  <div class="supply-note">
+    <div class="note-icon">
+      <i-lucide name="info" [size]="19"></i-lucide>
+    </div>
+    <div>
+      <strong>Supply confirmation note</strong>
+      <p>
+        Farmer commitments are recorded quantities, not automatically
+        confirmed supply. PTRI staff must review and aggregate the records
+        before confirming the overall available supply.
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- Add / Edit / View Farmer Modal -->
+@if (showFarmerModal) {
+  <div
+    class="modal-overlay"
+    (click)="closeModal()"
+    (keydown.escape)="closeModal()"
+  >
+    <section
+      class="farmer-modal"
+      role="dialog"
+      aria-modal="true"
+      [attr.aria-label]="
+        modalMode === 'add'
+          ? 'Add farmer'
+          : modalMode === 'edit'
+            ? 'Edit farmer'
+            : 'Farmer details'
+      "
+      (click)="$event.stopPropagation()"
+    >
+      <header class="modal-header">
+        <div class="modal-title-group">
+          <div class="modal-title-icon">
+            @if (modalMode === 'view') {
+              <i-lucide name="users" [size]="21"></i-lucide>
+            } @else if (modalMode === 'edit') {
+              <i-lucide name="pencil" [size]="21"></i-lucide>
+            } @else {
+              <i-lucide name="plus" [size]="21"></i-lucide>
+            }
+          </div>
+
+          <div>
+            <h2>
+              {{
+                modalMode === 'add'
+                  ? 'Add Farmer'
+                  : modalMode === 'edit'
+                    ? 'Edit Farmer'
+                    : 'Farmer Details'
+              }}
+            </h2>
+            <p>
+              {{
+                modalMode === 'view'
+                  ? 'Review farmer and farm information.'
+                  : 'Enter the farmer information below.'
+              }}
+            </p>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          class="modal-close-btn"
+          (click)="closeModal()"
+          aria-label="Close modal"
+        >
+          <i-lucide name="x" [size]="20"></i-lucide>
+        </button>
+      </header>
+
+      <!-- View Mode -->
+      @if (modalMode === 'view' && selectedFarmer) {
+        <div class="modal-body">
+          <div class="farmer-profile-summary">
+            <div class="profile-avatar">
+              {{ selectedFarmer.fullName.charAt(0).toUpperCase() }}
+            </div>
+            <div>
+              <h3>{{ selectedFarmer.fullName }}</h3>
+              <p>
+                <i-lucide name="map-pin" [size]="14"></i-lucide>
+                {{ selectedFarmer.locality }}
+              </p>
+              <span
+                class="status-badge"
+                [ngClass]="{
+                  'status-active': selectedFarmer.status === 'Active',
+                  'status-pending': selectedFarmer.status === 'Pending',
+                  'status-inactive': selectedFarmer.status === 'Inactive'
+                }"
+              >
+                <span class="status-dot"></span>
+                {{ selectedFarmer.status }}
+              </span>
+            </div>
+          </div>
+
+          <div class="details-section">
+            <h3>Contact Information</h3>
+
+            <div class="details-grid">
+              <div class="detail-item">
+                <span>
+                  <i-lucide name="phone" [size]="15"></i-lucide>
+                  Phone Number
+                </span>
+                <strong>{{ selectedFarmer.phone || 'Not provided' }}</strong>
+              </div>
+
+              <div class="detail-item">
+                <span>
+                  <i-lucide name="mail" [size]="15"></i-lucide>
+                  Email Address
+                </span>
+                <strong>{{ selectedFarmer.email || 'Not provided' }}</strong>
+              </div>
+
+              <div class="detail-item">
+                <span>
+                  <i-lucide name="map-pin" [size]="15"></i-lucide>
+                  Locality
+                </span>
+                <strong>{{ selectedFarmer.locality }}</strong>
+              </div>
+            </div>
+          </div>
+
+          <div class="details-section">
+            <h3>Farm Information</h3>
+
+            <div class="details-grid">
+              <div class="detail-item">
+                <span>
+                  <i-lucide name="sprout" [size]="15"></i-lucide>
+                  Farm Name
+                </span>
+                <strong>{{ selectedFarmer.farmName || 'Not provided' }}</strong>
+              </div>
+
+              <div class="detail-item">
+                <span>
+                  <i-lucide name="package" [size]="15"></i-lucide>
+                  Farm Area
+                </span>
+                <strong>{{ selectedFarmer.farmArea || 'Not provided' }}</strong>
+              </div>
+
+              <div class="detail-item">
+                <span>
+                  <i-lucide name="wheat" [size]="15"></i-lucide>
+                  Supply Commitment
+                </span>
+                <strong>
+                  {{ selectedFarmer.supplyCommitment | number }} kg
+                </strong>
+              </div>
+            </div>
+          </div>
+
+          <div class="modal-note">
+            <i-lucide name="info" [size]="17"></i-lucide>
+            <p>
+              This is the recorded commitment. PTRI must review the supply
+              before marking it as confirmed.
+            </p>
+          </div>
+        </div>
+
+        <footer class="modal-footer">
+          <button
+            type="button"
+            class="secondary-btn"
+            (click)="closeModal()"
+          >
+            Close
+          </button>
+          <button
+            type="button"
+            class="primary-btn"
+            (click)="openEditModal(selectedFarmer)"
+          >
+            <i-lucide name="pencil" [size]="17"></i-lucide>
+            Edit Farmer
+          </button>
+        </footer>
+      }
+
+      <!-- Add / Edit Mode -->
+      @if (modalMode === 'add' || modalMode === 'edit') {
+        <form
+          class="modal-body farmer-form"
+          #farmerNgForm="ngForm"
+          (ngSubmit)="saveFarmer()"
+        >
+          <div class="form-section">
+            <h3>Personal Information</h3>
+
+            <div class="form-grid">
+              <div class="form-group full-width">
+                <label for="farmerFullName">
+                  Full Name <span class="required">*</span>
+                </label>
+                <input
+                  id="farmerFullName"
+                  name="fullName"
+                  type="text"
+                  [(ngModel)]="farmerForm.fullName"
+                  placeholder="Enter farmer's full name"
+                  required
+                />
+              </div>
+
+              
+@if (modalMode === 'add') {
+  <div class="form-group">
+    <label for="farmerUsername">
+      Username <span class="required">*</span>
+    </label>
+    <input
+      id="farmerUsername"
+      name="username"
+      type="text"
+      [(ngModel)]="farmerForm.username"
+      placeholder="Create a username"
+      required
+    />
+  </div>
+}
+
+  
+<div class="form-group">
+  <label for="farmerPassword">
+    Password <span class="required">*</span>
+  </label>
+  <input
+    id="farmerPassword"
+    name="password"
+    type="password"
+    [(ngModel)]="farmerPassword"
+    placeholder="Create a password"
+    required
+    minlength="6"
+  />
+</div>
+
+
+              <div class="form-group">
+                <label for="farmerPhone">
+                  Phone Number <span class="required">*</span>
+                </label>
+                <input
+                  id="farmerPhone"
+                  name="phone"
+                  type="tel"
+                  [(ngModel)]="farmerForm.phone"
+                  placeholder="e.g. 09171234567"
+                  required
+                />
+              </div>
+
+              <div class="form-group">
+                <label for="farmerEmail">Email Address</label>
+                <input
+                  id="farmerEmail"
+                  name="email"
+                  type="email"
+                  [(ngModel)]="farmerForm.email"
+                  placeholder="Enter email address"
+                />
+              </div>
+
+              <div class="form-group full-width">
+                <label for="farmerLocality">
+                  Locality <span class="required">*</span>
+                </label>
+                <input
+                  id="farmerLocality"
+                  name="locality"
+                  type="text"
+                  [(ngModel)]="farmerForm.locality"
+                  placeholder="Municipality, province"
+                  required
+                />
+              </div>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <h3>Farm and Supply Information</h3>
+
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="farmerFarmName">Farm Name</label>
+                <input
+                  id="farmerFarmName"
+                  name="farmName"
+                  type="text"
+                  [(ngModel)]="farmerForm.farmName"
+                  placeholder="Enter farm name"
+                />
+              </div>
+
+              <div class="form-group">
+                <label for="farmerFarmArea">Farm Area</label>
+                <input
+                  id="farmerFarmArea"
+                  name="farmArea"
+                  type="text"
+                  [(ngModel)]="farmerForm.farmArea"
+                  placeholder="e.g. 2 hectares"
+                />
+              </div>
+
+              <div class="form-group">
+                <label for="farmerSupply">Supply Commitment (kg)</label>
+                <input
+                  id="farmerSupply"
+                  name="supplyCommitment"
+                  type="number"
+                  min="0"
+                  [(ngModel)]="farmerForm.supplyCommitment"
+                  placeholder="Enter quantity in kg"
+                />
+              </div>
+
+              <div class="form-group">
+                <label for="farmerStatus">Farmer Status</label>
+                <select
+                  id="farmerStatus"
+                  name="status"
+                  [(ngModel)]="farmerForm.status"
+                >
+                  <option value="Pending">Pending</option>
+                  <option value="Active">Active</option>
+                  <option value="Inactive">Inactive</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="modal-note">
+            <i-lucide name="info" [size]="17"></i-lucide>
+            <p>
+              Supply commitment is not the same as confirmed available supply.
+              PTRI staff should verify quantities before confirming them.
+            </p>
+          </div>
+
+          <footer class="modal-footer">
+            <button
+              type="button"
+              class="secondary-btn"
+              (click)="closeModal()"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              class="primary-btn"
+              [disabled]="farmerNgForm.invalid"
+            >
+              <i-lucide name="save" [size]="17"></i-lucide>
+              {{ modalMode === 'add' ? 'Add Farmer' : 'Save Changes' }}
+            </button>
+          </footer>
+        </form>
+      }
+    </section>
+  </div>
+}

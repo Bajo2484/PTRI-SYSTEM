@@ -1,72 +1,103 @@
 
 <div class="production-page">
-  <div class="page-header">
-    <div>
+
+  <!-- Page Header -->
+  <header class="page-header">
+    <div class="header-content">
       <p class="eyebrow">FARMER PORTAL</p>
       <h1>My Production</h1>
       <p class="subtitle">
-        Keep track of your silk production and submitted records.
+        Manage your farm production records and track their review status.
       </p>
     </div>
 
     <button class="add-button" type="button">
-      <span class="plus">+</span>
-      Add Production
+      <lucide-angular [img]="Plus" [size]="19" [strokeWidth]="2"></lucide-angular>
+      <span>Add Production</span>
     </button>
-  </div>
+  </header>
 
+  <!-- Summary Cards -->
   <section class="summary-grid">
-    <article class="summary-card">
-      <div class="summary-icon green">🌱</div>
-      <div>
-        <p>Total Production</p>
-        <h2>0 kg</h2>
-        <span>All recorded production</span>
+
+    <article class="summary-card total-card">
+      <div class="summary-icon green">
+        <lucide-angular [img]="Sprout" [size]="22" [strokeWidth]="1.8"></lucide-angular>
+      </div>
+
+      <div class="summary-content">
+        <p class="card-label">Total Production</p>
+        <h2>0 <span>kg</span></h2>
+        <p class="card-description">Total quantity recorded</p>
       </div>
     </article>
 
-    <article class="summary-card">
-      <div class="summary-icon beige">📋</div>
-      <div>
-        <p>Production Records</p>
+    <article class="summary-card records-card">
+      <div class="summary-icon beige">
+        <lucide-angular [img]="ClipboardList" [size]="22" [strokeWidth]="1.8"></lucide-angular>
+      </div>
+
+      <div class="summary-content">
+        <p class="card-label">Production Records</p>
         <h2>0</h2>
-        <span>Total records submitted</span>
+        <p class="card-description">Records you have submitted</p>
       </div>
     </article>
 
-    <article class="summary-card">
-      <div class="summary-icon light-green">⏳</div>
-      <div>
-        <p>Pending Review</p>
+    <article class="summary-card pending-card">
+      <div class="summary-icon light-green">
+        <lucide-angular [img]="Clock3" [size]="22" [strokeWidth]="1.8"></lucide-angular>
+      </div>
+
+      <div class="summary-content">
+        <p class="card-label">Pending Review</p>
         <h2>0</h2>
-        <span>Awaiting staff review</span>
+        <p class="card-description">Awaiting PTRI staff review</p>
       </div>
     </article>
+
   </section>
 
+  <!-- Production Records -->
   <section class="records-section">
+
     <div class="section-heading">
       <div>
         <h2>Production Records</h2>
-        <p>View and monitor your recorded silk production.</p>
+        <p>View your reported production and its current status.</p>
       </div>
 
       <span class="record-count">0 records</span>
     </div>
 
+    <!-- Empty State -->
     <div class="empty-state">
-      <div class="empty-icon">🌿</div>
+
+      <div class="empty-icon">
+        <lucide-angular [img]="Leaf" [size]="30" [strokeWidth]="1.6"></lucide-angular>
+      </div>
+
       <h3>No production records yet</h3>
+
       <p>
-        Your production records will appear here once they have been added.
+        Add your production details to let PTRI staff review your reported
+        quantity and expected availability.
       </p>
+
       <button class="empty-button" type="button">
-        Add Your First Record
+        <lucide-angular [img]="Plus" [size]="17" [strokeWidth]="2"></lucide-angular>
+        <span>Add Your First Record</span>
       </button>
+
     </div>
   </section>
 
-  <p class="page-note">
-    Need help? Contact PTRI staff for assistance with your production records.
-  </p>
+  <!-- Help Note -->
+  <div class="page-note">
+    <lucide-angular [img]="Info" [size]="17" [strokeWidth]="1.8"></lucide-angular>
+    <p>
+      Need help? Contact PTRI staff for assistance with your production records.
+    </p>
+  </div>
+
 </div>

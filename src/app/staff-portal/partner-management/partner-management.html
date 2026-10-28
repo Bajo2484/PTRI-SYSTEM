@@ -1,1 +1,472 @@
-<p>partner-management works!</p>
+
+<div class="partners-page">
+  <header class="page-header">
+    <div class="header-copy">
+      <h1>Partners</h1>
+      <p>A shared directory of silk partner organizations and their order contacts.</p>
+    </div>
+
+    <button class="primary-btn" type="button" (click)="openAddPartner()">
+      <i-lucide name="plus"></i-lucide>
+      Add partner
+    </button>
+  </header>
+
+  <!-- Summary cards -->
+  <section class="summary-grid">
+    <article class="summary-card">
+      <div class="summary-icon organizations-icon">
+        <i-lucide name="building-2"></i-lucide>
+      </div>
+      <div class="summary-content">
+        <p>Partner organizations</p>
+        <h2>{{ partners.length }}</h2>
+        <span>Registered partner organizations</span>
+      </div>
+    </article>
+
+    <article class="summary-card">
+      <div class="summary-icon orders-icon">
+        <i-lucide name="clipboard-list"></i-lucide>
+      </div>
+      <div class="summary-content">
+        <p>Partners with active orders</p>
+        <h2>{{ activeOrderPartners }}</h2>
+        <span>Partners with orders in progress</span>
+      </div>
+    </article>
+
+    <article class="summary-card">
+      <div class="summary-icon review-icon">
+        <i-lucide name="clock"></i-lucide>
+      </div>
+      <div class="summary-content">
+        <p>Awaiting order review</p>
+        <h2>{{ pendingOrderReviews }}</h2>
+        <span>Orders waiting for staff review</span>
+      </div>
+    </article>
+  </section>
+
+  <!-- Partners table -->
+  <section class="partners-layout">
+    <div class="partners-main">
+      <div class="filter-bar">
+        <div class="search-box">
+          <i-lucide name="search"></i-lucide>
+
+          <input
+            type="text"
+            placeholder="Search organization or contact"
+            [(ngModel)]="searchTerm"
+            aria-label="Search partners"
+          />
+
+          @if (searchTerm) {
+            <button
+              class="clear-search-btn"
+              type="button"
+              aria-label="Clear search"
+              (click)="searchTerm = ''"
+            >
+              <i-lucide name="x"></i-lucide>
+            </button>
+          }
+        </div>
+
+        <select
+          class="location-filter"
+          [(ngModel)]="selectedLocation"
+          aria-label="Filter by location"
+        >
+          <option value="All">All locations</option>
+          @for (location of locations; track location) {
+            <option [value]="location">{{ location }}</option>
+          }
+        </select>
+
+        <select
+          class="status-filter"
+          [(ngModel)]="selectedStatus"
+          aria-label="Filter by partner status"
+        >
+          <option value="All">All statuses</option>
+          <option value="Active">Active</option>
+          <option value="Inactive">Inactive</option>
+        </select>
+      </div>
+
+      <div class="partners-panel">
+        <div class="table-wrapper">
+          <table class="partners-table">
+            <thead>
+              <tr>
+                <th>Organization / Locality</th>
+                <th>Contact person</th>
+                <th>Active orders</th>
+                <th>Pending review</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              @for (partner of filteredPartners; track partner.id) {
+                <tr
+                  [class.selected-row]="selectedPartner?.id === partner.id"
+                  (click)="selectPartner(partner)"
+                  tabindex="0"
+                  (keydown.enter)="selectPartner(partner)"
+                  (keydown.space)="selectPartner(partner); $event.preventDefault()"
+                  [attr.aria-label]="'View details for ' + partner.organizationName"
+                >
+                  <td>
+                    <div class="organization-cell">
+                      <div class="organization-avatar">
+                        <i-lucide name="building-2"></i-lucide>
+                      </div>
+
+                      <div>
+                        <strong>{{ partner.organizationName }}</strong>
+                        <span>{{ partner.locality }}</span>
+                      </div>
+                    </div>
+                  </td>
+
+                  <td>
+                    <div class="contact-cell">
+                      <strong>{{ partner.contactPerson }}</strong>
+                      <span>{{ partner.phone }}</span>
+                    </div>
+                  </td>
+
+                  <td>{{ partner.activeOrders }}</td>
+                  <td>{{ partner.pendingReviews }}</td>
+
+                  <td>
+                    <span
+                      class="status-badge"
+                      [class.status-active]="partner.status === 'Active'"
+                      [class.status-inactive]="partner.status === 'Inactive'"
+                    >
+                      <span class="status-dot"></span>
+                      {{ partner.status }}
+                    </span>
+                  </td>
+                </tr>
+              } @empty {
+                <tr>
+                  <td colspan="5">
+                    <div class="empty-state">
+                      <i-lucide name="building-2"></i-lucide>
+                      <h3>No partners found</h3>
+                      <p>Try changing your search or filters.</p>
+                    </div>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <div class="table-footer">
+          <span>
+            Showing {{ filteredPartners.length }} partner organization(s)
+          </span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Partner Details Modal -->
+  @if (selectedPartner && !showPartnerModal) {
+    <div
+      class="modal-overlay"
+      (click)="selectedPartner = null"
+    >
+      <section
+        class="partner-modal details-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="partner-details-title"
+        (click)="$event.stopPropagation()"
+      >
+        <div class="modal-header">
+          <div>
+            <h2 id="partner-details-title">Partner details</h2>
+            <p>Organization information and current orders.</p>
+          </div>
+
+          <button
+            class="icon-btn"
+            type="button"
+            aria-label="Close partner details"
+            (click)="selectedPartner = null"
+          >
+            <i-lucide name="x"></i-lucide>
+          </button>
+        </div>
+
+        <div class="modal-body">
+          <div class="partner-profile">
+            <div class="profile-icon">
+              <i-lucide name="building-2"></i-lucide>
+            </div>
+
+            <div>
+              <h3>{{ selectedPartner.organizationName }}</h3>
+
+              <span
+                class="status-badge"
+                [class.status-active]="selectedPartner.status === 'Active'"
+                [class.status-inactive]="selectedPartner.status === 'Inactive'"
+              >
+                <span class="status-dot"></span>
+                {{ selectedPartner.status }}
+              </span>
+            </div>
+          </div>
+
+          <div class="details-section">
+            <h4>Partner information</h4>
+
+            <div class="details-grid">
+              <div class="detail-item">
+                <span>Partner reference</span>
+                <strong>{{ selectedPartner.reference }}</strong>
+              </div>
+
+              <div class="detail-item">
+                <span>Contact person</span>
+                <strong>{{ selectedPartner.contactPerson }}</strong>
+              </div>
+
+              <div class="detail-item">
+                <span>Email address</span>
+                <strong>{{ selectedPartner.email }}</strong>
+              </div>
+
+              <div class="detail-item">
+                <span>Mobile number</span>
+                <strong>{{ selectedPartner.phone }}</strong>
+              </div>
+
+              <div class="detail-item">
+                <span>Locality</span>
+                <strong>{{ selectedPartner.locality }}</strong>
+              </div>
+
+              <div class="detail-item">
+                <span>Delivery address</span>
+                <strong>{{ selectedPartner.address }}</strong>
+              </div>
+            </div>
+          </div>
+
+          <div class="details-section">
+            <h4>Current orders</h4>
+
+            @if (selectedPartner.orders.length > 0) {
+              @for (order of selectedPartner.orders; track order.orderNumber) {
+                <div class="order-item">
+                  <div>
+                    <strong>
+                      {{ order.orderNumber }} · {{ order.quantity }} kg
+                    </strong>
+                    <span>{{ order.date }}</span>
+                  </div>
+
+                  <span
+                    class="order-status"
+                    [class.order-scheduled]="order.status === 'Scheduled'"
+                    [class.order-confirmed]="order.status === 'Confirmed'"
+                    [class.order-review]="order.status === 'Pending Review'"
+                  >
+                    {{ order.status }}
+                  </span>
+                </div>
+              }
+            } @else {
+              <p class="no-orders">No current orders for this partner.</p>
+            }
+          </div>
+        </div>
+
+        <div class="modal-footer details-modal-footer">
+          <button
+            class="secondary-btn"
+            type="button"
+            (click)="messagePartner(selectedPartner!)"
+          >
+            <i-lucide name="message-circle"></i-lucide>
+            Message
+          </button>
+
+          <button
+            class="primary-btn"
+            type="button"
+            (click)="openEditPartner(selectedPartner!)"
+          >
+            <i-lucide name="pencil"></i-lucide>
+            Edit partner
+          </button>
+        </div>
+      </section>
+    </div>
+  }
+
+  <!-- Add / Edit Partner Modal -->
+  @if (showPartnerModal) {
+    <div class="modal-overlay" (click)="closePartnerModal()">
+      <section
+        class="partner-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="partner-modal-title"
+        (click)="$event.stopPropagation()"
+      >
+        <div class="modal-header">
+          <div>
+            <h2 id="partner-modal-title">
+              {{ editingPartnerId !== null ? 'Edit partner' : 'Add partner' }}
+            </h2>
+            <p>Enter the partner organization's information.</p>
+          </div>
+
+          <button
+            class="icon-btn"
+            type="button"
+            aria-label="Close modal"
+            (click)="closePartnerModal()"
+          >
+            <i-lucide name="x"></i-lucide>
+          </button>
+        </div>
+
+        <form (ngSubmit)="savePartner()">
+          <div class="modal-body">
+            <div class="form-grid">
+              <div class="form-group full-width">
+                <label for="organizationName">Organization name *</label>
+                <input
+                  id="organizationName"
+                  name="organizationName"
+                  [(ngModel)]="partnerForm.organizationName"
+                  required
+                />
+              </div>
+
+              <div class="form-group">
+                <label for="contactPerson">Contact person *</label>
+                <input
+                  id="contactPerson"
+                  name="contactPerson"
+                  [(ngModel)]="partnerForm.contactPerson"
+                  required
+                />
+              </div>
+
+              
+<div class="form-group">
+  <label for="username">Login username *</label>
+  <input
+    id="username"
+    name="username"
+    [(ngModel)]="partnerForm.username"
+    autocomplete="off"
+    required
+    [disabled]="editingPartnerId !== null"
+  />
+</div>
+
+@if (editingPartnerId === null) {
+  <div class="form-group">
+    <label for="password">Temporary password *</label>
+    <input
+      id="password"
+      name="password"
+      type="password"
+      [(ngModel)]="partnerForm.password"
+      autocomplete="new-password"
+      minlength="6"
+      required
+    />
+  </div>
+}
+
+
+              <div class="form-group">
+                <label for="phone">Mobile number *</label>
+                <input
+                  id="phone"
+                  name="phone"
+                  type="tel"
+                  [(ngModel)]="partnerForm.phone"
+                  required
+                />
+              </div>
+
+              <div class="form-group">
+                <label for="email">Email address *</label>
+                <input
+                  id="email"
+                  name="email"
+                  type="email"
+                  [(ngModel)]="partnerForm.email"
+                  required
+                />
+              </div>
+
+              <div class="form-group">
+                <label for="locality">Locality *</label>
+                <input
+                  id="locality"
+                  name="locality"
+                  [(ngModel)]="partnerForm.locality"
+                  required
+                />
+              </div>
+
+              <div class="form-group full-width">
+                <label for="address">Delivery address *</label>
+                <textarea
+                  id="address"
+                  name="address"
+                  rows="2"
+                  [(ngModel)]="partnerForm.address"
+                  required
+                ></textarea>
+              </div>
+
+              <div class="form-group">
+                <label for="status">Partner status</label>
+                <select
+                  id="status"
+                  name="status"
+                  [(ngModel)]="partnerForm.status"
+                >
+                  <option value="Active">Active</option>
+                  <option value="Inactive">Inactive</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <button
+              class="secondary-btn"
+              type="button"
+              (click)="closePartnerModal()"
+            >
+              Cancel
+            </button>
+
+            <button class="primary-btn" type="submit">
+              <i-lucide name="save"></i-lucide>
+              {{ editingPartnerId !== null ? 'Save changes' : 'Add partner' }}
+            </button>
+          </div>
+        </form>
+      </section>
+    </div>
+  }
+</div>

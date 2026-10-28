@@ -1,1 +1,128 @@
-<p>farmer-dashboard works!</p>
+ <div class="dashboard">
+
+  <!-- Welcome Header -->
+  <header class="dashboard-header">
+    <div class="welcome-section">
+      <p class="welcome-label">FARMER PORTAL</p>
+      <h1>Hello, Farmer!</h1>
+      <p class="farmer-info">
+        Elena Reyes <span class="separator">·</span> Monday, 23 November
+      </p>
+    </div>
+
+    <button class="profile-button" type="button" aria-label="View profile">
+      <lucide-angular [img]="UserRound" [size]="21" [strokeWidth]="1.8"></lucide-angular>
+    </button>
+  </header>
+
+  <!-- Summary Cards -->
+  <section class="summary-grid">
+
+    <article class="summary-card production-card">
+      <div class="card-top">
+        <span class="card-icon production-icon">
+          <lucide-angular [img]="Sprout" [size]="21" [strokeWidth]="1.8"></lucide-angular>
+        </span>
+        <span class="card-period">November</span>
+      </div>
+
+      <p class="card-label">Expected Production</p>
+      <h2>25 <span>kg</span></h2>
+      <p class="card-description">Silk cocoons</p>
+    </article>
+
+    <article class="summary-card requests-card">
+      <div class="card-top">
+        <span class="card-icon requests-icon">
+          <lucide-angular [img]="ClipboardList" [size]="21" [strokeWidth]="1.8"></lucide-angular>
+        </span>
+        <span class="card-period">Active</span>
+      </div>
+
+      <p class="card-label">Supply Requests</p>
+      <h2>02</h2>
+      <p class="card-description">Requests for your review</p>
+    </article>
+
+  </section>
+
+  <!-- Latest Production Update -->
+  <section class="dashboard-section">
+    <div class="section-heading">
+      <div>
+        <h2>Latest Production Update</h2>
+        <p class="section-description">Your most recent production record</p>
+      </div>
+    </div>
+
+    <article class="update-card">
+      <span class="update-icon">
+        <lucide-angular [img]="Package" [size]="22" [strokeWidth]="1.8"></lucide-angular>
+      </span>
+
+      <div class="update-content">
+        <h3>Silk cocoons</h3>
+        <p class="update-quantity">25 kg expected by 28 Nov 2026</p>
+        <p class="update-date">Submitted 22 Nov 2026</p>
+      </div>
+
+      <span class="status-badge reviewed">
+        <lucide-angular [img]="CheckCircle2" [size]="14" [strokeWidth]="2"></lucide-angular>
+        Reviewed
+      </span>
+    </article>
+  </section>
+
+  <!-- Submit Production Update -->
+  <section class="action-section">
+    <button class="submit-button" type="button">
+      <lucide-angular [img]="Plus" [size]="19" [strokeWidth]="2"></lucide-angular>
+      <span>Submit Production Update</span>
+      <lucide-angular class="button-arrow" [img]="ArrowRight" [size]="18" [strokeWidth]="1.8"></lucide-angular>
+    </button>
+  </section>
+
+  <!-- Recent Notifications -->
+  <section class="dashboard-section notifications-section">
+    <div class="section-heading">
+      <div>
+        <h2>Recent Notifications</h2>
+        <p class="section-description">Updates about your production and supplies</p>
+      </div>
+
+      <button class="view-all-button" type="button">
+        View all
+        <lucide-angular [img]="ChevronRight" [size]="16"></lucide-angular>
+      </button>
+    </div>
+
+    <div class="notification-list">
+
+      <article class="notification-item">
+        <span class="notification-icon request-icon">
+          <lucide-angular [img]="ClipboardList" [size]="19" [strokeWidth]="1.8"></lucide-angular>
+        </span>
+
+        <div class="notification-content">
+          <h3>New supply request</h3>
+          <p>20 kg of silk cocoons <span class="notification-dot">·</span> 9:15 AM</p>
+        </div>
+
+        <span class="notification-indicator" aria-label="New notification"></span>
+      </article>
+
+      <article class="notification-item">
+        <span class="notification-icon reviewed-icon">
+          <lucide-angular [img]="CheckCircle2" [size]="19" [strokeWidth]="1.8"></lucide-angular>
+        </span>
+
+        <div class="notification-content">
+          <h3>Production update reviewed</h3>
+          <p>Your November update <span class="notification-dot">·</span> Yesterday</p>
+        </div>
+      </article>
+
+    </div>
+  </section>
+
+</div>

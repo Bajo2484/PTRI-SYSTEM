@@ -1,1 +1,227 @@
-<p>farmer-production works!</p>
+<div class="production-page">
+
+  <!-- PAGE HEADER -->
+  <header class="page-header">
+    <div>
+      <h1>Farmer production</h1>
+      <p>Coordinate expected cocoon output and record progress against farmer commitments.</p>
+    </div>
+
+    <button class="update-production-btn" type="button" (click)="openUpdateProduction()">
+      <span>▣</span>
+      Update production
+    </button>
+  </header>
+
+  <!-- SUMMARY CARDS -->
+  <section class="summary-grid">
+
+    <article class="summary-card">
+      <div class="summary-card-heading">
+        <span>Total committed output</span>
+        <span class="summary-icon">⚖</span>
+      </div>
+      <h2>500 kg</h2>
+      <p>6 farmers · October–November harvest</p>
+    </article>
+
+    <article class="summary-card">
+      <div class="summary-card-heading">
+        <span>Expected, not yet received</span>
+        <span class="summary-icon">▦</span>
+      </div>
+      <h2>420 kg</h2>
+      <p>320 kg confirmed · 100 kg awaiting</p>
+    </article>
+
+    <article class="summary-card">
+      <div class="summary-card-heading">
+        <span>Received to date</span>
+        <span class="summary-icon">◉</span>
+      </div>
+      <h2>80 kg</h2>
+      <p>16% of committed cocoon output</p>
+    </article>
+
+    <article class="summary-card">
+      <div class="summary-card-heading">
+        <span>Awaiting confirmation</span>
+        <span class="summary-icon warning-icon">◷</span>
+      </div>
+      <h2>2</h2>
+      <p class="warning-text">100 kg · Follow-up needed</p>
+    </article>
+
+  </section>
+
+  <!-- INVENTORY NOTICE -->
+  <div class="inventory-notice">
+    <span class="notice-icon">ⓘ</span>
+    <div>
+      <strong>Forecasts are not available inventory</strong>
+      <p>
+        Expected output enters inventory only after a collection is received,
+        weighed and recorded. Received progress below is cumulative against each commitment.
+      </p>
+    </div>
+  </div>
+
+  <!-- PRODUCTION COMMITMENTS -->
+  <section class="commitments-panel">
+
+    <div class="commitments-header">
+      <div>
+        <h2>Production commitments</h2>
+        <p>Cocoon only · Expected harvest window: 26 Oct–08 Nov 2028</p>
+      </div>
+    </div>
+
+    <!-- SEARCH AND FILTERS -->
+    <div class="table-toolbar">
+
+      <label class="production-search">
+        <span>⌕</span>
+        <input
+          type="search"
+          placeholder="Search farmer or production reference"
+          [(ngModel)]="searchTerm"
+        />
+      </label>
+
+      <select
+        class="production-filter"
+        [(ngModel)]="selectedConfirmation"
+        aria-label="Filter by confirmation"
+      >
+        <option value="all">All confirmations</option>
+        <option value="confirmed">Confirmed</option>
+        <option value="awaiting">Awaiting response</option>
+      </select>
+
+      <button class="production-filter" type="button" (click)="toggleHarvestSort()">
+        <span>⌄</span>
+        Harvest date
+      </button>
+
+      <button class="production-filter" type="button" (click)="toggleFilters()">
+        <span>☷</span>
+        Filters
+      </button>
+
+    </div>
+
+    <!-- COMMITMENTS TABLE -->
+    <div class="production-table-wrapper">
+      <table class="production-table">
+        <thead>
+          <tr>
+            <th>Farmer / reference</th>
+            <th>Expected harvest</th>
+            <th>Committed</th>
+            <th>Received</th>
+            <th>Remaining</th>
+            <th>Confirmation</th>
+            <th>Last update</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <tr
+            *ngFor="let commitment of filteredCommitments"
+          >
+            <td>
+              <div class="farmer-name">{{ commitment.farmer }}</div>
+              <div class="production-reference">{{ commitment.reference }}</div>
+            </td>
+
+            <td>{{ commitment.harvestDate }}</td>
+            <td>{{ commitment.committed }} kg</td>
+            <td>{{ commitment.received }} kg</td>
+            <td>{{ commitment.remaining }} kg</td>
+
+            <td>
+              <span
+                class="confirmation-status"
+                [class.confirmed-status]="commitment.confirmation === 'Confirmed'"
+                [class.awaiting-status]="commitment.confirmation === 'Awaiting response'"
+              >
+                <span class="confirmation-dot"></span>
+                {{ commitment.confirmation }}
+              </span>
+            </td>
+
+            <td>{{ commitment.lastUpdate }}</td>
+          </tr>
+
+          <tr *ngIf="filteredCommitments.length === 0">
+            <td colspan="7" class="no-production-records">
+              No production commitments found.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- TABLE FOOTER -->
+    <footer class="table-footer">
+      <span>
+        Showing {{ filteredCommitments.length }} of {{ commitments.length }} commitments
+      </span>
+
+      <div class="pagination">
+        <button type="button" aria-label="Previous page">‹</button>
+        <button type="button" class="active-page">1</button>
+        <button type="button" aria-label="Next page">›</button>
+      </div>
+    </footer>
+
+  </section>
+
+  <!-- BOTTOM INFORMATION CARDS -->
+  <section class="production-bottom-grid">
+
+    <article class="progress-panel">
+      <h2>Commitment progress</h2>
+      <p>500 kg total · 80 kg received and 420 kg expected</p>
+
+      <div class="progress-bar">
+        <div class="progress-received"></div>
+        <div class="progress-confirmed"></div>
+        <div class="progress-awaiting"></div>
+      </div>
+
+      <div class="progress-legend">
+        <span><i class="legend-dot received-dot"></i>Received 80 kg</span>
+        <span><i class="legend-dot confirmed-dot"></i>Confirmed 320 kg</span>
+        <span><i class="legend-dot awaiting-dot"></i>Awaiting 100 kg</span>
+      </div>
+    </article>
+
+    <article class="follow-up-panel">
+      <div class="follow-up-heading">
+        <h2>Next follow-up</h2>
+        <button
+          type="button"
+          class="communication-btn"
+          (click)="openCommunication()"
+        >
+          <span>▢</span>
+          Open communication
+        </button>
+      </div>
+
+      <p>
+        Confirm Ana Mendoza's 60 kg and Joel Ramos's 40 kg commitments
+        before scheduling collection. Last reminders sent 22 October.
+      </p>
+    </article>
+
+  </section>
+
+  <!-- PAGE FOOTNOTE -->
+  <footer class="production-page-footer">
+    <span>Sample records for design preview · Quantities in kilograms (kg)</span>
+    <span>Philippine Standard Time · UTC+8</span>
+  </footer>
+
+</div>

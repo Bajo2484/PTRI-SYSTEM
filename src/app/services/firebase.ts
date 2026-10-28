@@ -1,4 +1,5 @@
 
+import { getFunctions } from 'firebase/functions';
 import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
@@ -15,4 +16,18 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 
 export const auth = getAuth(app);
+
+export const farmerCreationApp = initializeApp(
+  firebaseConfig,
+  'farmerCreationApp'
+);
+
+export const farmerCreationAuth = getAuth(farmerCreationApp);
+export const partnerCreationApp = initializeApp(
+  firebaseConfig,
+  'partnerCreationApp'
+);
+
+export const partnerCreationAuth = getAuth(partnerCreationApp);
 export const db = getFirestore(app);
+export const functions = getFunctions(app, 'asia-southeast1');

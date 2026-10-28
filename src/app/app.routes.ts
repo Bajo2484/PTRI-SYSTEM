@@ -58,7 +58,7 @@ export const routes: Routes = [
         path: 'farmer-production',
         loadComponent: () =>
           import('./staff-portal/farmer-production/farmer-production').then(
-            (m) => m.FarmerProduction
+            (m) => m.FarmersProductionComponent
           )
       },
       {

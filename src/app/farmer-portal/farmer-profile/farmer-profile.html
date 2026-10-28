@@ -1,1 +1,262 @@
-<p>farmer-profile works!</p>
+
+<div class="profile-page">
+
+  <!-- Page Header -->
+  <header class="page-header">
+    <div>
+      <p class="eyebrow">FARMER PORTAL</p>
+      <h1>My Profile</h1>
+      <p class="page-subtitle">
+        View and manage your personal and farm information.
+      </p>
+    </div>
+
+    <div class="account-status">
+      <lucide-angular
+        [img]="ShieldCheck"
+        [size]="17"
+        [strokeWidth]="1.8">
+      </lucide-angular>
+      <span>Farmer Account</span>
+    </div>
+  </header>
+
+  <!-- Profile Overview -->
+  <section class="profile-overview">
+
+    <div class="profile-cover">
+      <div class="cover-decoration cover-decoration-one"></div>
+      <div class="cover-decoration cover-decoration-two"></div>
+
+      <div class="cover-label">
+        <lucide-angular
+          [img]="Sprout"
+          [size]="16"
+          [strokeWidth]="1.8">
+        </lucide-angular>
+        <span>Farmer Information</span>
+      </div>
+    </div>
+
+    <div class="profile-identity">
+      <div class="profile-avatar">
+        <lucide-angular
+          [img]="CircleUserRound"
+          [size]="58"
+          [strokeWidth]="1.3">
+        </lucide-angular>
+      </div>
+
+      <div class="identity-details">
+        <h2>Farmer Name</h2>
+        <p>
+          <lucide-angular
+            [img]="Sprout"
+            [size]="15"
+            [strokeWidth]="1.8">
+          </lucide-angular>
+          Registered Farmer
+        </p>
+      </div>
+
+      <span class="verified-status">
+        <lucide-angular
+          [img]="BadgeCheck"
+          [size]="15"
+          [strokeWidth]="1.8">
+        </lucide-angular>
+        Account
+      </span>
+    </div>
+
+    <div class="profile-summary">
+      <div class="summary-item">
+        <span class="summary-label">Account Type</span>
+        <strong>Farmer</strong>
+      </div>
+
+      <div class="summary-item">
+        <span class="summary-label">Organization</span>
+        <strong>PTRI Partner Farmer</strong>
+      </div>
+
+      <div class="summary-item">
+        <span class="summary-label">Account Status</span>
+        <strong class="status-active">
+          <span class="status-dot"></span>
+          Registered
+        </strong>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- Information Sections -->
+  <div class="profile-content">
+
+    <!-- Personal Information -->
+    <section class="information-card">
+
+      <div class="section-heading">
+        <div class="section-icon">
+          <lucide-angular
+            [img]="UserRound"
+            [size]="20"
+            [strokeWidth]="1.8">
+          </lucide-angular>
+        </div>
+
+        <div>
+          <h2>Personal Information</h2>
+          <p>Your basic contact details</p>
+        </div>
+      </div>
+
+      <div class="information-grid">
+
+        <div class="information-field">
+          <span class="field-label">Full Name</span>
+          <div class="field-value">
+            <lucide-angular
+              [img]="UserRound"
+              [size]="17"
+              [strokeWidth]="1.8">
+            </lucide-angular>
+            <span>Not provided</span>
+          </div>
+        </div>
+
+        <div class="information-field">
+          <span class="field-label">Email Address</span>
+          <div class="field-value">
+            <lucide-angular
+              [img]="Mail"
+              [size]="17"
+              [strokeWidth]="1.8">
+            </lucide-angular>
+            <span>Not provided</span>
+          </div>
+        </div>
+
+        <div class="information-field">
+          <span class="field-label">Contact Number</span>
+          <div class="field-value">
+            <lucide-angular
+              [img]="Phone"
+              [size]="17"
+              [strokeWidth]="1.8">
+            </lucide-angular>
+            <span>Not provided</span>
+          </div>
+        </div>
+
+        <div class="information-field">
+          <span class="field-label">Home Address</span>
+          <div class="field-value">
+            <lucide-angular
+              [img]="MapPin"
+              [size]="17"
+              [strokeWidth]="1.8">
+            </lucide-angular>
+            <span>Not provided</span>
+          </div>
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- Farm Information -->
+    <section class="information-card">
+
+      <div class="section-heading">
+        <div class="section-icon farm-icon">
+          <lucide-angular
+            [img]="Sprout"
+            [size]="20"
+            [strokeWidth]="1.8">
+          </lucide-angular>
+        </div>
+
+        <div>
+          <h2>Farm Information</h2>
+          <p>Details about your farm and production</p>
+        </div>
+      </div>
+
+      <div class="information-grid">
+
+        <div class="information-field">
+          <span class="field-label">Farm Name</span>
+          <div class="field-value">
+            <lucide-angular
+              [img]="Building2"
+              [size]="17"
+              [strokeWidth]="1.8">
+            </lucide-angular>
+            <span>Not provided</span>
+          </div>
+        </div>
+
+        <div class="information-field">
+          <span class="field-label">Farm Location</span>
+          <div class="field-value">
+            <lucide-angular
+              [img]="MapPin"
+              [size]="17"
+              [strokeWidth]="1.8">
+            </lucide-angular>
+            <span>Not provided</span>
+          </div>
+        </div>
+
+        <div class="information-field">
+          <span class="field-label">Production Type</span>
+          <div class="field-value">
+            <lucide-angular
+              [img]="Sprout"
+              [size]="17"
+              [strokeWidth]="1.8">
+            </lucide-angular>
+            <span>Not provided</span>
+          </div>
+        </div>
+
+        <div class="information-field">
+          <span class="field-label">Member Since</span>
+          <div class="field-value">
+            <lucide-angular
+              [img]="CalendarDays"
+              [size]="17"
+              [strokeWidth]="1.8">
+            </lucide-angular>
+            <span>Not provided</span>
+          </div>
+        </div>
+
+      </div>
+
+    </section>
+
+  </div>
+
+  <!-- Account Notice -->
+  <div class="profile-notice">
+    <div class="notice-icon">
+      <lucide-angular
+        [img]="ShieldCheck"
+        [size]="20"
+        [strokeWidth]="1.8">
+      </lucide-angular>
+    </div>
+
+    <div>
+      <h3>Keep your information updated</h3>
+      <p>
+        Accurate contact and farm details help PTRI staff communicate
+        with you about production reports, supply availability, and deliveries.
+      </p>
+    </div>
+  </div>
+
+</div>

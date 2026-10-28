@@ -1,1 +1,533 @@
-<p>messages works!</p>
+<div class="communication-page">
+
+  <!-- INBOX VIEW -->
+  <ng-container *ngIf="!selectedConversation; else conversationView">
+
+    <header class="page-header">
+      <div class="header-text">
+        <span class="eyebrow">STAFF PORTAL</span>
+        <h1>Communication</h1>
+        <p>Manage conversations with farmers and silk partners.</p>
+      </div>
+
+      <button
+        class="new-conversation-btn"
+        type="button"
+        (click)="startNewConversation()"
+      >
+        <span class="plus-icon">+</span>
+        New conversation
+      </button>
+    </header>
+
+    <section class="inbox-panel">
+
+      <!-- INBOX HEADER -->
+      <div class="panel-heading">
+        <div>
+          <h2>Inbox</h2>
+          <p>{{ conversations.length }} conversations</p>
+        </div>
+
+        <span class="inbox-count">{{ unreadCount }}</span>
+      </div>
+
+      <!-- SEARCH -->
+      <div class="search-box">
+        <span class="search-icon">⌕</span>
+
+        <input
+          type="text"
+          name="searchTerm"
+          [(ngModel)]="searchTerm"
+          placeholder="Search conversations..."
+          aria-label="Search conversations"
+        />
+      </div>
+
+      <!-- FILTERS -->
+      <div class="inbox-filters">
+        <button
+          type="button"
+          [class.active]="activeFilter === 'All'"
+          (click)="setFilter('All')"
+        >
+          All
+        </button>
+
+        <button
+          type="button"
+          [class.active]="activeFilter === 'Farmers'"
+          (click)="setFilter('Farmers')"
+        >
+          Farmers
+        </button>
+
+        <button
+          type="button"
+          [class.active]="activeFilter === 'Partners'"
+          (click)="setFilter('Partners')"
+        >
+          Partners
+        </button>
+
+        <button
+          type="button"
+          [class.active]="activeFilter === 'Unread'"
+          (click)="setFilter('Unread')"
+        >
+          Unread
+        </button>
+      </div>
+
+      <!-- CONVERSATION LIST -->
+      <div class="conversation-list">
+
+        <button
+          type="button"
+          class="conversation-item"
+          *ngFor="let conversation of filteredConversations"
+          (click)="selectConversation(conversation)"
+        >
+          <div class="avatar">
+            {{ conversation.initials }}
+          </div>
+
+          <div class="conversation-details">
+
+            <div class="conversation-topline">
+              <h3>{{ conversation.name }}</h3>
+              <span class="conversation-time">
+                {{ conversation.time }}
+              </span>
+            </div>
+
+            <p class="conversation-organization">
+              {{ conversation.organization }}
+            </p>
+
+            <div class="conversation-bottomline">
+              <p class="last-message">
+                {{ conversation.lastMessage }}
+              </p>
+
+              <span
+                *ngIf="conversation.unread"
+                class="unread-indicator"
+                aria-label="Unread conversation"
+              ></span>
+            </div>
+
+          </div>
+        </button>
+
+        <!-- EMPTY INBOX -->
+        <div
+          class="empty-inbox"
+          *ngIf="filteredConversations.length === 0"
+        >
+          <div class="empty-icon">⌕</div>
+          <h3>No conversations found</h3>
+          <p>Try another search term or filter.</p>
+        </div>
+
+      </div>
+
+      <!-- INBOX FOOTER -->
+      <div class="inbox-footer">
+        <span class="status-dot"></span>
+        <span>Staff communication inbox</span>
+      </div>
+
+    </section>
+
+  </ng-container>
+
+
+  <!-- CONVERSATION VIEW -->
+  <ng-template #conversationView>
+
+    <ng-container *ngIf="selectedConversation as conversation">
+
+      <section class="conversation-view">
+
+        <!-- CONVERSATION HEADER -->
+        <header class="chat-header">
+
+          <div class="chat-header-left">
+
+            <button
+              type="button"
+              class="back-to-inbox-btn"
+              (click)="backToInbox()"
+              aria-label="Back to inbox"
+            >
+              <span>←</span>
+              <span>Inbox</span>
+            </button>
+
+            <div class="chat-contact">
+
+              <div class="avatar chat-avatar">
+                {{ conversation.initials }}
+              </div>
+
+              <div class="chat-contact-details">
+                <h2>{{ conversation.name }}</h2>
+                <p>{{ conversation.organization }}</p>
+              </div>
+
+            </div>
+
+          </div>
+
+          <div class="chat-header-actions">
+
+            <span
+              class="role-badge"
+              [class.farmer-badge]="conversation.role === 'Farmer'"
+              [class.partner-badge]="conversation.role === 'Partner'"
+            >
+              {{ conversation.role }}
+            </span>
+
+            <button
+              type="button"
+              class="contact-info-btn"
+              (click)="showContactInfo = true"
+            >
+              <span>ⓘ</span>
+              Contact info
+            </button>
+
+          </div>
+
+        </header>
+
+
+        <!-- CONVERSATION CONTEXT -->
+        <div class="chat-context">
+          <div class="context-icon">i</div>
+
+          <p>
+            Conversation with
+            <strong>{{ conversation.name }}</strong>
+
+            <span *ngIf="conversation.location">
+              · {{ conversation.location }}
+            </span>
+          </p>
+        </div>
+
+
+        <!-- MESSAGE HISTORY -->
+        <div class="message-history">
+
+          <div
+            class="date-divider"
+            *ngIf="conversation.messages.length > 0"
+          >
+            <span>Conversation history</span>
+          </div>
+
+          <div
+            class="message-row"
+            *ngFor="let message of conversation.messages"
+            [class.staff-message-row]="message.sender === 'staff'"
+            [class.other-message-row]="message.sender === 'other'"
+          >
+
+            <div
+              class="message-avatar"
+              *ngIf="message.sender === 'other'"
+            >
+              {{ conversation.initials }}
+            </div>
+
+            <div class="message-content">
+
+              <div class="message-sender">
+                {{
+                  message.sender === 'staff'
+                    ? 'You · PTRI Staff'
+                    : conversation.name
+                }}
+              </div>
+
+              <div
+                class="message-bubble"
+                [class.staff-bubble]="message.sender === 'staff'"
+                [class.other-bubble]="message.sender === 'other'"
+              >
+                {{ message.text }}
+              </div>
+
+              <span class="message-time">
+                {{ message.time }}
+              </span>
+
+            </div>
+
+          </div>
+
+
+          <!-- EMPTY CONVERSATION -->
+          <div
+            class="empty-chat"
+            *ngIf="conversation.messages.length === 0"
+          >
+            <div class="empty-chat-icon">✉</div>
+            <h3>Start the conversation</h3>
+            <p>Send a message to {{ conversation.name }}.</p>
+          </div>
+
+        </div>
+
+
+        <!-- MESSAGE COMPOSER -->
+        <form
+          class="message-composer"
+          (ngSubmit)="sendMessage()"
+        >
+
+          <textarea
+            name="messageText"
+            [(ngModel)]="messageText"
+            (keydown.enter)="onEnterPressed($event)"
+            placeholder="Write a message..."
+            rows="2"
+            aria-label="Write a message"
+          ></textarea>
+
+          <div class="composer-footer">
+
+            <div class="composer-tools">
+
+              <label
+                class="attachment-btn"
+                title="Attach a file"
+              >
+                <input
+                  #attachmentInput
+                  type="file"
+                  hidden
+                  (change)="onAttachmentSelected($event)"
+                />
+
+                <span class="attachment-icon">＋</span>
+                <span>Attach file</span>
+              </label>
+
+              <span class="composer-hint">
+                Enter to send · Shift + Enter for a new line
+              </span>
+
+            </div>
+
+            <button
+              type="submit"
+              class="send-btn"
+              [disabled]="!messageText.trim()"
+            >
+              <span>Send</span>
+              <span class="send-icon">➤</span>
+            </button>
+
+          </div>
+
+        </form>
+
+      </section>
+
+
+      <!-- CONTACT INFORMATION MODAL -->
+      <div
+        class="contact-modal-backdrop"
+        *ngIf="showContactInfo"
+        (click)="showContactInfo = false"
+      >
+
+        <section
+          class="contact-modal"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="contact-modal-title"
+          (click)="$event.stopPropagation()"
+        >
+
+          <!-- MODAL HEADER -->
+          <div class="contact-modal-header">
+
+            <div>
+              <span class="eyebrow">CONVERSATION DETAILS</span>
+              <h2 id="contact-modal-title">Related records</h2>
+            </div>
+
+            <button
+              type="button"
+              class="close-contact-modal"
+              (click)="showContactInfo = false"
+              aria-label="Close contact information"
+            >
+              ×
+            </button>
+
+          </div>
+
+
+          <!-- CONTACT INFORMATION -->
+          <section class="related-section">
+
+            <h3 class="section-label">CONTACT INFORMATION</h3>
+
+            <div class="contact-card">
+
+              <div class="contact-card-avatar">
+                {{ conversation.initials }}
+              </div>
+
+              <div class="contact-card-details">
+                <h3>{{ conversation.name }}</h3>
+                <p>{{ conversation.organization }}</p>
+              </div>
+
+              <span
+                class="role-badge small-role-badge"
+                [class.farmer-badge]="conversation.role === 'Farmer'"
+                [class.partner-badge]="conversation.role === 'Partner'"
+              >
+                {{ conversation.role }}
+              </span>
+
+            </div>
+
+            <div class="record-detail">
+              <span class="detail-label">Location</span>
+              <span class="detail-value">
+                {{ conversation.location }}
+              </span>
+            </div>
+
+            <div class="record-detail">
+              <span class="detail-label">Contact type</span>
+              <span class="detail-value">
+                {{ conversation.role }}
+              </span>
+            </div>
+
+          </section>
+
+
+          <!-- PRODUCTION / COLLECTION RECORD -->
+          <section class="related-section">
+
+            <h3 class="section-label">PRODUCTION / COLLECTION</h3>
+
+            <!-- FARMER RECORD -->
+            <div
+              class="record-card"
+              *ngIf="conversation.role === 'Farmer'; else partnerRecord"
+            >
+
+              <div class="record-card-top">
+
+                <span class="record-type-icon production-icon">
+                  P
+                </span>
+
+                <div class="record-title">
+                  <h3>Silk cocoon collection</h3>
+                  <span class="record-id">SR-26-041</span>
+                </div>
+
+              </div>
+
+              <div class="record-detail">
+                <span class="detail-label">Expected quantity</span>
+                <span class="detail-value">80 kg</span>
+              </div>
+
+              <div class="record-detail">
+                <span class="detail-label">Collection date</span>
+                <span class="detail-value">26 October 2026</span>
+              </div>
+
+              <div class="record-detail">
+                <span class="detail-label">Status</span>
+                <span class="status-badge pending-status">
+                  Scheduled
+                </span>
+              </div>
+
+            </div>
+
+
+            <!-- PARTNER RECORD -->
+            <ng-template #partnerRecord>
+
+              <div class="record-card">
+
+                <div class="record-card-top">
+
+                  <span class="record-type-icon order-icon">
+                    O
+                  </span>
+
+                  <div class="record-title">
+                    <h3>Silk yarn order</h3>
+                    <span class="record-id">SO-26-018</span>
+                  </div>
+
+                </div>
+
+                <div class="record-detail">
+                  <span class="detail-label">Order type</span>
+                  <span class="detail-value">Silk yarn</span>
+                </div>
+
+                <div class="record-detail">
+                  <span class="detail-label">Delivery status</span>
+                  <span class="status-badge pending-status">
+                    In progress
+                  </span>
+                </div>
+
+              </div>
+
+            </ng-template>
+
+          </section>
+
+
+          <!-- STAFF NOTE -->
+          <section class="related-section">
+
+            <h3 class="section-label">STAFF NOTE</h3>
+
+            <div class="staff-note">
+              <span class="note-icon">i</span>
+
+              <p>
+                Keep collection schedules, quantities, and partner order
+                updates aligned with the official PTRI records.
+              </p>
+            </div>
+
+          </section>
+
+
+          <!-- MODAL FOOTER -->
+          <div class="related-footer">
+            <span class="status-dot"></span>
+            <span>Mock records · For preview only</span>
+          </div>
+
+        </section>
+
+      </div>
+
+    </ng-container>
+
+  </ng-template>
+
+</div>

@@ -1,1 +1,279 @@
-<p>farmer-messages works!</p>
+
+<div class="messages-page">
+
+  <!-- Page Header -->
+  <header class="page-header">
+    <div>
+      <p class="eyebrow">FARMER PORTAL</p>
+      <h1>Messages</h1>
+      <p class="page-subtitle">
+        Communicate directly with PTRI staff.
+      </p>
+    </div>
+
+    <div class="header-status">
+      <span class="online-dot"></span>
+      <span>PTRI Communication</span>
+    </div>
+  </header>
+
+  <!-- Messaging Layout -->
+  <section class="messaging-layout">
+
+    <!-- Conversation List -->
+    <aside class="conversation-panel">
+
+      <div class="conversation-header">
+        <div>
+          <h2>Conversations</h2>
+          <p>Your messages with PTRI staff</p>
+        </div>
+
+        <span class="conversation-count">2</span>
+      </div>
+
+      <!-- Search -->
+      <div class="search-box">
+        <lucide-angular
+          [img]="Search"
+          [size]="18"
+          [strokeWidth]="1.8">
+        </lucide-angular>
+
+        <input
+          type="search"
+          placeholder="Search conversations..."
+          aria-label="Search conversations">
+      </div>
+
+      <!-- Conversation Items -->
+      <div class="conversation-list">
+
+        <button class="conversation-item active" type="button">
+
+          <div class="conversation-avatar staff-avatar">
+            <lucide-angular
+              [img]="Building2"
+              [size]="22"
+              [strokeWidth]="1.8">
+            </lucide-angular>
+          </div>
+
+          <div class="conversation-details">
+            <div class="conversation-top">
+              <h3>PTRI Staff</h3>
+              <span class="conversation-time">10:30 AM</span>
+            </div>
+
+            <p class="last-message">
+              Please confirm your expected production date.
+            </p>
+
+            <div class="conversation-bottom">
+              <span class="conversation-label">Production</span>
+              <span class="unread-badge">1</span>
+            </div>
+          </div>
+
+        </button>
+
+        <button class="conversation-item" type="button">
+
+          <div class="conversation-avatar supply-avatar">
+            <lucide-angular
+              [img]="MessagesSquare"
+              [size]="21"
+              [strokeWidth]="1.8">
+            </lucide-angular>
+          </div>
+
+          <div class="conversation-details">
+            <div class="conversation-top">
+              <h3>PTRI Staff</h3>
+              <span class="conversation-time">Yesterday</span>
+            </div>
+
+            <p class="last-message">
+              We will update you regarding supply availability.
+            </p>
+
+            <div class="conversation-bottom">
+              <span class="conversation-label">Supply Update</span>
+            </div>
+          </div>
+
+        </button>
+
+      </div>
+
+      <div class="conversation-help">
+        <lucide-angular
+          [img]="Bell"
+          [size]="17"
+          [strokeWidth]="1.8">
+        </lucide-angular>
+
+        <p>New messages will appear here.</p>
+      </div>
+
+    </aside>
+
+    <!-- Chat Panel -->
+    <div class="chat-panel">
+
+      <!-- Chat Header -->
+      <header class="chat-header">
+
+        <div class="chat-contact">
+          <div class="conversation-avatar staff-avatar">
+            <lucide-angular
+              [img]="Building2"
+              [size]="22"
+              [strokeWidth]="1.8">
+            </lucide-angular>
+          </div>
+
+          <div>
+            <h2>PTRI Staff</h2>
+            <p>
+              <span class="online-dot"></span>
+              Official communication
+            </p>
+          </div>
+        </div>
+
+        <button
+          class="icon-button"
+          type="button"
+          aria-label="Conversation options">
+          <lucide-angular
+            [img]="MoreVertical"
+            [size]="21"
+            [strokeWidth]="1.8">
+          </lucide-angular>
+        </button>
+
+      </header>
+
+      <!-- Chat Messages -->
+      <div class="chat-body">
+
+        <div class="date-divider">
+          <span>Today</span>
+        </div>
+
+        <!-- Staff Message -->
+        <div class="message-row received">
+          <div class="message-avatar">
+            <lucide-angular
+              [img]="Building2"
+              [size]="16"
+              [strokeWidth]="1.8">
+            </lucide-angular>
+          </div>
+
+          <div class="message-content">
+            <span class="message-sender">PTRI Staff</span>
+
+            <div class="message-bubble">
+              <p>
+                Good morning! We would like to confirm the expected
+                availability date of your reported silk cocoon production.
+              </p>
+            </div>
+
+            <span class="message-time">10:25 AM</span>
+          </div>
+        </div>
+
+        <!-- Farmer Message -->
+        <div class="message-row sent">
+          <div class="message-content">
+            <div class="message-bubble">
+              <p>
+                Good morning! My silk cocoons are expected to be available
+                by the end of this month.
+              </p>
+            </div>
+
+            <span class="message-time">
+              10:28 AM
+              <lucide-angular
+                [img]="CheckCheck"
+                [size]="14"
+                [strokeWidth]="1.8">
+              </lucide-angular>
+            </span>
+          </div>
+        </div>
+
+        <!-- Latest Staff Message -->
+        <div class="message-row received">
+          <div class="message-avatar">
+            <lucide-angular
+              [img]="Building2"
+              [size]="16"
+              [strokeWidth]="1.8">
+            </lucide-angular>
+          </div>
+
+          <div class="message-content">
+            <span class="message-sender">PTRI Staff</span>
+
+            <div class="message-bubble">
+              <p>
+                Thank you for the update. We will review your reported
+                production and include it in our overall supply assessment.
+              </p>
+            </div>
+
+            <span class="message-time">10:30 AM</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Message Composer -->
+      <form class="message-composer">
+
+        <div class="composer-input">
+          <input
+            type="text"
+            placeholder="Write your message..."
+            aria-label="Write your message">
+
+          <button
+            class="attachment-button"
+            type="button"
+            aria-label="Attach a file">
+            <lucide-angular
+              [img]="Paperclip"
+              [size]="20"
+              [strokeWidth]="1.8">
+            </lucide-angular>
+          </button>
+        </div>
+
+        <button
+          class="send-button"
+          type="button"
+          aria-label="Send message">
+          <lucide-angular
+            [img]="Send"
+            [size]="19"
+            [strokeWidth]="1.8">
+          </lucide-angular>
+          <span>Send</span>
+        </button>
+
+      </form>
+
+      <p class="composer-note">
+        Messages are intended for communication with PTRI staff.
+      </p>
+
+    </div>
+
+  </section>
+
+</div>

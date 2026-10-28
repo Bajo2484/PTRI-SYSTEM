@@ -1,1 +1,223 @@
-<p>staff-dashboard works!</p>
+<div class="dashboard">
+
+  <!-- PAGE HEADER -->
+  <header class="page-header">
+    <div>
+      <h1>Operations overview</h1>
+      <p>A clear view of silk supply, partner demand and upcoming commitments.</p>
+    </div>
+
+    <div class="date-badge">
+      <span>▦</span>
+      23 October 2026
+    </div>
+  </header>
+
+  <!-- SUMMARY CARDS -->
+  <section class="stats-grid">
+    <article class="stat-card" *ngFor="let stat of stats">
+      <div class="stat-top">
+        <span>{{ stat.title }}</span>
+        <span class="stat-icon" [ngClass]="stat.color">{{ stat.icon }}</span>
+      </div>
+
+      <h2>{{ stat.value }}</h2>
+      <p>{{ stat.detail }}</p>
+    </article>
+  </section>
+
+  <!-- GRAPH AND ALERTS -->
+  <section class="overview-grid">
+
+    <!-- SILK STOCK GRAPH -->
+    <article class="panel chart-panel">
+      <div class="panel-header">
+        <div>
+          <h3>Silk stock &amp; partner demand</h3>
+          <p>On-hand silk yarn compared with reserved order quantities</p>
+        </div>
+
+        <span class="month-badge">● October 2026</span>
+      </div>
+
+      <div class="chart-legend">
+        <span><i class="legend-dot on-hand-dot"></i> On hand</span>
+        <span><i class="legend-dot reserved-dot"></i> Reserved</span>
+        <small>kg · Daily snapshot</small>
+      </div>
+
+      <div class="bar-chart">
+        <div class="y-axis">
+          <span>160</span>
+          <span>120</span>
+          <span>80</span>
+          <span>40</span>
+          <span>0</span>
+        </div>
+
+        <div class="chart-area">
+          <div class="grid-line line-160"><span></span></div>
+          <div class="grid-line line-120"><span></span></div>
+          <div class="grid-line line-80"><span></span></div>
+          <div class="grid-line line-40"><span></span></div>
+          <div class="grid-line line-0"><span></span></div>
+
+          <div class="bar-groups">
+            <div class="bar-group" *ngFor="let item of stockDemand">
+              <div class="bars">
+                <div class="bar-wrapper">
+                  <span class="bar-value" *ngIf="item.onHand > 0">
+                    {{ item.onHand }}
+                  </span>
+                  <div
+                    class="bar on-hand-bar"
+                    [style.height.%]="getBarHeight(item.onHand)">
+                  </div>
+                </div>
+
+                <div class="bar-wrapper">
+                  <span class="bar-value" *ngIf="item.reserved > 0">
+                    {{ item.reserved }}
+                  </span>
+                  <div
+                    class="bar reserved-bar"
+                    [style.height.%]="getBarHeight(item.reserved)">
+                  </div>
+                </div>
+              </div>
+
+              <span class="bar-date">{{ item.date }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="chart-footer">
+        <span class="footer-check">✓</span>
+        <span>
+          48 kg available after allocations · Below the 60 kg low-stock threshold
+        </span>
+      </div>
+    </article>
+
+    <!-- NEEDS YOUR ATTENTION -->
+    <article class="panel attention-panel">
+      <div class="panel-header">
+        <div>
+          <h3>Needs your attention</h3>
+          <p>3 items to keep operations on track</p>
+        </div>
+
+        <button class="more-button" type="button" aria-label="More options">
+          •••
+        </button>
+      </div>
+
+      <div class="alert-list">
+        <a
+          class="alert-item"
+          *ngFor="let alert of alerts"
+          [routerLink]="alert.link">
+
+          <div class="alert-icon" [ngClass]="alert.type">
+            {{ alert.icon }}
+          </div>
+
+          <div class="alert-content">
+            <h4>{{ alert.title }}</h4>
+            <p>{{ alert.description }}</p>
+            <span class="alert-action">{{ alert.action }} →</span>
+          </div>
+        </a>
+      </div>
+    </article>
+
+  </section>
+
+  <!-- BOTTOM SECTION -->
+  <section class="bottom-grid">
+
+    <!-- RECENT ORDERS -->
+    <article class="panel orders-panel">
+      <div class="panel-header table-panel-header">
+        <h3>Recent partner orders</h3>
+        <a routerLink="/staff/orders" class="view-all">View all →</a>
+      </div>
+
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>Order / partner</th>
+              <th>Material</th>
+              <th>Quantity</th>
+              <th>Requested</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            <tr *ngFor="let order of recentOrders">
+              <td>
+                <strong>{{ order.id }}</strong>
+                <span class="partner-name">{{ order.partner }}</span>
+              </td>
+
+              <td>{{ order.material }}</td>
+              <td>{{ order.quantity }}</td>
+              <td>{{ order.requested }}</td>
+
+              <td>
+                <span
+                  class="status-badge"
+                  [ngClass]="order.status.toLowerCase()">
+                  <i></i>
+                  {{ order.status }}
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="table-footer">
+        Updated today at 8:15 AM · 3 of 6 active orders
+      </div>
+    </article>
+
+    <!-- UPCOMING MOVEMENTS -->
+    <article class="panel movements-panel">
+      <div class="panel-header table-panel-header">
+        <h3>Upcoming movements</h3>
+        <a routerLink="/staff/deliveries" class="view-all">Schedule →</a>
+      </div>
+
+      <div class="movement-list">
+        <div
+          class="movement-item"
+          *ngFor="let movement of upcomingMovements">
+
+          <div class="movement-date">
+            <strong>{{ movement.day }}</strong>
+            <span>{{ movement.weekday }}</span>
+          </div>
+
+          <div class="movement-info">
+            <h4>{{ movement.title }}</h4>
+            <p>{{ movement.description }}</p>
+          </div>
+
+          <span class="movement-time">{{ movement.time }}</span>
+        </div>
+      </div>
+    </article>
+
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="dashboard-footer">
+    <span>Sample records for design preview · Quantities in kilograms (kg)</span>
+    <span>Philippine Standard Time · UTC+8</span>
+  </footer>
+
+</div>
