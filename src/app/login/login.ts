@@ -8,7 +8,11 @@ import {
 } from 'firebase/auth';
 import {
   doc,
-  getDoc
+  getDoc,
+  collection,
+  query,
+  where,
+  getDocs
 } from 'firebase/firestore';
 import { Router } from '@angular/router';
 import { auth, db } from '../services/firebase';
@@ -61,9 +65,28 @@ export class LoginComponent {
 
       // Staff and Partner use email.
       // Farmer uses username, converted to the internal email.
-const loginEmail = loginInput.includes('@')
-  ? loginInput
-  : `${loginInput.toLowerCase()}@farmers.ptrisilksystem.com`;
+// Staff can log in using email.
+// Farmers and Partners can log in using username.
+let loginEmail = loginInput.toLowerCase();
+
+if (!loginInput.includes('@')) {
+  const username = loginInput.toLowerCase();
+
+  // Check if the username belongs to a Farmer.
+  const farmerQuery = query(
+    collection(db, 'farmers'),
+    where('username', '==', username)
+  );
+
+  const farmerSnapshot = await getDocs(farmerQuery);
+
+  if (!farmerSnapshot.empty) {
+    loginEmail = `${username}@farmers.ptrisilksystem.com`;
+  } else {
+    // If not a Farmer, use the Partner login email format.
+    loginEmail = `${username}@partners.ptrisilksystem.com`;
+  }
+}
 
       const credential = await signInWithEmailAndPassword(
         auth,

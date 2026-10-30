@@ -1,1 +1,252 @@
-<p>reports works!</p>
+
+<div class="reports-page">
+
+  <!-- HEADER -->
+  <header class="report-header">
+    <div>
+      <span class="eyebrow">STAFF PORTAL / ANALYTICS</span>
+      <h1>Reports</h1>
+      <p>{{ reportSubtitle }}</p>
+    </div>
+
+    <button class="export-btn" type="button" (click)="exportReport()">
+      <span>↓</span> Export report
+    </button>
+  </header>
+
+  <!-- REPORT FILTERS -->
+  <section class="report-controls">
+    <label class="control-group">
+      <span>Report</span>
+      <select [(ngModel)]="reportType">
+        <option *ngFor="let type of reportTypes" [value]="type">
+          {{ type }}
+        </option>
+      </select>
+    </label>
+
+    <label class="control-group">
+      <span>Date range</span>
+      <div class="date-range">
+        <input
+          type="date"
+          [(ngModel)]="startDate"
+          [max]="endDate"
+          aria-label="Start date"
+        />
+        <span>–</span>
+        <input
+          type="date"
+          [(ngModel)]="endDate"
+          [min]="startDate"
+          aria-label="End date"
+        />
+      </div>
+    </label>
+
+    <span class="generated-label">
+      Preview generated: {{ generatedAt | date:'dd MMM yyyy, h:mm a' }}
+    </span>
+  </section>
+
+  <!-- SUMMARY METRICS -->
+  <section class="metrics-grid">
+    <article class="metric-card" *ngFor="let metric of metrics">
+      <div class="metric-heading">
+        <span>{{ metric.label }}</span>
+        <span class="metric-icon">{{ metric.icon }}</span>
+      </div>
+
+      <strong class="metric-value">{{ metric.value }}</strong>
+      <small>{{ metric.description }}</small>
+    </article>
+  </section>
+
+  <!-- CHARTS -->
+  <section class="analytics-grid">
+
+    <!-- STOCK TREND -->
+    <article class="report-card stock-card">
+      <div class="card-heading">
+        <div>
+          <h2>Silk Yarn Stock Trend</h2>
+          <p>Weekly closing on-hand quantities · kg</p>
+        </div>
+        <span class="unit-tag">kg</span>
+      </div>
+
+      <div class="chart-container">
+        <svg
+          class="stock-chart"
+          viewBox="0 0 460 190"
+          role="img"
+          aria-label="Sample silk yarn stock trend chart"
+        >
+          <g class="chart-grid">
+            <line
+              *ngFor="let label of chartYLabels; let i = index"
+              x1="32"
+              [attr.y1]="14 + i * 31"
+              x2="448"
+              [attr.y2]="14 + i * 31"
+            />
+          </g>
+
+          <g class="chart-labels">
+            <text
+              *ngFor="let label of chartYLabels; let i = index"
+              x="3"
+              [attr.y]="18 + i * 31"
+            >
+              {{ label }}
+            </text>
+          </g>
+
+          <polygon
+            class="chart-area"
+            [attr.points]="chartAreaCoordinates"
+          />
+
+          <polyline
+            class="chart-line"
+            [attr.points]="chartCoordinates"
+          />
+
+          <g *ngFor="let point of stockPoints; let i = index">
+            <circle
+              class="chart-point"
+              [attr.cx]="32 + (i / (stockPoints.length - 1)) * 416"
+              [attr.cy]="14 + (1 - point.quantity / chartMax) * 124"
+              r="3.5"
+            />
+
+            <text
+              class="point-value"
+              [attr.x]="32 + (i / (stockPoints.length - 1)) * 416"
+              [attr.y]="8 + (1 - point.quantity / chartMax) * 124"
+              text-anchor="middle"
+            >
+              {{ point.quantity }}
+            </text>
+
+            <text
+              class="point-date"
+              [attr.x]="32 + (i / (stockPoints.length - 1)) * 416"
+              y="184"
+              text-anchor="middle"
+            >
+              {{ point.date }}
+            </text>
+          </g>
+        </svg>
+      </div>
+
+      <div class="chart-legend">
+        <span class="legend-dot"></span>
+        <span>Silk yarn on hand</span>
+      </div>
+    </article>
+
+    <!-- COCOON PROGRESS -->
+    <article class="report-card progress-card">
+      <div class="card-heading">
+        <div>
+          <h2>Cocoon Commitment Progress</h2>
+          <p>Current cycle · Received versus expected output</p>
+        </div>
+      </div>
+
+      <div class="progress-item">
+        <div class="progress-label">
+          <div>
+            <strong>Received</strong>
+            <small>Already recorded in inventory</small>
+          </div>
+          <strong>80 kg</strong>
+        </div>
+        <div class="progress-track">
+          <div class="progress-fill received-fill" style="width: 16%"></div>
+        </div>
+      </div>
+
+      <div class="progress-item">
+        <div class="progress-label">
+          <div>
+            <strong>Confirmed expected</strong>
+            <small>Expected collection commitment</small>
+          </div>
+          <strong>320 kg</strong>
+        </div>
+        <div class="progress-track">
+          <div class="progress-fill expected-fill" style="width: 64%"></div>
+        </div>
+      </div>
+
+      <div class="progress-item">
+        <div class="progress-label">
+          <div>
+            <strong>Awaiting confirmation</strong>
+            <small>Not yet received</small>
+          </div>
+          <strong>100 kg</strong>
+        </div>
+        <div class="progress-track">
+          <div class="progress-fill awaiting-fill" style="width: 20%"></div>
+        </div>
+      </div>
+
+      <p class="progress-note">
+        Sample commitments shown for layout demonstration.
+      </p>
+    </article>
+
+  </section>
+
+  <!-- OPERATIONAL SUMMARY TABLE -->
+  <section class="report-card operational-card">
+    <div class="operational-heading">
+      <div>
+        <h2>Operational Summary</h2>
+        <p>Physical stock movements exclude reservations; all quantities are in kg.</p>
+      </div>
+      <span class="date-label">
+        {{ startDate | date:'dd MMM yyyy' }} – {{ endDate | date:'dd MMM yyyy' }}
+      </span>
+    </div>
+
+    <div class="report-table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>AREA</th>
+            <th>MEASURE</th>
+            <th>RESULT</th>
+            <th>OPERATIONAL CONTEXT</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <tr *ngFor="let row of filteredRows">
+            <td class="area-cell">{{ row.area }}</td>
+            <td>{{ row.measure }}</td>
+            <td class="result-cell">{{ row.result }}</td>
+            <td>{{ row.context }}</td>
+          </tr>
+
+          <tr *ngIf="filteredRows.length === 0">
+            <td colspan="4" class="empty-report">
+              No report rows available.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="report-footer">
+    <span>PTRI Silk Supply and Delivery Communication System</span>
+    <span>Operational reporting · All quantities in kilograms (kg)</span>
+  </footer>
+
+</div>

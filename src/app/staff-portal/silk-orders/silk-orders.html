@@ -1,1 +1,283 @@
-<p>silk-orders works!</p>
+
+<div class="orders-page">
+
+  <!-- PAGE HEADER -->
+  <header class="page-header">
+    <div>
+      <span class="eyebrow">STAFF PORTAL / ORDER MANAGEMENT</span>
+      <h1>Silk Orders</h1>
+      <p>Review partner orders, allocate silk stock, and manage deliveries.</p>
+    </div>
+
+    <div class="header-actions">
+      <button class="btn btn-outline" type="button" (click)="searchTerm = ''">
+        <span>↻</span> Reset Search
+      </button>
+    </div>
+  </header>
+
+  <!-- SUMMARY CARDS -->
+  <section class="summary-grid">
+
+    <article class="summary-card">
+      <div class="summary-top">
+        <span>Total Orders</span>
+        <span class="summary-icon blue">▤</span>
+      </div>
+      <strong>{{ totalOrders }}</strong>
+      <small>Orders in this list</small>
+    </article>
+
+    <article class="summary-card">
+      <div class="summary-top">
+        <span>Pending Review</span>
+        <span class="summary-icon orange">◷</span>
+      </div>
+      <strong>{{ pendingReviewCount }}</strong>
+      <small>Awaiting staff review</small>
+    </article>
+
+    <article class="summary-card">
+      <div class="summary-top">
+        <span>Preparing Orders</span>
+        <span class="summary-icon purple">▣</span>
+      </div>
+      <strong>{{ preparingCount }}</strong>
+      <small>Being prepared</small>
+    </article>
+
+    <article class="summary-card">
+      <div class="summary-top">
+        <span>Delivered</span>
+        <span class="summary-icon green">✓</span>
+      </div>
+      <strong>{{ deliveredCount }}</strong>
+      <small>Completed deliveries</small>
+    </article>
+
+  </section>
+
+  <!-- ORDER TABLE PANEL -->
+  <section class="orders-panel">
+
+    <nav class="status-tabs" aria-label="Filter orders">
+      <button
+        *ngFor="let filter of filters"
+        type="button"
+        [class.active]="activeFilter === filter"
+        (click)="setFilter(filter)"
+      >
+        {{ filter }}
+        <span class="tab-count" *ngIf="filter === 'All Orders'">
+          {{ totalOrders }}
+        </span>
+        <span class="tab-count" *ngIf="filter === 'Pending Review'">
+          {{ pendingReviewCount }}
+        </span>
+      </button>
+    </nav>
+
+    <!-- SEARCH AND TOOLBAR -->
+    <div class="table-toolbar">
+      <label class="search-box">
+        <span>⌕</span>
+        <input
+          type="text"
+          [(ngModel)]="searchTerm"
+          placeholder="Search order, partner, location, or silk type..."
+          aria-label="Search silk orders"
+        />
+        <button
+          *ngIf="searchTerm"
+          type="button"
+          class="clear-search"
+          (click)="searchTerm = ''"
+          aria-label="Clear search"
+        >
+          ×
+        </button>
+      </label>
+
+      <span class="result-count">
+        {{ filteredOrders.length }} results
+      </span>
+    </div>
+
+    <!-- RESPONSIVE TABLE -->
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>ORDER DETAILS</th>
+            <th>PARTNER</th>
+            <th>SILK TYPE</th>
+            <th>QUANTITY</th>
+            <th>DELIVERY DATE</th>
+            <th>STATUS</th>
+            <th>ACTION</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <tr
+            *ngFor="let order of filteredOrders; trackBy: trackByOrderId"
+          >
+            <td>
+              <div class="order-id">{{ order.orderId }}</div>
+              <small class="muted">Silk supply order</small>
+            </td>
+
+            <td>
+              <div class="partner-name">{{ order.partnerName }}</div>
+              <small class="muted">{{ order.location }}</small>
+            </td>
+
+            <td>{{ order.silkType }}</td>
+
+            <td>
+              <strong>{{ order.quantity }} kg</strong>
+            </td>
+
+            <td>{{ order.deliveryDate | date:'dd MMM yyyy' }}</td>
+
+            <td>
+              <span
+                class="status-badge"
+                [ngClass]="{
+                  'status-pending': order.status === 'Pending Review',
+                  'status-confirmed': order.status === 'Confirmed',
+                  'status-preparing': order.status === 'Preparing',
+                  'status-scheduled': order.status === 'Scheduled',
+                  'status-delivered': order.status === 'Delivered',
+                  'status-rejected': order.status === 'Rejected'
+                }"
+              >
+                <span class="status-dot"></span>
+                {{ order.status }}
+              </span>
+            </td>
+
+            <td>
+              <button
+                type="button"
+                class="view-btn"
+                (click)="selectedOrder = order"
+              >
+                View <span>→</span>
+              </button>
+            </td>
+          </tr>
+
+          <tr *ngIf="filteredOrders.length === 0">
+            <td colspan="7" class="empty-state">
+              <div class="empty-icon">⌕</div>
+              <strong>No orders found</strong>
+              <p>Try another search term or select a different status.</p>
+              <button
+                type="button"
+                class="btn btn-outline"
+                (click)="searchTerm = ''; setFilter('All Orders')"
+              >
+                Clear filters
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <footer class="table-footer">
+      <span>
+        Showing {{ filteredOrders.length }} of {{ totalOrders }} orders
+      </span>
+      <span>PTRI Silk Supply Management</span>
+    </footer>
+
+  </section>
+
+  <!-- ORDER DETAILS MODAL -->
+  <div
+    class="modal-overlay"
+    *ngIf="selectedOrder"
+    (click)="selectedOrder = null"
+  >
+    <section
+      class="order-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="order-modal-title"
+      (click)="$event.stopPropagation()"
+    >
+      <header class="modal-header">
+        <div>
+          <span class="eyebrow">ORDER INFORMATION</span>
+          <h2 id="order-modal-title">Order Details</h2>
+        </div>
+
+        <button
+          type="button"
+          class="modal-close"
+          (click)="selectedOrder = null"
+          aria-label="Close order details"
+        >
+          ×
+        </button>
+      </header>
+
+      <div class="modal-body">
+        <div class="detail-order-id">
+          <span>Order reference</span>
+          <strong>{{ selectedOrder.orderId }}</strong>
+        </div>
+
+        <div class="detail-grid">
+          <div class="detail-item">
+            <span>Partner</span>
+            <strong>{{ selectedOrder.partnerName }}</strong>
+          </div>
+
+          <div class="detail-item">
+            <span>Location</span>
+            <strong>{{ selectedOrder.location }}</strong>
+          </div>
+
+          <div class="detail-item">
+            <span>Silk type</span>
+            <strong>{{ selectedOrder.silkType }}</strong>
+          </div>
+
+          <div class="detail-item">
+            <span>Quantity requested</span>
+            <strong>{{ selectedOrder.quantity }} kg</strong>
+          </div>
+
+          <div class="detail-item">
+            <span>Requested delivery</span>
+            <strong>{{ selectedOrder.deliveryDate | date:'dd MMM yyyy' }}</strong>
+          </div>
+
+          <div class="detail-item">
+            <span>Current status</span>
+            <strong>{{ selectedOrder.status }}</strong>
+          </div>
+        </div>
+
+        <p class="modal-note">
+          This is a preview using sample data. Order review, stock allocation,
+          and status updates will be connected to Firebase in the next steps.
+        </p>
+      </div>
+
+      <footer class="modal-footer">
+        <button
+          type="button"
+          class="btn btn-outline"
+          (click)="selectedOrder = null"
+        >
+          Close
+        </button>
+      </footer>
+    </section>
+  </div>
+
+</div>

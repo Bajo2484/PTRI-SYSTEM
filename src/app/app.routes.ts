@@ -181,13 +181,6 @@ export const routes: Routes = [
           )
       },
       {
-        path: 'deliveries',
-        loadComponent: () =>
-          import('./farmer-portal/farmer-deliveries/farmer-deliveries').then(
-            (m) => m.FarmerDeliveries
-          )
-      },
-      {
         path: 'messages',
         loadComponent: () =>
           import('./farmer-portal/farmer-messages/farmer-messages').then(

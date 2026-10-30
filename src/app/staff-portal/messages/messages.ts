@@ -1,7 +1,19 @@
-
-import { Component } from '@angular/core';
+import { MessageCacheService } from '../../cache/message-cache.service';
+import Swal from 'sweetalert2';
+import { Component, OnInit,ChangeDetectorRef, OnDestroy, } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { MessageService } from '../../services/message.service';
+import {
+  FarmerAccount,
+  FarmerAccountService
+} from '../../services/farmer-account.service';
+
+import {
+  PartnerAccount,
+  PartnerAccountService
+} from '../../services/partner-account.service';
+import { Unsubscribe } from 'firebase/firestore';
 
 interface Message {
   id: number;
@@ -21,6 +33,9 @@ interface Conversation {
   time: string;
   unread: boolean;
   messages: Message[];
+    recipientUid?: string;
+  recipientRole?: 'farmer' | 'partner';
+  firebaseConversationId?: string;
 }
 
 @Component({
@@ -30,156 +45,181 @@ interface Conversation {
   templateUrl: './messages.html',
   styleUrl: './messages.css',
 })
-export class Messages {
+export class Messages implements OnInit, OnDestroy {
+  constructor(
+  private messageService: MessageService,
+  private farmerAccountService: FarmerAccountService,
+  private partnerAccountService: PartnerAccountService,
+  private cdr: ChangeDetectorRef,
+  private messageCache: MessageCacheService
+) {}
+
+ngOnDestroy(): void {
+  this.conversationsUnsubscribe?.();
+  this.conversationsUnsubscribe = null;
+}
+
+ngOnInit(): void {
+  this.conversations = this.messageCache.conversations;
+  void this.loadAccounts();
+}
+
+openNewConversation(): void {
+  console.log('New Conversation button clicked');
+
+  this.contactSearchTerm = '';
+  this.contactFilter = 'All';
+  this.showNewConversationModal = true
+  console.log('Modal state:', this.showNewConversationModal);
+}
+
+closeNewConversation(): void {
+  this.showNewConversationModal = false;
+}
+
+
+
+startConversationWith(
+  contact: {
+    uid: string;
+    name: string;
+    organization: string;
+    role: 'Farmer' | 'Partner';
+    location: string;
+  }
+): void {
+  const conversationId =
+    `staff_${contact.role.toLowerCase()}_${contact.uid}`;
+
+    console.log('Selected contact:', contact);
+console.log('Generated conversation ID:', conversationId);
+
+  const existingConversation = this.conversations.find(
+  conversation =>
+    conversation.firebaseConversationId === conversationId
+);
+
+if (existingConversation) {
+  this.selectedConversationId = existingConversation.id;
+  this.activeFilter = 'All';
+  this.closeNewConversation();
+  this.selectConversation(existingConversation);
+  return;
+}
+
+  const newConversation: Conversation = {
+    id: Date.now(),
+    name: contact.name,
+    organization: contact.organization,
+    role: contact.role,
+    location: contact.location,
+    initials: contact.name
+      .split(' ')
+      .map(part => part.charAt(0))
+      .join('')
+      .slice(0, 2)
+      .toUpperCase(),
+    lastMessage: 'Start a conversation',
+    time: '',
+    unread: false,
+    messages: [],
+    recipientUid: contact.uid,
+    recipientRole:
+      contact.role === 'Farmer' ? 'farmer' : 'partner',
+    firebaseConversationId: conversationId
+  };
+
+  this.conversations = [
+    newConversation,
+    ...this.conversations
+  ];
+
+  this.messageCache.conversations = this.conversations;
+this.messageCache.conversationsLoaded = true;
+
+  this.activeFilter = 'All';
+  this.searchTerm = '';
+  this.selectedConversationId = newConversation.id;
+
+  this.closeNewConversation();
+  this.listenToSelectedConversation(newConversation);
+}
+
+
+private listenToSelectedConversation(
+  conversation: Conversation
+): void {
+  this.conversationsUnsubscribe?.();
+  this.conversationsUnsubscribe = null;
+
+  if (!conversation.firebaseConversationId) {
+    return;
+  }
+
+  this.conversationsUnsubscribe =
+    this.messageService.listenToMessages(
+      conversation.firebaseConversationId,
+      (messages) => {
+        const currentConversation = this.conversations.find(
+          item => item.id === conversation.id
+        );
+
+        if (!currentConversation) return;
+
+        currentConversation.messages = messages.map(message => ({
+          id: message.id as unknown as number,
+          sender: message.senderRole === 'staff' ? 'staff' : 'other',
+          text: message.text,
+          time: message.createdAt?.toDate
+            ? message.createdAt.toDate().toLocaleTimeString([], {
+                hour: '2-digit',
+                minute: '2-digit'
+              })
+            : ''
+        }));
+
+        const latestMessage = currentConversation.messages[
+          currentConversation.messages.length - 1
+        ];
+
+        currentConversation.lastMessage =
+          latestMessage?.text || 'Start a conversation';
+
+        currentConversation.time = latestMessage?.time || '';
+        // Save updated conversations to cache
+        this.messageCache.conversations = [...this.conversations];
+        this.messageCache.conversationsLoaded = true;
+        this.cdr?.detectChanges();
+      }
+    );
+}
+
+
   searchTerm = '';
   messageText = '';
 
   activeFilter: 'All' | 'Farmers' | 'Partners' | 'Unread' = 'All';
   selectedConversationId: number | null = null;
-  showContactInfo = false;
+  conversationsUnsubscribe: Unsubscribe | null = null;
   
-  conversations: Conversation[] = [
-    {
-      id: 1,
-      name: 'Maria Santos',
-      organization: 'Farmer · Claveria, Misamis Oriental',
-      role: 'Farmer',
-      location: 'Claveria, Misamis Oriental',
-      initials: 'MS',
-      lastMessage: 'The remaining 80 kg is on track...',
-      time: '8:42 AM',
-      unread: true,
-      messages: [
-        {
-          id: 1,
-          sender: 'staff',
-          text: 'Good morning, Ma’am Maria. May we confirm the remaining 80 kg of cocoons for 26 October under SR-26-041?',
-          time: '8:30 AM',
-        },
-        {
-          id: 2,
-          sender: 'other',
-          text: 'Good morning. The remaining 80 kg is on track for 26 October. Collection after 1:00 PM works for us. Thank you.',
-          time: '8:42 AM',
-        },
-        {
-          id: 3,
-          sender: 'staff',
-          text: 'Thank you for confirming. Paolo Garcia is scheduled to collect at 1:30 PM in Claveria. We will record the actual weight upon receipt.',
-          time: '8:45 AM',
-        },
-      ],
-    },
-    {
-      id: 2,
-      name: 'Liza Mercado',
-      organization: 'Habi Silk Cooperative',
-      role: 'Partner',
-      location: 'Misamis Oriental',
-      initials: 'LM',
-      lastMessage: 'Our silk yarn requirement will be read...',
-      time: 'Yesterday',
-      unread: false,
-      messages: [
-        {
-          id: 1,
-          sender: 'other',
-          text: 'Good afternoon. We would like to check the availability of silk yarn for our next order.',
-          time: 'Yesterday',
-        },
-        {
-          id: 2,
-          sender: 'staff',
-          text: 'Good afternoon, Ma’am Liza. We will review the available inventory and update you on the quantity.',
-          time: 'Yesterday',
-        },
-      ],
-    },
-    {
-      id: 3,
-      name: 'Jose Cruz',
-      organization: 'Farmer · Balingasag',
-      role: 'Farmer',
-      location: 'Balingasag, Misamis Oriental',
-      initials: 'JC',
-      lastMessage: 'Yes, 27 October is confirmed.',
-      time: 'Yesterday',
-      unread: true,
-      messages: [
-        {
-          id: 1,
-          sender: 'staff',
-          text: 'Can you confirm your cocoon collection schedule for 27 October?',
-          time: 'Yesterday',
-        },
-        {
-          id: 2,
-          sender: 'other',
-          text: 'Yes, 27 October is confirmed.',
-          time: 'Yesterday',
-        },
-      ],
-    },
-    {
-      id: 4,
-      name: 'Carlo Lim',
-      organization: 'Mindanao Silk Studio',
-      role: 'Partner',
-      location: 'Cagayan de Oro',
-      initials: 'CL',
-      lastMessage: 'Please include the lot labels.',
-      time: '22 Oct',
-      unread: false,
-      messages: [
-        {
-          id: 1,
-          sender: 'other',
-          text: 'Please include the lot labels with the next silk yarn delivery.',
-          time: '22 Oct',
-        },
-      ],
-    },
-    {
-      id: 5,
-      name: 'Ana Mendoza',
-      organization: 'Farmer · Malitbog',
-      role: 'Farmer',
-      location: 'Malitbog, Misamis Oriental',
-      initials: 'AM',
-      lastMessage: 'I will check the harvest estimate.',
-      time: '21 Oct',
-      unread: false,
-      messages: [
-        {
-          id: 1,
-          sender: 'other',
-          text: 'I will check the harvest estimate and send you the expected cocoon quantity.',
-          time: '21 Oct',
-        },
-      ],
-    },
-    {
-      id: 6,
-      name: 'Nina Abad',
-      organization: 'Northern Silk Weavers',
-      role: 'Partner',
-      location: 'Northern Mindanao',
-      initials: 'NA',
-      lastMessage: 'Thank you for confirming our order.',
-      time: '20 Oct',
-      unread: false,
-      messages: [
-        {
-          id: 1,
-          sender: 'other',
-          text: 'Thank you for confirming our order. We will wait for the delivery schedule.',
-          time: '20 Oct',
-        },
-      ],
-    },
-  ];
+isSending = false;
+isLoadingAccounts = false;
+accountsLoadError = '';
+isLoadingMessages = false;
 
-  get selectedConversation(): Conversation | undefined {
+farmers: FarmerAccount[] = [];
+partners: PartnerAccount[] = [];
+
+  showContactInfo = false;
+  showNewConversationModal = false;
+contactSearchTerm = '';
+contactFilter: 'All' | 'Farmers' | 'Partners' = 'All';
+  
+  
+conversations: Conversation[] = [];
+
+ 
+get selectedConversation(): Conversation | undefined {
   if (this.selectedConversationId === null) {
     return undefined;
   }
@@ -188,6 +228,95 @@ export class Messages {
     conversation => conversation.id === this.selectedConversationId
   );
 }
+
+
+
+async loadAccounts(): Promise<void> {
+  if (this.messageCache.accountsLoaded) {
+    this.farmers = this.messageCache.farmers;
+    this.partners = this.messageCache.partners;
+    this.cdr.detectChanges();
+    return;
+  }
+
+  this.isLoadingAccounts = true;
+  this.accountsLoadError = '';
+
+  Swal.fire({
+    title: 'Loading Contacts',
+    text: 'Fetching Farmer and Partner accounts...',
+    allowOutsideClick: false,
+    allowEscapeKey: false,
+    didOpen: () => Swal.showLoading()
+  });
+
+  try {
+    const [farmers, partners] = await Promise.all([
+      this.farmerAccountService.getFarmers(),
+      this.partnerAccountService.getPartners()
+    ]);
+
+    this.farmers = farmers;
+    this.partners = partners;
+    this.messageCache.farmers = farmers;
+    this.messageCache.partners = partners;
+    this.messageCache.accountsLoaded = true;
+    Swal.close();
+  } catch (error) {
+    console.error('Failed to load Farmer and Partner accounts:', error);
+    this.accountsLoadError = 'Unable to load contacts. Please try again.';
+
+    await Swal.fire({
+      icon: 'error',
+      title: 'Unable to Load Contacts',
+      text: 'Please check your connection and try again.',
+      confirmButtonText: 'OK'
+    });
+  } finally {
+  this.isLoadingAccounts = false;
+  this.cdr.detectChanges();
+}
+}
+
+
+
+get availableContacts() {
+  const farmerContacts = this.farmers
+    .filter(farmer => farmer.authUid)
+    .map(farmer => ({
+      uid: farmer.authUid!,
+      name: farmer.fullName,
+      organization: farmer.farmName || 'Farmer',
+      role: 'Farmer' as const,
+      location: farmer.locality || ''
+    }));
+
+  const partnerContacts = this.partners
+    .filter(partner => partner.authUid)
+    .map(partner => ({
+      uid: partner.authUid!,
+      name: partner.fullName,
+      organization: partner.organizationName || 'Partner',
+      role: 'Partner' as const,
+      location: partner.locality || ''
+    }));
+
+  return [...farmerContacts, ...partnerContacts].filter(contact => {
+    const matchesFilter =
+      this.contactFilter === 'All' ||
+      (this.contactFilter === 'Farmers' && contact.role === 'Farmer') ||
+      (this.contactFilter === 'Partners' && contact.role === 'Partner');
+
+    const search = this.contactSearchTerm.trim().toLowerCase();
+    const matchesSearch =
+      contact.name.toLowerCase().includes(search) ||
+      contact.organization.toLowerCase().includes(search) ||
+      contact.location.toLowerCase().includes(search);
+
+    return matchesFilter && matchesSearch;
+  });
+}
+
   get filteredConversations(): Conversation[] {
     const term = this.searchTerm.toLowerCase().trim();
 
@@ -212,10 +341,15 @@ export class Messages {
   }
 
   selectConversation(conversation: Conversation): void {
-    this.selectedConversationId = conversation.id;
-    conversation.unread = false;
-  }
+  this.selectedConversationId = conversation.id;
+  conversation.unread = false;
+
+  this.listenToSelectedConversation(conversation);
+}
   backToInbox(): void {
+  this.conversationsUnsubscribe?.();
+  this.conversationsUnsubscribe = null;
+
   this.selectedConversationId = null;
   this.showContactInfo = false;
   this.messageText = '';
@@ -225,28 +359,60 @@ export class Messages {
     this.activeFilter = filter;
   }
 
-  sendMessage(): void {
-    const text = this.messageText.trim();
-    const conversation = this.selectedConversation;
+  
+async sendMessage(): Promise<void> {
+  const text = this.messageText.trim();
+  const conversation = this.selectedConversation;
 
-    if (!text || !conversation) {
-      return;
-    }
+  console.log('Selected conversation:', conversation);
+console.log('Firebase ID:', conversation?.firebaseConversationId);
+console.log('Recipient UID:', conversation?.recipientUid);
+console.log('Recipient role:', conversation?.recipientRole);
 
-    conversation.messages.push({
-      id: Date.now(),
-      sender: 'staff',
-      text,
-      time: new Date().toLocaleTimeString('en-PH', {
-        hour: 'numeric',
-        minute: '2-digit',
-      }),
-    });
-
-    conversation.lastMessage = text;
-    conversation.time = 'Just now';
-    this.messageText = '';
+  if (!text || !conversation || this.isSending) {
+    return;
   }
+
+  if (
+    !conversation.firebaseConversationId ||
+    !conversation.recipientUid ||
+    !conversation.recipientRole
+  ) {
+    Swal.fire({
+      icon: 'info',
+      title: 'Firebase connection needed',
+      text: 'Please start a conversation by selecting an actual Farmer or Partner account.',
+      confirmButtonColor: '#17365D'
+    });
+    return;
+  }
+
+  this.isSending = true;
+
+  try {
+    await this.messageService.sendMessage(
+  conversation.firebaseConversationId,
+  conversation.recipientUid,
+  conversation.recipientRole,
+  text,
+  'staff'
+);
+    this.messageText = '';
+  } catch (error) {
+    console.error('Failed to send message:', error);
+
+    Swal.fire({
+      icon: 'error',
+      title: 'Message not sent',
+      text: 'Unable to send your message. Please try again.',
+      confirmButtonColor: '#17365D'
+    });
+  } finally {
+    this.isSending = false;
+    this.cdr.detectChanges();
+  }
+}
+
 
   startNewConversation(): void {
     const name = prompt('Enter the farmer or partner name:');
@@ -271,7 +437,10 @@ export class Messages {
       messages: [],
     };
 
-    this.conversations.unshift(newConversation);
+   this.conversations.unshift(newConversation);
+
+this.messageCache.conversations = this.conversations;
+this.messageCache.conversationsLoaded = true;
     this.selectedConversationId = newId;
     this.activeFilter = 'All';
     this.searchTerm = '';

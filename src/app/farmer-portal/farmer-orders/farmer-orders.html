@@ -1,1 +1,404 @@
-<p>farmer-orders works!</p>
+
+<div class="supply-page">
+
+  <!-- PAGE HEADER -->
+  <header class="page-header">
+    <div class="header-content">
+      <div class="page-icon">
+        <lucide-angular [img]="Package" [size]="22"></lucide-angular>
+      </div>
+      <div class="header-text">
+        <p class="eyebrow">FARMER PORTAL</p>
+        <h1>Supply Requests</h1>
+        <p>Review and respond to supply requests from PTRI.</p>
+      </div>
+    </div>
+    <div class="header-tag">
+      <span class="online-dot"></span>
+      PTRI Supply Coordination
+    </div>
+  </header>
+
+  <!-- SUMMARY -->
+  <section class="summary-section">
+    <article class="summary-card">
+      <div class="summary-icon">
+        <lucide-angular [img]="ClipboardList" [size]="23"></lucide-angular>
+      </div>
+      <div class="summary-info">
+        <p class="summary-label">Available Requests</p>
+        <h2>{{ 2 - (hasSubmittedResponse('SR-2026-001') ? 1 : 0) - (hasSubmittedResponse('SR-2026-002') ? 1 : 0) | number:'2.0-0' }}</h2>
+        <span class="summary-caption">Requests from PTRI</span>
+      </div>
+      <div class="summary-decoration">
+        <lucide-angular [img]="Package" [size]="54"></lucide-angular>
+      </div>
+    </article>
+  </section>
+
+  <!-- REQUESTS SECTION -->
+  <section class="requests-section">
+    <div class="section-header">
+      <div>
+        <p class="section-eyebrow">REQUEST MANAGEMENT</p>
+        <h2>Incoming Requests</h2>
+        <p class="section-description">
+          Review the requested products and let PTRI know your availability.
+        </p>
+      </div>
+      <div class="request-total">
+        <span class="total-dot"></span>
+        2 Requests
+      </div>
+    </div>
+
+    <!-- REQUEST CARD 1 -->
+    <article class="request-card">
+      <div class="request-main">
+        <div class="product-icon cocoon-icon">
+          <lucide-angular [img]="Leaf" [size]="25"></lucide-angular>
+        </div>
+        <div class="product-info">
+          <div class="product-title-row">
+            <h3>Silk Cocoons</h3>
+            <span class="status-badge" [ngClass]="hasSubmittedResponse('SR-2026-001') ? 'submitted-status' : 'new-status'">
+              <span class="status-dot"></span>
+              {{ hasSubmittedResponse('SR-2026-001') ? 'Response Submitted' : 'New Request' }}
+            </span>
+          </div>
+          <p class="request-id">Request ID: SR-2026-001</p>
+        </div>
+        <div class="request-arrow">
+          <lucide-angular [img]="ArrowRight" [size]="19"></lucide-angular>
+        </div>
+      </div>
+
+      <div class="request-divider"></div>
+
+      <div class="request-details">
+        <div class="detail-item">
+          <div class="detail-icon">
+            <lucide-angular [img]="Boxes" [size]="17"></lucide-angular>
+          </div>
+          <div>
+            <span class="detail-label">Requested Quantity</span>
+            <strong>20 kg</strong>
+          </div>
+        </div>
+        <div class="detail-item">
+          <div class="detail-icon calendar-icon">
+            <lucide-angular [img]="CalendarDays" [size]="17"></lucide-angular>
+          </div>
+          <div>
+            <span class="detail-label">Needed Availability</span>
+            <strong>November 30, 2026</strong>
+          </div>
+        </div>
+      </div>
+
+      <div class="request-footer">
+        <span class="request-note">
+          <lucide-angular [img]="Clock3" [size]="15"></lucide-angular>
+          {{ hasSubmittedResponse('SR-2026-001') ? 'Waiting for PTRI Staff review' : 'Awaiting your response' }}
+        </span>
+        <button type="button" class="view-button"
+          (click)="viewResponse({id: 'SR-2026-001', product: 'Silk Cocoons', quantity: '20 kg', dueDate: 'November 30, 2026'})">
+          {{ hasSubmittedResponse('SR-2026-001') ? 'View Response' : 'View Request' }}
+          <lucide-angular [img]="ArrowRight" [size]="16"></lucide-angular>
+        </button>
+      </div>
+    </article>
+
+    <!-- REQUEST CARD 2 -->
+    <article class="request-card">
+      <div class="request-main">
+        <div class="product-icon silk-icon">
+          <lucide-angular [img]="Package" [size]="25"></lucide-angular>
+        </div>
+        <div class="product-info">
+          <div class="product-title-row">
+            <h3>Raw Silk</h3>
+            <span class="status-badge" [ngClass]="hasSubmittedResponse('SR-2026-002') ? 'submitted-status' : 'new-status'">
+              <span class="status-dot"></span>
+              {{ hasSubmittedResponse('SR-2026-002') ? 'Response Submitted' : 'New Request' }}
+            </span>
+          </div>
+          <p class="request-id">Request ID: SR-2026-002</p>
+        </div>
+        <div class="request-arrow">
+          <lucide-angular [img]="ArrowRight" [size]="19"></lucide-angular>
+        </div>
+      </div>
+
+      <div class="request-divider"></div>
+
+      <div class="request-details">
+        <div class="detail-item">
+          <div class="detail-icon">
+            <lucide-angular [img]="Boxes" [size]="17"></lucide-angular>
+          </div>
+          <div>
+            <span class="detail-label">Requested Quantity</span>
+            <strong>10 kg</strong>
+          </div>
+        </div>
+        <div class="detail-item">
+          <div class="detail-icon calendar-icon">
+            <lucide-angular [img]="CalendarDays" [size]="17"></lucide-angular>
+          </div>
+          <div>
+            <span class="detail-label">Needed Availability</span>
+            <strong>December 5, 2026</strong>
+          </div>
+        </div>
+      </div>
+
+      <div class="request-footer">
+        <span class="request-note">
+          <lucide-angular [img]="Clock3" [size]="15"></lucide-angular>
+          {{ hasSubmittedResponse('SR-2026-002') ? 'Waiting for PTRI Staff review' : 'Awaiting your response' }}
+        </span>
+        <button type="button" class="view-button"
+          (click)="viewResponse({id: 'SR-2026-002', product: 'Raw Silk', quantity: '10 kg', dueDate: 'December 5, 2026'})">
+          {{ hasSubmittedResponse('SR-2026-002') ? 'View Response' : 'View Request' }}
+          <lucide-angular [img]="ArrowRight" [size]="16"></lucide-angular>
+        </button>
+      </div>
+    </article>
+  </section>
+
+  <!-- INFORMATION NOTE -->
+  <div class="supply-info-note">
+    <div class="info-icon">
+      <lucide-angular [img]="CheckCircle2" [size]="19"></lucide-angular>
+    </div>
+    <div>
+      <strong>Keep your supply coordination updated</strong>
+      <p>Review each request carefully and provide an accurate response based on your available farm production.</p>
+    </div>
+  </div>
+
+  <!-- REQUEST / RESPONSE MODAL -->
+  <div class="modal-overlay" *ngIf="showRequestModal && selectedRequest" (click)="closeRequest()">
+    <div class="request-modal" (click)="$event.stopPropagation()">
+
+      <div class="modal-header">
+        <div class="modal-heading">
+          <span class="modal-eyebrow">PTRI SUPPLY COORDINATION</span>
+          <h2>{{ hasSubmittedResponse(selectedRequest.id) ? 'Your Submitted Response' : 'Supply Request Details' }}</h2>
+          <p>{{ hasSubmittedResponse(selectedRequest.id) ? 'Review the response you provided to PTRI.' : 'Review the request information below.' }}</p>
+        </div>
+        <button type="button" class="modal-close" (click)="closeRequest()" aria-label="Close modal">
+          <lucide-angular [img]="X" [size]="20"></lucide-angular>
+        </button>
+      </div>
+
+      <div class="modal-content">
+        <div class="modal-status-row">
+          <span class="request-reference">REQUEST ID: {{ selectedRequest.id }}</span>
+          <span class="status-badge" [ngClass]="hasSubmittedResponse(selectedRequest.id) ? 'submitted-status' : 'new-status'">
+            <span class="status-dot"></span>
+            {{ hasSubmittedResponse(selectedRequest.id) ? 'Response Submitted' : 'New Request' }}
+          </span>
+        </div>
+
+        <div class="modal-product">
+          <div class="modal-product-icon">
+            <lucide-angular [img]="Package" [size]="27"></lucide-angular>
+          </div>
+          <div>
+            <span class="detail-label">Requested Product</span>
+            <h3>{{ selectedRequest.product }}</h3>
+          </div>
+        </div>
+
+        <div class="modal-details-grid">
+          <div class="modal-detail-card">
+            <div class="modal-detail-icon">
+              <lucide-angular [img]="Boxes" [size]="19"></lucide-angular>
+            </div>
+            <div>
+              <span class="detail-label">Requested Quantity</span>
+              <strong>{{ selectedRequest.quantity }}</strong>
+            </div>
+          </div>
+          <div class="modal-detail-card">
+            <div class="modal-detail-icon">
+              <lucide-angular [img]="CalendarDays" [size]="19"></lucide-angular>
+            </div>
+            <div>
+              <span class="detail-label">Needed By</span>
+              <strong>{{ selectedRequest.dueDate }}</strong>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-description">
+          <h4>Request Description</h4>
+          <p>PTRI is requesting the product listed above for its upcoming production requirements. Please review the requested quantity and indicate your availability.</p>
+        </div>
+
+        <div class="modal-instructions" *ngIf="!hasSubmittedResponse(selectedRequest.id)">
+          <div class="instruction-icon">
+            <lucide-angular [img]="ClipboardList" [size]="19"></lucide-angular>
+          </div>
+          <div>
+            <strong>Instructions from PTRI Staff</strong>
+            <p>Kindly confirm whether you can provide the requested quantity on or before the specified date.</p>
+          </div>
+        </div>
+
+        <!-- SUBMITTED RESPONSE VIEW -->
+        <div class="modal-response-section" *ngIf="hasSubmittedResponse(selectedRequest.id)">
+          <h4>Your Submitted Response</h4>
+          <div class="confirmation-summary">
+            <span>Your Response</span>
+            <strong>{{ submittedResponses[selectedRequest.id].response }}</strong>
+
+            <ng-container *ngIf="submittedResponses[selectedRequest.id].response === 'Partially Available'">
+              <span>Available Quantity</span>
+              <strong>{{ submittedResponses[selectedRequest.id].availableQuantity }} kg</strong>
+            </ng-container>
+
+            <ng-container *ngIf="submittedResponses[selectedRequest.id].response === 'Cannot Supply'">
+              <span>Reason</span>
+              <strong>{{ submittedResponses[selectedRequest.id].reason }}</strong>
+            </ng-container>
+
+            <ng-container *ngIf="submittedResponses[selectedRequest.id].remarks">
+              <span>Remarks</span>
+              <strong>{{ submittedResponses[selectedRequest.id].remarks }}</strong>
+            </ng-container>
+
+            <span>Submission Status</span>
+            <strong>Waiting for PTRI Staff review</strong>
+          </div>
+        </div>
+
+        <!-- RESPONSE FORM -->
+        <div class="modal-response-section" *ngIf="!hasSubmittedResponse(selectedRequest.id)">
+          <h4>Your Response</h4>
+          <p>Select your availability for this supply request.</p>
+
+          <button type="button" class="response-option"
+            [class.selected]="selectedResponse === 'Can Supply'"
+            (click)="selectResponse('Can Supply')">
+            <div class="response-option-icon available">
+              <lucide-angular [img]="CheckCircle2" [size]="19"></lucide-angular>
+            </div>
+            <div class="response-option-text">
+              <strong>Can Supply</strong>
+              <span>I can provide the full requested quantity.</span>
+            </div>
+            <span class="response-check" *ngIf="selectedResponse === 'Can Supply'">
+              <lucide-angular [img]="CheckCircle2" [size]="18"></lucide-angular>
+            </span>
+          </button>
+
+          <button type="button" class="response-option"
+            [class.selected]="selectedResponse === 'Partially Available'"
+            (click)="selectResponse('Partially Available')">
+            <div class="response-option-icon partial">
+              <lucide-angular [img]="Boxes" [size]="19"></lucide-angular>
+            </div>
+            <div class="response-option-text">
+              <strong>Partially Available</strong>
+              <span>I can provide only a portion of the requested quantity.</span>
+            </div>
+            <span class="response-check" *ngIf="selectedResponse === 'Partially Available'">
+              <lucide-angular [img]="CheckCircle2" [size]="18"></lucide-angular>
+            </span>
+          </button>
+
+          <button type="button" class="response-option"
+            [class.selected]="selectedResponse === 'Cannot Supply'"
+            (click)="selectResponse('Cannot Supply')">
+            <div class="response-option-icon unavailable">
+              <lucide-angular [img]="X" [size]="19"></lucide-angular>
+            </div>
+            <div class="response-option-text">
+              <strong>Cannot Supply</strong>
+              <span>I am unable to provide the requested product.</span>
+            </div>
+            <span class="response-check" *ngIf="selectedResponse === 'Cannot Supply'">
+              <lucide-angular [img]="CheckCircle2" [size]="18"></lucide-angular>
+            </span>
+          </button>
+
+          <div class="response-extra-field" *ngIf="selectedResponse === 'Partially Available'">
+            <label>Available Quantity</label>
+            <div class="quantity-input-wrap">
+              <input type="number" min="0" [max]="selectedRequest.quantity.replace(' kg', '')"
+                placeholder="Enter available quantity"
+                [value]="availableQuantity ?? ''"
+                (input)="availableQuantity = $any($event.target).valueAsNumber">
+              <span>kg</span>
+            </div>
+          </div>
+
+          <div class="response-extra-field" *ngIf="selectedResponse === 'Cannot Supply'">
+            <label>Reason</label>
+            <textarea rows="3" placeholder="Please explain why you cannot supply this request..."
+              [value]="responseReason"
+              (input)="responseReason = $any($event.target).value"></textarea>
+          </div>
+
+          <div class="response-extra-field" *ngIf="selectedResponse !== ''">
+            <label>Remarks <span>(Optional)</span></label>
+            <textarea rows="3" placeholder="Add additional information..."
+              [value]="responseRemarks"
+              (input)="responseRemarks = $any($event.target).value"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="modal-cancel-button" (click)="closeRequest()">Close</button>
+        <button *ngIf="!hasSubmittedResponse(selectedRequest.id)"
+          type="button" class="submit-response-button"
+          [disabled]="!selectedResponse || (selectedResponse === 'Partially Available' && (!availableQuantity || availableQuantity <= 0 || availableQuantity >= (+selectedRequest.quantity.replace(' kg', '')))) || (selectedResponse === 'Cannot Supply' && !responseReason.trim())"
+          (click)="showConfirmationModal = true">
+          <lucide-angular [img]="CheckCircle2" [size]="17"></lucide-angular>
+          Submit Response
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SUBMIT RESPONSE CONFIRMATION MODAL -->
+<div class="modal-overlay confirmation-overlay" *ngIf="showConfirmationModal" (click)="showConfirmationModal = false">
+  <div class="confirmation-modal" (click)="$event.stopPropagation()">
+    <div class="confirmation-icon">
+      <lucide-angular [img]="CheckCircle2" [size]="30"></lucide-angular>
+    </div>
+    <h2>Confirm Your Response</h2>
+    <p class="confirmation-description">Are you sure you want to submit your response to this PTRI supply request?</p>
+
+    <div class="confirmation-summary">
+      <span>Request</span>
+      <strong>{{ selectedRequest?.id }}</strong>
+      <span>Product</span>
+      <strong>{{ selectedRequest?.product }}</strong>
+      <span>Your Response</span>
+      <strong>{{ selectedResponse }}</strong>
+
+      <ng-container *ngIf="selectedResponse === 'Partially Available'">
+        <span>Available Quantity</span>
+        <strong>{{ availableQuantity }} kg</strong>
+      </ng-container>
+      <ng-container *ngIf="selectedResponse === 'Cannot Supply'">
+        <span>Reason</span>
+        <strong>{{ responseReason }}</strong>
+      </ng-container>
+    </div>
+
+    <div class="confirmation-actions">
+      <button type="button" class="confirmation-cancel" (click)="showConfirmationModal = false">Go Back</button>
+      <button type="button" class="confirmation-submit" (click)="confirmResponse()">
+        <lucide-angular [img]="CheckCircle2" [size]="16"></lucide-angular>
+        Confirm Response
+      </button>
+    </div>
+  </div>
+</div>

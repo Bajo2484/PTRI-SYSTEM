@@ -11,7 +11,7 @@
       </p>
     </div>
 
-    <button class="add-button" type="button">
+    <button class="add-button" type="button" (click)="openProductionForm()">
       <lucide-angular [img]="Plus" [size]="19" [strokeWidth]="2"></lucide-angular>
       <span>Add Production</span>
     </button>
@@ -27,7 +27,7 @@
 
       <div class="summary-content">
         <p class="card-label">Total Production</p>
-        <h2>0 <span>kg</span></h2>
+        <h2>{{ totalProduction }} <span>kg</span></h2>
         <p class="card-description">Total quantity recorded</p>
       </div>
     </article>
@@ -39,8 +39,8 @@
 
       <div class="summary-content">
         <p class="card-label">Production Records</p>
-        <h2>0</h2>
-        <p class="card-description">Records you have submitted</p>
+        <h2>{{ totalRecords }}</h2>
+<p class="card-description">Records you have submitted</p>
       </div>
     </article>
 
@@ -51,46 +51,117 @@
 
       <div class="summary-content">
         <p class="card-label">Pending Review</p>
-        <h2>0</h2>
-        <p class="card-description">Awaiting PTRI staff review</p>
+        <h2>{{ pendingReviewCount }}</h2>
+<p class="card-description">Awaiting PTRI staff review</p>
       </div>
     </article>
 
   </section>
 
-  <!-- Production Records -->
-  <section class="records-section">
+ 
+<!-- Production Records -->
+<section class="records-section">
 
-    <div class="section-heading">
-      <div>
-        <h2>Production Records</h2>
-        <p>View your reported production and its current status.</p>
-      </div>
-
-      <span class="record-count">0 records</span>
+  <div class="section-heading">
+    <div>
+      <h2>Production Records</h2>
+      <p>View your reported production and its current status.</p>
     </div>
 
-    <!-- Empty State -->
-    <div class="empty-state">
+    <span class="record-count">
+      {{ totalRecords }} records
+    </span>
+  </div>
 
-      <div class="empty-icon">
-        <lucide-angular [img]="Leaf" [size]="30" [strokeWidth]="1.6"></lucide-angular>
+  <!-- Loading State -->
+  <div class="empty-state" *ngIf="isLoading">
+    <p>Loading your production records...</p>
+  </div>
+
+  <!-- Error State -->
+  <div class="empty-state" *ngIf="!isLoading && loadError">
+    <p>{{ loadError }}</p>
+    <button type="button" class="empty-button" (click)="loadProductions()">
+      Try Again
+    </button>
+  </div>
+
+  <!-- Empty State -->
+  <div class="empty-state"
+       *ngIf="!isLoading && !loadError && productions.length === 0">
+
+    <div class="empty-icon">
+      <lucide-angular [img]="Leaf" [size]="30" [strokeWidth]="1.6">
+      </lucide-angular>
+    </div>
+
+    <h3>No production records yet</h3>
+
+    <p>
+      Add your production details to let PTRI staff review your reported
+      quantity and expected availability.
+    </p>
+
+    <button class="empty-button" type="button" (click)="openProductionForm()">
+      <lucide-angular [img]="Plus" [size]="17" [strokeWidth]="2">
+      </lucide-angular>
+      <span>Add Your First Record</span>
+    </button>
+
+  </div>
+
+  
+  <!-- Production Records Cards -->
+  <div class="production-list"
+       *ngIf="!isLoading && !loadError && productions.length > 0">
+
+    <article class="production-card"
+             *ngFor="let record of productions">
+
+      <div class="production-card-top">
+        <div class="production-type-group">
+          <div class="record-icon">
+            <lucide-angular [img]="Package" [size]="21">
+            </lucide-angular>
+          </div>
+
+          <div class="record-details">
+            <h3>{{ record.productionType }}</h3>
+            <p>{{ record.farmName }}</p>
+          </div>
+        </div>
+
+        <span class="status-badge"
+              [ngClass]="{
+                'pending': record.status === 'Pending Review',
+                'approved': record.status === 'Approved',
+                'revision': record.status === 'Revision Requested'
+              }">
+          {{ record.status }}
+        </span>
       </div>
 
-      <h3>No production records yet</h3>
+      <div class="production-card-divider"></div>
 
-      <p>
-        Add your production details to let PTRI staff review your reported
-        quantity and expected availability.
-      </p>
+      <div class="production-card-info">
+        <div class="info-item">
+          <span class="info-label">QUANTITY</span>
+          <strong>{{ record.quantity }} {{ record.unit }}</strong>
+        </div>
 
-      <button class="empty-button" type="button">
-        <lucide-angular [img]="Plus" [size]="17" [strokeWidth]="2"></lucide-angular>
-        <span>Add Your First Record</span>
-      </button>
+        <div class="info-item">
+          <span class="info-label">EXPECTED AVAILABILITY</span>
+          <strong>{{ record.expectedAvailability }}</strong>
+        </div>
+      </div>
 
-    </div>
-  </section>
+    </article>
+
+  </div>
+
+
+</section>
+
 
   <!-- Help Note -->
   <div class="page-note">
@@ -101,3 +172,120 @@
   </div>
 
 </div>
+
+<!-- Add Production Modal -->
+<div class="production-form-overlay" *ngIf="showProductionForm">
+
+  <div class="production-form-modal">
+
+    <div class="form-header">
+      <div>
+        <h2>Add Production</h2>
+        <p>Enter your farm production details below.</p>
+      </div>
+
+      <button
+        type="button"
+        class="close-form-button"
+        (click)="closeProductionForm()"
+        [disabled]="isSaving"
+        aria-label="Close form">
+        &times;
+      </button>
+    </div>
+
+    <form class="production-form" (ngSubmit)="saveProduction()">
+
+      <div class="form-group">
+        <label for="productionType">Production Type *</label>
+
+        <input
+          id="productionType"
+          type="text"
+          name="productionType"
+          [(ngModel)]="productionType"
+          placeholder="e.g. Raw Silk Cocoons"
+          required>
+      </div>
+
+      <div class="form-group">
+        <label for="quantity">Production Quantity *</label>
+
+        <input
+          id="quantity"
+          type="number"
+          name="quantity"
+          [(ngModel)]="quantity"
+          min="0.01"
+          step="0.01"
+          placeholder="Enter quantity"
+          required>
+
+        <span class="form-hint">
+          Enter the total quantity of your available production.
+        </span>
+      </div>
+
+      <div class="form-group">
+        <label for="unit">Unit *</label>
+
+        <select
+          id="unit"
+          name="unit"
+          [(ngModel)]="unit"
+          required>
+          <option value="kg">Kilograms (kg)</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="expectedAvailability">
+          Expected Availability Date *
+        </label>
+
+        <input
+          id="expectedAvailability"
+          type="date"
+          name="expectedAvailability"
+          [(ngModel)]="expectedAvailability"
+          required>
+      </div>
+
+      <div class="form-group">
+        <label for="notes">Additional Notes (Optional)</label>
+
+        <textarea
+          id="notes"
+          name="notes"
+          [(ngModel)]="notes"
+          placeholder="Add any additional production details...">
+        </textarea>
+      </div>
+
+      <p class="form-hint" *ngIf="formError">
+        {{ formError }}
+      </p>
+
+      <div class="form-actions">
+        <button
+          type="button"
+          class="cancel-form-button"
+          (click)="closeProductionForm()"
+          [disabled]="isSaving">
+          Cancel
+        </button>
+
+        <button
+          type="submit"
+          class="save-form-button"
+          [disabled]="isSaving">
+          {{ isSaving ? 'Saving...' : 'Submit Production' }}
+        </button>
+      </div>
+
+    </form>
+
+  </div>
+
+</div>
+

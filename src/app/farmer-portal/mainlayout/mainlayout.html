@@ -91,21 +91,13 @@
         routerLink="/farmer/orders"
         routerLinkActive="active"
         (click)="closeMenu()"
-        title="My Orders"
+        title="Supply Request"
       >
         <i-lucide class="nav-icon" [img]="icons.Package" [size]="21" [strokeWidth]="1.8"></i-lucide>
-        <span class="nav-label">My Orders</span>
+        <span class="nav-label">Supply Request</span>
       </a>
 
-      <a
-        routerLink="/farmer/deliveries"
-        routerLinkActive="active"
-        (click)="closeMenu()"
-        title="Deliveries"
-      >
-        <i-lucide class="nav-icon" [img]="icons.Truck" [size]="21" [strokeWidth]="1.8"></i-lucide>
-        <span class="nav-label">Deliveries</span>
-      </a>
+
 
       <a
         routerLink="/farmer/messages"

@@ -404,3 +404,374 @@
     padding: 16px;
   }
 }
+
+/* Add Production Form */
+.production-form-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgb(24 40 29 / 48%);
+  backdrop-filter: blur(3px);
+}
+
+.production-form-modal {
+  width: 100%;
+  max-width: 560px;
+  max-height: 90vh;
+  overflow-y: auto;
+  border: 1px solid #e5ebe4;
+  border-radius: 18px;
+  background: #ffffff;
+  box-shadow: 0 20px 60px rgb(20 40 25 / 18%);
+}
+
+.form-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 15px;
+  padding: 23px 25px;
+  border-bottom: 1px solid #edf0ec;
+}
+
+.form-header h2 {
+  margin: 0;
+  color: #263b30;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.form-header p {
+  margin: 7px 0 0;
+  color: #78847c;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.close-form-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 36px;
+  width: 36px;
+  height: 36px;
+  border: 1px solid #e5ebe4;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #65746a;
+  cursor: pointer;
+}
+
+.close-form-button:hover {
+  background: #f2f6f1;
+}
+
+.production-form {
+  display: flex;
+  flex-direction: column;
+  gap: 17px;
+  padding: 23px 25px 25px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-group label {
+  color: #405346;
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  min-height: 44px;
+  box-sizing: border-box;
+  padding: 11px 13px;
+  border: 1px solid #dfe7df;
+  border-radius: 10px;
+  outline: none;
+  background: #ffffff;
+  color: #314738;
+  font: inherit;
+  font-size: 13px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.form-group textarea {
+  min-height: 95px;
+  resize: vertical;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  border-color: #719879;
+  box-shadow: 0 0 0 3px rgb(113 152 121 / 13%);
+}
+
+.form-group input::placeholder,
+.form-group textarea::placeholder {
+  color: #a0aaa2;
+}
+
+.form-hint {
+  color: #89958c;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding-top: 8px;
+}
+
+.cancel-form-button,
+.save-form-button {
+  min-height: 43px;
+  padding: 0 17px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.cancel-form-button {
+  border: 1px solid #e1e8e0;
+  background: #ffffff;
+  color: #647269;
+}
+
+.save-form-button {
+  border: 1px solid #315b43;
+  background: #315b43;
+  color: #ffffff;
+}
+
+.save-form-button:hover {
+  background: #244832;
+}
+
+.save-form-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+@media (max-width: 650px) {
+  .production-form-overlay {
+    align-items: flex-end;
+    padding: 10px;
+  }
+
+  .production-form-modal {
+    max-height: 92vh;
+    border-radius: 17px;
+  }
+
+  .form-header,
+  .production-form {
+    padding-left: 18px;
+    padding-right: 18px;
+  }
+
+  .form-actions {
+    flex-direction: column-reverse;
+  }
+
+  .cancel-form-button,
+  .save-form-button {
+    width: 100%;
+    min-height: 46px;
+  }
+}
+
+/* =================================
+   MODERN PRODUCTION CARDS
+================================= */
+
+.production-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  padding: 22px 25px 25px;
+}
+
+.production-card {
+  min-width: 0;
+  padding: 20px;
+  border: 1px solid #e6ece5;
+  border-radius: 15px;
+  background: #ffffff;
+  box-shadow: 0 3px 12px rgb(34 57 41 / 3%);
+  transition: border-color 0.2s ease,
+              box-shadow 0.2s ease,
+              transform 0.2s ease;
+}
+
+.production-card:hover {
+  border-color: #cbdccf;
+  box-shadow: 0 8px 22px rgb(34 57 41 / 7%);
+  transform: translateY(-2px);
+}
+
+.production-card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.production-type-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.record-icon {
+  display: flex;
+  flex: 0 0 44px;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: #edf4ec;
+  color: #477451;
+}
+
+.record-details {
+  min-width: 0;
+}
+
+.record-details h3 {
+  margin: 0;
+  color: #2d4334;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.record-details p {
+  margin: 4px 0 0;
+  color: #859087;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.status-badge {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 10px;
+  border-radius: 20px;
+  font-size: 10px;
+  font-weight: 650;
+  line-height: 1.4;
+  text-align: center;
+}
+
+.status-badge.pending {
+  background: #fff5df;
+  color: #98702d;
+}
+
+.status-badge.approved {
+  background: #e8f4e9;
+  color: #397348;
+}
+
+.status-badge.revision {
+  background: #fff0ed;
+  color: #b45d4d;
+}
+
+.production-card-divider {
+  height: 1px;
+  margin: 18px 0;
+  background: #edf0ec;
+}
+
+.production-card-info {
+  display: grid;
+  grid-template-columns: 0.8fr 1.2fr;
+  gap: 14px;
+}
+
+.info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  min-width: 0;
+}
+
+.info-label {
+  color: #929d94;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+}
+
+.info-item strong {
+  color: #354b3b;
+  font-size: 12px;
+  font-weight: 650;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+/* Tablet and Mobile */
+@media (max-width: 800px) {
+  .production-list {
+    grid-template-columns: 1fr;
+    padding: 17px;
+    gap: 13px;
+  }
+}
+
+@media (max-width: 480px) {
+  .production-card {
+    padding: 16px;
+    border-radius: 13px;
+  }
+
+  .production-card-top {
+    flex-wrap: wrap;
+  }
+
+  .record-icon {
+    flex-basis: 40px;
+    width: 40px;
+    height: 40px;
+  }
+
+  .record-details h3 {
+    font-size: 13px;
+  }
+
+  .status-badge {
+    font-size: 9px;
+  }
+
+  .production-card-info {
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .info-item strong {
+    font-size: 11px;
+  }
+}
+

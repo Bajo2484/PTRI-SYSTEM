@@ -10,14 +10,14 @@
         <p>Manage conversations with farmers and silk partners.</p>
       </div>
 
-      <button
-        class="new-conversation-btn"
-        type="button"
-        (click)="startNewConversation()"
-      >
-        <span class="plus-icon">+</span>
-        New conversation
-      </button>
+      
+<button
+  type="button"
+  (click)="openNewConversation()"
+>
+  <span class="plus-icon">+</span>
+  New conversation
+</button>
     </header>
 
     <section class="inbox-panel">
@@ -530,4 +530,97 @@
 
   </ng-template>
 
+  <!-- New Conversation Modal -->
+<div
+  class="new-conversation-overlay"
+  *ngIf="showNewConversationModal"
+  (click)="closeNewConversation()"
+>
+  <section
+    class="new-conversation-modal"
+    (click)="$event.stopPropagation()"
+  >
+    <div class="new-conversation-header">
+      <div>
+        <h2>New conversation</h2>
+        <p>Select a Farmer or Partner to start messaging.</p>
+      </div>
+
+      <button
+        type="button"
+        class="close-modal-btn"
+        (click)="closeNewConversation()"
+        aria-label="Close modal"
+      >
+        &times;
+      </button>
+    </div>
+
+    <input
+      type="text"
+      class="contact-search-input"
+      [(ngModel)]="contactSearchTerm"
+      placeholder="Search name, organization, or location..."
+    />
+
+    <div class="contact-filter-tabs">
+      <button
+        type="button"
+        [class.active]="contactFilter === 'All'"
+        (click)="contactFilter = 'All'"
+      >
+        All
+      </button>
+
+      <button
+        type="button"
+        [class.active]="contactFilter === 'Farmers'"
+        (click)="contactFilter = 'Farmers'"
+      >
+        Farmers
+      </button>
+
+      <button
+        type="button"
+        [class.active]="contactFilter === 'Partners'"
+        (click)="contactFilter = 'Partners'"
+      >
+        Partners
+      </button>
+    </div>
+
+    <div class="contact-list">
+      <button
+        type="button"
+        class="contact-option"
+        *ngFor="let contact of availableContacts"
+        (click)="startConversationWith(contact)"
+      >
+        <span class="contact-avatar">
+          {{ contact.name.charAt(0).toUpperCase() }}
+        </span>
+
+        <span class="contact-details">
+          <strong>{{ contact.name }}</strong>
+          <small>{{ contact.organization }}</small>
+          <small *ngIf="contact.location">{{ contact.location }}</small>
+        </span>
+
+        <span class="contact-role">{{ contact.role }}</span>
+      </button>
+
+      
+<div class="empty-contacts" *ngIf="availableContacts.length === 0 && !isLoadingAccounts && !accountsLoadError">
+  <p>No matching contacts found.</p>
+  <small>Check the search or make sure the account has an authentication UID.</small>
+</div>
+
+<div class="empty-contacts" *ngIf="accountsLoadError">
+  <p>{{ accountsLoadError }}</p>
+  <button type="button" (click)="loadAccounts()">Try again</button>
+</div>
+
+    </div>
+  </section>
+</div>
 </div>

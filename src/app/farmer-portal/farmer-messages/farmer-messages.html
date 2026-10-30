@@ -154,93 +154,88 @@
         </button>
 
       </header>
+<!-- Firebase Chat Messages -->
+<div class="chat-body">
 
-      <!-- Chat Messages -->
-      <div class="chat-body">
+  <!-- Loading -->
+  <div class="chat-empty-state" *ngIf="isLoadingMessages">
+    <p>Loading messages...</p>
+  </div>
 
-        <div class="date-divider">
-          <span>Today</span>
+  <!-- Empty Conversation -->
+  <div
+    class="chat-empty-state"
+    *ngIf="!isLoadingMessages && messages.length === 0">
+
+    <lucide-angular
+      [img]="MessagesSquare"
+      [size]="35">
+    </lucide-angular>
+
+    <h3>No messages yet</h3>
+    <p>Your conversation with PTRI Staff will appear here.</p>
+  </div>
+
+  <!-- Actual Firebase Messages -->
+  <ng-container *ngIf="!isLoadingMessages">
+
+    <div
+      class="message-row"
+      *ngFor="let message of messages"
+      [ngClass]="message.senderRole === 'farmer' ? 'sent' : 'received'">
+
+      <!-- Staff Avatar -->
+      <div
+        class="message-avatar"
+        *ngIf="message.senderRole === 'staff'">
+
+        <lucide-angular
+          [img]="Building2"
+          [size]="16"
+          [strokeWidth]="1.8">
+        </lucide-angular>
+      </div>
+
+      <div class="message-content">
+
+        <span
+          class="message-sender"
+          *ngIf="message.senderRole === 'staff'">
+          PTRI Staff
+        </span>
+
+        <div class="message-bubble">
+          <p>{{ message.text }}</p>
         </div>
 
-        <!-- Staff Message -->
-        <div class="message-row received">
-          <div class="message-avatar">
-            <lucide-angular
-              [img]="Building2"
-              [size]="16"
-              [strokeWidth]="1.8">
-            </lucide-angular>
-          </div>
+        <span class="message-time">
+          {{ message.createdAt?.toDate() | date:'shortTime' }}
 
-          <div class="message-content">
-            <span class="message-sender">PTRI Staff</span>
-
-            <div class="message-bubble">
-              <p>
-                Good morning! We would like to confirm the expected
-                availability date of your reported silk cocoon production.
-              </p>
-            </div>
-
-            <span class="message-time">10:25 AM</span>
-          </div>
-        </div>
-
-        <!-- Farmer Message -->
-        <div class="message-row sent">
-          <div class="message-content">
-            <div class="message-bubble">
-              <p>
-                Good morning! My silk cocoons are expected to be available
-                by the end of this month.
-              </p>
-            </div>
-
-            <span class="message-time">
-              10:28 AM
-              <lucide-angular
-                [img]="CheckCheck"
-                [size]="14"
-                [strokeWidth]="1.8">
-              </lucide-angular>
-            </span>
-          </div>
-        </div>
-
-        <!-- Latest Staff Message -->
-        <div class="message-row received">
-          <div class="message-avatar">
-            <lucide-angular
-              [img]="Building2"
-              [size]="16"
-              [strokeWidth]="1.8">
-            </lucide-angular>
-          </div>
-
-          <div class="message-content">
-            <span class="message-sender">PTRI Staff</span>
-
-            <div class="message-bubble">
-              <p>
-                Thank you for the update. We will review your reported
-                production and include it in our overall supply assessment.
-              </p>
-            </div>
-
-            <span class="message-time">10:30 AM</span>
-          </div>
-        </div>
+          <lucide-angular
+            *ngIf="message.senderRole === 'farmer'"
+            [img]="CheckCheck"
+            [size]="14"
+            [strokeWidth]="1.8">
+          </lucide-angular>
+        </span>
 
       </div>
 
+    </div>
+
+  </ng-container>
+
+</div>
       <!-- Message Composer -->
-      <form class="message-composer">
+      <form class="message-composer" (ngSubmit)="sendMessage()">
 
         <div class="composer-input">
           <input
-            type="text"
-            placeholder="Write your message..."
-            aria-label="Write your message">
+  type="text"
+  name="messageText"
+  [(ngModel)]="messageText"
+  placeholder="Write your message..."
+  aria-label="Write your message">
 
           <button
             class="attachment-button"
@@ -255,9 +250,10 @@
         </div>
 
         <button
-          class="send-button"
-          type="button"
-          aria-label="Send message">
+  class="send-button"
+  type="submit"
+  aria-label="Send message"
+  [disabled]="isSending">
           <lucide-angular
             [img]="Send"
             [size]="19"
