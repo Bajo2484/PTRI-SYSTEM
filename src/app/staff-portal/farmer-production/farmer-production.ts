@@ -1,18 +1,29 @@
 import { FormsModule } from '@angular/forms';
-import { Component } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import Swal from 'sweetalert2';
+
+import {
+  FarmerProductionService,
+  FarmerProductionRecord
+} from '../../services/farmer-production.service';
 
 interface ProductionCommitment {
+  id: string;
   farmer: string;
-  reference: string;
+  farmName: string;
+  productionType: string;
+  quantity: number;
+  unit: string;
   harvestDate: string;
+  notes: string;
+  reference: string;
   committed: number;
   received: number;
   remaining: number;
-  confirmation: 'Confirmed' | 'Awaiting response';
+  confirmation: 'Reviewed' | 'Pending Review';
   lastUpdate: string;
 }
-
 @Component({
   selector: 'app-farmers-production',
   standalone: true,
@@ -20,75 +31,176 @@ interface ProductionCommitment {
   templateUrl: './farmer-production.html',
   styleUrls: ['./farmer-production.css']
 })
-export class FarmersProductionComponent {
+export class FarmersProductionComponent implements OnInit {
+
+  constructor(
+    private productionService: FarmerProductionService,
+    private cdr: ChangeDetectorRef
+  ) {}
+
+  isLoading = true;
+  loadError = '';
+
+  get totalCommitted(): number {
+  return this.commitments.reduce(
+    (total, item) => total + item.committed,
+    0
+  );
+}
+
+get totalReceived(): number {
+  return this.commitments.reduce(
+    (total, item) => total + item.received,
+    0
+  );
+}
+
+get totalRemaining(): number {
+  return this.commitments.reduce(
+    (total, item) => total + item.remaining,
+    0
+  );
+}
+
+get awaitingConfirmationCount(): number {
+  return this.commitments.filter(
+    item => item.confirmation === 'Pending Review'
+  ).length;
+}
+
+get confirmedTotal(): number {
+  return this.commitments
+    .filter(item => item.confirmation === 'Reviewed')
+    .reduce((total, item) => total + item.remaining, 0);
+}
+
+get awaitingTotal(): number {
+  return this.commitments
+    .filter(item => item.confirmation === 'Pending Review')
+    .reduce((total, item) => total + item.remaining, 0);
+}
+
+get receivedPercentage(): number {
+  return this.totalCommitted > 0
+    ? (this.totalReceived / this.totalCommitted) * 100
+    : 0;
+}
+get awaitingFarmers(): ProductionCommitment[] {
+  return this.commitments.filter(item => item.confirmation === 'Pending Review');
+}
 
   searchTerm = '';
   selectedConfirmation = 'all';
   harvestSortAscending = true;
   filtersVisible = false;
 
-  commitments: ProductionCommitment[] = [
-    {
-      farmer: 'Maria Santos',
-      reference: 'PRD-26-031 · Claveria',
-      harvestDate: '26 Oct 2028',
-      committed: 120,
-      received: 40,
-      remaining: 80,
-      confirmation: 'Confirmed',
-      lastUpdate: '23 Oct 2028'
-    },
-    {
-      farmer: 'Jose Cruz',
-      reference: 'PRD-26-032 · Balingasag',
-      harvestDate: '27 Oct 2028',
-      committed: 100,
-      received: 40,
-      remaining: 60,
-      confirmation: 'Confirmed',
-      lastUpdate: '22 Oct 2028'
-    },
-    {
-      farmer: 'Elena Dela Cruz',
-      reference: 'PRD-26-033 · Claveria',
-      harvestDate: '30 Oct 2028',
-      committed: 100,
+  commitments: ProductionCommitment[] = [];
+  selectedProduction: ProductionCommitment | null = null;
+showReviewModal = false;
+isReviewing = false;
+
+openReviewModal(commitment: ProductionCommitment): void {
+  this.selectedProduction = commitment;
+  this.showReviewModal = true;
+}
+
+closeReviewModal(): void {
+  if (this.isReviewing) return;
+
+  this.showReviewModal = false;
+  this.selectedProduction = null;
+}
+
+ngOnInit(): void {
+  this.loadProductions();
+}
+
+async loadProductions(): Promise<void> {
+  this.isLoading = true;
+  this.loadError = '';
+
+  try {
+    const records = await this.productionService.getAllProductions();
+
+    this.commitments = records.map(record => ({
+  id: record.id || '',
+  farmer: record.farmerName,
+  farmName: record.farmName,
+  productionType: record.productionType,
+  quantity: Number(record.quantity || 0),
+  unit: record.unit,
+  harvestDate: record.expectedAvailability,
+  notes: record.notes || '',
+  reference: `PRD-${record.id?.slice(0, 6).toUpperCase() || 'NEW'} · ${record.farmName}`,
+      committed: Number(record.quantity || 0),
       received: 0,
-      remaining: 100,
-      confirmation: 'Confirmed',
-      lastUpdate: '22 Oct 2028'
-    },
-    {
-      farmer: 'Roberto Flores',
-      reference: 'PRD-26-034 · Jasaan',
-      harvestDate: '02 Nov 2028',
-      committed: 80,
-      received: 0,
-      remaining: 80,
-      confirmation: 'Confirmed',
-      lastUpdate: '21 Oct 2028'
-    },
-    {
-      farmer: 'Ana Mendoza',
-      reference: 'PRD-26-035 · Mambajao',
-      harvestDate: '04 Nov 2028',
-      committed: 60,
-      received: 0,
-      remaining: 60,
-      confirmation: 'Awaiting response',
-      lastUpdate: '21 Oct 2028'
-    },
-    {
-      farmer: 'Joel Ramos',
-      reference: 'PRD-26-036 · Manolo Fortich',
-      harvestDate: '06 Nov 2028',
-      committed: 40,
-      received: 0,
-      remaining: 40,
-      confirmation: 'Awaiting response',
-      lastUpdate: '20 Oct 2028'
-    }
-  ];
+      remaining: Number(record.quantity || 0),
+      confirmation: record.status === 'Reviewed'
+  ? 'Reviewed'
+  : 'Pending Review',
+      lastUpdate: record.createdAt && typeof (record.createdAt as any).toDate === 'function'
+        ? (record.createdAt as any).toDate().toLocaleDateString()
+        : ''
+    }));
+
+  } catch (error) {
+    console.error('Error loading farmer productions:', error);
+    this.loadError = 'Unable to load farmer production records. Please try again.';
+
+    await Swal.fire({
+      icon: 'error',
+      title: 'Unable to Load Production',
+      text: this.loadError,
+      confirmButtonColor: '#244b38'
+    });
+
+  } finally {
+    this.isLoading = false;
+    this.cdr.detectChanges();
+  }
+}
+
+async reviewProduction(commitment: ProductionCommitment): Promise<void> {
+  if (!commitment.id || commitment.confirmation === 'Reviewed') {
+    return;
+  }
+
+  this.isReviewing = true;
+
+  try {
+    await this.productionService.updateProductionStatus(
+      commitment.id,
+      'Reviewed'
+    );
+
+    const farmerName = commitment.farmer;
+
+    this.showReviewModal = false;
+    this.selectedProduction = null;
+    this.isReviewing = false;
+
+    await this.loadProductions();
+
+    await Swal.fire({
+      icon: 'success',
+      title: 'Production Reviewed!',
+      text: `${farmerName}'s production submission has been confirmed.`,
+      confirmButtonColor: '#244b38'
+    });
+
+  } catch (error) {
+    console.error('Error reviewing production:', error);
+
+    this.isReviewing = false;
+
+    await Swal.fire({
+      icon: 'error',
+      title: 'Unable to Review',
+      text: 'Something went wrong while updating the production status.',
+      confirmButtonColor: '#244b38'
+    });
+  }
+}
 
   get filteredCommitments(): ProductionCommitment[] {
     const search = this.searchTerm.trim().toLowerCase();
@@ -102,9 +214,9 @@ export class FarmersProductionComponent {
         const matchesConfirmation =
           this.selectedConfirmation === 'all' ||
           (this.selectedConfirmation === 'confirmed' &&
-            commitment.confirmation === 'Confirmed') ||
+            commitment.confirmation === 'Reviewed') ||
           (this.selectedConfirmation === 'awaiting' &&
-            commitment.confirmation === 'Awaiting response');
+            commitment.confirmation === 'Pending Review');
 
         return matchesSearch && matchesConfirmation;
       })

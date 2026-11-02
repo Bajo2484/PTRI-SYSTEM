@@ -1,1 +1,276 @@
-<p>supply-delivery works!</p>
+
+<div class="delivery-page">
+
+  <!-- PAGE HEADER -->
+  <div class="page-header">
+    <div>
+      <h1>Deliveries & Collections</h1>
+      <p>Coordinate partner deliveries and incoming farmer collections on one schedule.</p>
+    </div>
+
+    <button class="primary-btn" type="button">
+      <span>＋</span> Schedule Movement
+    </button>
+  </div>
+
+  <!-- SUMMARY CARDS -->
+  <section class="summary-grid">
+
+    <div class="summary-card">
+      <div class="summary-top">
+        <span>Scheduled movements</span>
+        <span class="card-icon">▣</span>
+      </div>
+      <h2>4</h2>
+      <p>26–27 Oct · 2 deliveries, 2 collections</p>
+    </div>
+
+    <div class="summary-card">
+      <div class="summary-top">
+        <span>Outgoing silk yarn</span>
+        <span class="card-icon">◈</span>
+      </div>
+      <h2>42 kg</h2>
+      <p>ORD-26-001 and ORD-26-002</p>
+    </div>
+
+    <div class="summary-card">
+      <div class="summary-top">
+        <span>Expected incoming cocoons</span>
+        <span class="card-icon">♧</span>
+      </div>
+      <h2>140 kg</h2>
+      <p>Not yet received into inventory</p>
+    </div>
+
+    <div class="summary-card warning-card">
+      <div class="summary-top">
+        <span>Needs preparation</span>
+        <span class="card-icon">▤</span>
+      </div>
+      <h2>1</h2>
+      <p>ORD-26-002 · Packing in progress</p>
+    </div>
+
+  </section>
+
+  <!-- WEEKLY CALENDAR -->
+  <section class="calendar-section">
+
+    <div class="calendar-header">
+      <div class="calendar-navigation">
+        <button type="button" aria-label="Previous week">‹</button>
+        <strong>23–29 October 2026</strong>
+        <button type="button" aria-label="Next week">›</button>
+      </div>
+
+      <div class="calendar-actions">
+        <button type="button" class="outline-btn">Today</button>
+        <button type="button" class="outline-btn">⌄ Week view</button>
+      </div>
+    </div>
+
+    <div class="calendar-grid">
+
+      <div class="calendar-day">
+        <span>FRI</span>
+        <strong>23</strong>
+        <small>Today</small>
+      </div>
+
+      <div class="calendar-day">
+        <span>SAT</span>
+        <strong>24</strong>
+        <small>No movements</small>
+      </div>
+
+      <div class="calendar-day">
+        <span>SUN</span>
+        <strong>25</strong>
+        <small>No movements</small>
+      </div>
+
+      <div class="calendar-day active-day">
+        <span>MON</span>
+        <strong>26</strong>
+        <small>2 movements</small>
+      </div>
+
+      <div class="calendar-day">
+        <span>TUE</span>
+        <strong>27</strong>
+        <small>2 movements</small>
+      </div>
+
+      <div class="calendar-day">
+        <span>WED</span>
+        <strong>28</strong>
+        <small>No movements</small>
+      </div>
+
+      <div class="calendar-day">
+        <span>THU</span>
+        <strong>29</strong>
+        <small>No movements</small>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- SCHEDULED MOVEMENTS -->
+  <section class="movements-section">
+
+    <div class="movements-header">
+      <div>
+        <h2>Scheduled movements</h2>
+        <p>All times in Philippine Standard Time · Destinations shown as recorded</p>
+      </div>
+
+      <div class="table-actions">
+        <button type="button" class="outline-btn">⌄ All types</button>
+        <button type="button" class="outline-btn">⇩ Export schedule</button>
+      </div>
+    </div>
+
+    <!-- MONDAY -->
+    <div class="date-group">
+      <div class="date-heading">
+        <strong>▣ Monday, 26 October</strong>
+        <span>• 2 movements</span>
+      </div>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Time</th>
+              <th>Type / Reference</th>
+              <th>Destination</th>
+              <th>Material / Qty</th>
+              <th>Assigned staff</th>
+              <th>Readiness</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            <tr>
+              <td>9:00 AM</td>
+              <td>
+                <strong>Delivery</strong>
+                <small>ORD-26-001</small>
+              </td>
+              <td>
+                <strong>Habi Silk Cooperative</strong>
+                <small>Cagayan de Oro</small>
+              </td>
+              <td>Silk yarn · 24 kg</td>
+              <td>Maria Reyes</td>
+              <td><span class="readiness ready">● Ready</span></td>
+              <td><span class="movement-status">Scheduled</span></td>
+              <td><button class="view-action" type="button">View</button></td>
+            </tr>
+
+            <tr>
+              <td>1:30 PM</td>
+              <td>
+                <strong>Collection</strong>
+                <small>SR-26-041</small>
+              </td>
+              <td>
+                <strong>Maria Santos</strong>
+                <small>Valencia, Misamis Oriental</small>
+              </td>
+              <td>Cocoons · 80 kg</td>
+              <td>Paolo Garcia</td>
+              <td><span class="readiness confirmed">● Farmer confirmed</span></td>
+              <td><span class="movement-status">Scheduled</span></td>
+              <td><button class="view-action" type="button">View</button></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TUESDAY -->
+    <div class="date-group">
+      <div class="date-heading">
+        <strong>▣ Tuesday, 27 October</strong>
+        <span>• 2 movements</span>
+      </div>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Time</th>
+              <th>Type / Reference</th>
+              <th>Destination</th>
+              <th>Material / Qty</th>
+              <th>Assigned staff</th>
+              <th>Readiness</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            <tr>
+              <td>10:00 AM</td>
+              <td>
+                <strong>Delivery</strong>
+                <small>ORD-26-002</small>
+              </td>
+              <td>
+                <strong>Mindanao Silk Studio</strong>
+                <small>Cagayan de Oro</small>
+              </td>
+              <td>Silk yarn · 18 kg</td>
+              <td>Maria Reyes</td>
+              <td><span class="readiness pending">● Awaiting packing</span></td>
+              <td><span class="movement-status">Scheduled</span></td>
+              <td><button class="view-action" type="button">View</button></td>
+            </tr>
+
+            <tr>
+              <td>2:00 PM</td>
+              <td>
+                <strong>Collection</strong>
+                <small>SR-26-042</small>
+              </td>
+              <td>
+                <strong>Jose Cruz</strong>
+                <small>Balingasag, Misamis Oriental</small>
+              </td>
+              <td>Cocoons · 60 kg</td>
+              <td>Paolo Garcia</td>
+              <td><span class="readiness confirmed">● Farmer confirmed</span></td>
+              <td><span class="movement-status">Scheduled</span></td>
+              <td><button class="view-action" type="button">View</button></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="table-footer">
+      A scheduled movement does not mark an order as delivered or a collection as received.
+    </div>
+
+  </section>
+
+  <!-- PREPARATION ALERT -->
+  <section class="preparation-alert">
+    <div class="alert-content">
+      <span class="alert-icon">⚠</span>
+      <div>
+        <strong>Packing check needed before 27 October</strong>
+        <p>18 kg is reserved for ORD-26-002. Confirm lot labels and packing readiness before dispatch.</p>
+      </div>
+    </div>
+
+    <button type="button" class="alert-link">View order →</button>
+  </section>
+
+</div>

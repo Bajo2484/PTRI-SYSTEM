@@ -246,3 +246,220 @@
     font-size: 12px;
   }
 }
+
+
+/* =========================================
+   CONTACT ADMINISTRATOR MODAL
+========================================= */
+
+.contact-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  box-sizing: border-box;
+  background: rgba(0, 35, 32, 0.65);
+  backdrop-filter: blur(4px);
+  animation: contactFadeIn 0.2s ease;
+}
+
+.contact-modal {
+  position: relative;
+  width: 100%;
+  max-width: 440px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-sizing: border-box;
+  padding: 32px;
+  border: 1px solid #d8bb76;
+  border-radius: 20px;
+  background: #faf7ef;
+  box-shadow: 0 20px 60px rgba(0, 25, 23, 0.3);
+  text-align: center;
+  animation: contactSlideUp 0.25s ease;
+}
+
+.modal-close {
+  position: absolute;
+  top: 13px;
+  right: 17px;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: #54716b;
+  font-size: 27px;
+  cursor: pointer;
+}
+
+.modal-close:hover {
+  background: #e9eee7;
+  color: #003d39;
+}
+
+.contact-modal-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 58px;
+  height: 58px;
+  margin: 0 auto 16px;
+  border: 1px solid #d8bb76;
+  border-radius: 50%;
+  background: #e9eee7;
+  color: #07574f;
+  font-size: 27px;
+}
+
+.contact-modal h3 {
+  margin: 0 0 9px;
+  color: #073f3d;
+  font-size: 23px;
+}
+
+.modal-description {
+  max-width: 340px;
+  margin: 0 auto 23px;
+  color: #727d80;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.contact-options {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  text-align: left;
+}
+
+.contact-option {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 15px;
+  border: 1px solid #ded9ca;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.65);
+}
+
+.option-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 43px;
+  height: 43px;
+  border-radius: 10px;
+  background: #e9eee7;
+  color: #07574f;
+  font-size: 22px;
+}
+
+.option-details {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+
+.option-details strong {
+  color: #073f3d;
+  font-size: 13px;
+}
+
+.option-details span {
+  color: #687875;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
+.option-details a {
+  width: fit-content;
+  color: #087064;
+  font-size: 12px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.option-details a:hover {
+  text-decoration: underline;
+}
+
+.account-help-note {
+  margin-top: 17px;
+  padding: 14px;
+  border-left: 3px solid #c99d3e;
+  border-radius: 7px;
+  background: #f1ecdf;
+  text-align: left;
+}
+
+.account-help-note strong {
+  color: #073f3d;
+  font-size: 12px;
+}
+
+.account-help-note p {
+  margin: 6px 0 0;
+  color: #727d80;
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+.modal-done-button {
+  width: 100%;
+  min-height: 46px;
+  margin-top: 20px;
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(110deg, #07574f, #003d39);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.modal-done-button:hover {
+  background: #087064;
+}
+
+@keyframes contactFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes contactSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* CONTACT MODAL RESPONSIVE */
+
+@media (max-width: 480px) {
+  .contact-modal {
+    padding: 28px 20px;
+  }
+
+  .contact-modal h3 {
+    font-size: 21px;
+  }
+
+  .contact-option {
+    padding: 12px;
+  }
+}

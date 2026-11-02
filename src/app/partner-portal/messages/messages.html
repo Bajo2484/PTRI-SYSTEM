@@ -6,37 +6,100 @@
   </div>
 
   <div class="messages-container">
+
+    <!-- CONVERSATION LIST -->
     <aside class="conversation-list">
       <div class="conversation-header">
         <h3>Conversations</h3>
-        <span class="conversation-count">0</span>
+        <span class="conversation-count">
+          {{ conversations.length }}
+        </span>
       </div>
 
-      <div class="search-box">
-        <span>⌕</span>
-        <input
-          type="text"
-          placeholder="Search conversations"
-          aria-label="Search conversations"
-          disabled
-        />
-      </div>
+      @if (conversations.length > 0) {
+        @for (conversation of conversations; track conversation.id) {
+          <button
+            type="button"
+            class="conversation-item"
+            [class.active]="selectedConversation?.id === conversation.id"
+            (click)="selectedConversation = conversation"
+          >
+            <div class="conversation-avatar">PS</div>
 
-      <div class="conversation-empty">
-        <div class="empty-icon">✉</div>
-        <h4>No conversations yet</h4>
-        <p>Your conversations with PTRI staff will appear here.</p>
-      </div>
+            <div class="conversation-details">
+              <strong>{{ conversation.name }}</strong>
+              <p>{{ conversation.lastMessage || 'Start a conversation' }}</p>
+            </div>
+          </button>
+        }
+      } @else {
+        <div class="conversation-empty">
+          <div class="empty-icon">✉</div>
+          <h4>No conversations yet</h4>
+          <p>Your conversations with PTRI staff will appear here.</p>
+        </div>
+      }
     </aside>
 
+    <!-- MESSAGE AREA -->
     <section class="message-area">
-      <div class="message-placeholder">
-        <div class="message-icon">✉</div>
-        <h3>Your Messages</h3>
-        <p>
-          Select a conversation to view messages and communicate with PTRI staff.
-        </p>
-      </div>
+
+      @if (selectedConversation) {
+        <div class="chat-header">
+          <div class="conversation-avatar">PS</div>
+          <div>
+            <h3>{{ selectedConversation.name }}</h3>
+            <p>PTRI Communication</p>
+          </div>
+        </div>
+
+        <div class="message-list">
+          @for (message of selectedConversation.messages; track message.id) {
+            <div
+              class="message-row"
+              [class.own-message]="message.sender === 'other'"
+            >
+              <div class="message-bubble">
+                <p>{{ message.text }}</p>
+                <small>{{ message.time }}</small>
+              </div>
+            </div>
+          } @empty {
+            @if (!isLoadingMessages) {
+              <div class="message-placeholder">
+                <div class="message-icon">✉</div>
+                <h3>Start a Conversation</h3>
+                <p>Send a message to communicate with PTRI Staff.</p>
+              </div>
+            }
+          }
+        </div>
+
+        <form class="message-composer" (ngSubmit)="sendMessage()">
+          <input
+            type="text"
+            name="messageText"
+            [(ngModel)]="messageText"
+            placeholder="Write your message..."
+            autocomplete="off"
+            [disabled]="isSending"
+          />
+
+          <button
+            type="submit"
+            [disabled]="!messageText.trim() || isSending"
+          >
+            {{ isSending ? 'Sending...' : 'Send' }}
+          </button>
+        </form>
+      } @else {
+        <div class="message-placeholder">
+          <div class="message-icon">✉</div>
+          <h3>Your Messages</h3>
+          <p>Select a conversation to view messages and communicate with PTRI Staff.</p>
+        </div>
+      }
+
     </section>
   </div>
 </section>

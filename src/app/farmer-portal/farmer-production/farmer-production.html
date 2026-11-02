@@ -134,8 +134,8 @@
         <span class="status-badge"
               [ngClass]="{
                 'pending': record.status === 'Pending Review',
-                'approved': record.status === 'Approved',
-                'revision': record.status === 'Revision Requested'
+                'reviewed': record.status === 'Reviewed',
+                'revision': record.status === 'Pending Review'
               }">
           {{ record.status }}
         </span>

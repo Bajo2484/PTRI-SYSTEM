@@ -57,11 +57,163 @@ export class Messages implements OnInit, OnDestroy {
 ngOnDestroy(): void {
   this.conversationsUnsubscribe?.();
   this.conversationsUnsubscribe = null;
+
+  this.allMessagesUnsubscribe?.();
+  this.allMessagesUnsubscribe = null;
+
+  Swal.close();
 }
 
-ngOnInit(): void {
+async ngOnInit(): Promise<void> {
   this.conversations = this.messageCache.conversations;
-  void this.loadAccounts();
+
+  await this.loadAccounts();
+
+  this.loadAllConversations();
+}
+
+loadAllConversations(): void {
+  this.isLoadingMessages = true;
+
+  Swal.fire({
+    title: 'Loading Messages',
+    text: 'Fetching conversations from the database...',
+    allowOutsideClick: false,
+    allowEscapeKey: false,
+    didOpen: () => Swal.showLoading()
+  });
+
+  this.allMessagesUnsubscribe?.();
+
+  this.allMessagesUnsubscribe =
+    this.messageService.listenToAllMessages(
+      (messages) => {
+        const groupedMessages = new Map<string, typeof messages>();
+
+        messages.forEach((message) => {
+          if (!groupedMessages.has(message.conversationId)) {
+            groupedMessages.set(message.conversationId, []);
+          }
+
+          groupedMessages.get(message.conversationId)!.push(message);
+        });
+
+        groupedMessages.forEach((chatMessages, firebaseConversationId) => {
+          const latestMessage = chatMessages[chatMessages.length - 1];
+
+          let conversation = this.conversations.find(
+            item => item.firebaseConversationId === firebaseConversationId
+          );
+
+          if (!conversation) {
+            const isFarmer = latestMessage.recipientRole === 'farmer' ||
+              latestMessage.senderRole === 'farmer';
+
+            const role = isFarmer ? 'Farmer' : 'Partner';
+
+            const account = isFarmer
+              ? this.farmers.find(f => f.authUid === (
+                  latestMessage.senderRole === 'farmer'
+                    ? latestMessage.senderUid
+                    : latestMessage.recipientUid
+                ))
+              : this.partners.find(p => p.authUid === (
+                  latestMessage.senderRole === 'partner'
+                    ? latestMessage.senderUid
+                    : latestMessage.recipientUid
+                ));
+
+            const name = account?.fullName || role;
+
+            conversation = {
+              id: Date.now() + this.conversations.length,
+              name,
+              organization: isFarmer
+                ? (account as FarmerAccount)?.farmName || 'Farmer'
+                : (account as PartnerAccount)?.organizationName || 'Partner',
+              role,
+              location: isFarmer
+                ? (account as FarmerAccount)?.locality || ''
+                : (account as PartnerAccount)?.locality || '',
+              initials: name.split(' ').map(part => part[0]).join('').slice(0, 2).toUpperCase(),
+              lastMessage: '',
+              time: '',
+              unread: false,
+              messages: [],
+              recipientUid: isFarmer
+                ? (account as FarmerAccount)?.authUid
+                : (account as PartnerAccount)?.authUid,
+              recipientRole: isFarmer ? 'farmer' : 'partner',
+              firebaseConversationId
+            };
+
+            this.conversations.push(conversation);
+          }
+
+          // Always refresh the actual recipient information
+const isFarmerConversation = conversation.role === 'Farmer';
+
+const recipientUid =
+  latestMessage.senderRole === (isFarmerConversation ? 'farmer' : 'partner')
+    ? latestMessage.senderUid
+    : latestMessage.recipientUid;
+
+const recipientAccount = isFarmerConversation
+  ? this.farmers.find(f => f.authUid === recipientUid)
+  : this.partners.find(p => p.authUid === recipientUid);
+
+conversation.recipientUid =
+  recipientAccount?.authUid || recipientUid;
+
+conversation.recipientRole = isFarmerConversation
+  ? 'farmer'
+  : 'partner';
+
+          conversation.messages = chatMessages.map(message => ({
+            id: message.id as unknown as number,
+            sender: message.senderRole === 'staff' ? 'staff' : 'other',
+            text: message.text,
+            time: message.createdAt?.toDate
+              ? message.createdAt.toDate().toLocaleTimeString([], {
+                  hour: '2-digit',
+                  minute: '2-digit'
+                })
+              : ''
+          }));
+
+          conversation.lastMessage = latestMessage.text;
+          conversation.time = conversation.messages[conversation.messages.length - 1]?.time || '';
+        });
+
+        this.conversations.sort((a, b) => {
+          const aTime = a.messages[a.messages.length - 1]?.time || '';
+          const bTime = b.messages[b.messages.length - 1]?.time || '';
+          return bTime.localeCompare(aTime);
+        });
+
+        this.messageCache.conversations = [...this.conversations];
+        this.messageCache.conversationsLoaded = true;
+
+        this.isLoadingMessages = false;
+        Swal.close();
+
+        this.cdr.detectChanges();
+      },
+      (error) => {
+        console.error('Unable to load conversations:', error);
+
+        this.isLoadingMessages = false;
+        Swal.close();
+
+        this.cdr.detectChanges();
+
+        void Swal.fire({
+          icon: 'error',
+          title: 'Unable to Load Messages',
+          text: 'Please check your connection and try again.'
+        });
+      }
+    );
 }
 
 openNewConversation(): void {
@@ -201,6 +353,7 @@ private listenToSelectedConversation(
   activeFilter: 'All' | 'Farmers' | 'Partners' | 'Unread' = 'All';
   selectedConversationId: number | null = null;
   conversationsUnsubscribe: Unsubscribe | null = null;
+  allMessagesUnsubscribe: Unsubscribe | null = null;
   
 isSending = false;
 isLoadingAccounts = false;

@@ -31,6 +31,7 @@ export class LoginComponent {
   rememberMe = false;
   loading = false;
   errorMessage = '';
+   showContactModal = false;
 
   constructor(private router: Router) {}
 
@@ -187,6 +188,7 @@ if (!loginInput.includes('@')) {
 
   async onForgotPassword(): Promise<void> {
     this.errorMessage = '';
+    this.showContactModal = true;
 
     if (!this.email.trim()) {
       this.errorMessage =
@@ -214,7 +216,10 @@ if (!loginInput.includes('@')) {
   }
 
   onContactAdmin(): void {
-    this.errorMessage =
-      'Please contact the system administrator for assistance.';
-  }
+  this.showContactModal = true;
+}
+
+closeContactModal(): void {
+  this.showContactModal = false;
+}
 }

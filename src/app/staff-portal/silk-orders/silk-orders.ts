@@ -3,6 +3,25 @@ import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
+type OrderStatus =
+  | 'Pending Review'
+  | 'Order Confirmed'
+  | 'Preparing Order'
+  | 'Packing Completed'
+  | 'Ready for Dispatch'
+  | 'Dispatched'
+  | 'In Transit'
+  | 'Delivered'
+  | 'Rejected';
+
+type OrderFilter = 'All Orders' | OrderStatus;
+
+interface OrderStatusHistory {
+  status: OrderStatus;
+  updatedAt: string;
+  remarks?: string;
+}
+
 interface SilkOrder {
   orderId: string;
   partnerName: string;
@@ -10,13 +29,28 @@ interface SilkOrder {
   silkType: string;
   quantity: number;
   deliveryDate: string;
-  status:
-    | 'Pending Review'
-    | 'Confirmed'
-    | 'Preparing'
-    | 'Scheduled'
-    | 'Delivered'
-    | 'Rejected';
+
+  status: OrderStatus;
+
+  // Order tracking information
+  trackingId?: string;
+  qrCode?: string;
+  barcode?: string;
+  trackingGenerated?: boolean;
+
+  // Order timestamps
+  confirmedAt?: string;
+  preparingAt?: string;
+  packingCompletedAt?: string;
+  readyForDispatchAt?: string;
+  dispatchedAt?: string;
+  inTransitAt?: string;
+  deliveredAt?: string;
+  rejectedAt?: string;
+
+  // Additional information
+  rejectionReason?: string;
+  statusHistory?: OrderStatusHistory[];
 }
 
 @Component({
@@ -30,14 +64,7 @@ export class SilkOrders {
   searchTerm = '';
   selectedOrder: SilkOrder | null = null;
 
-  activeFilter:
-    | 'All Orders'
-    | 'Pending Review'
-    | 'Confirmed'
-    | 'Preparing'
-    | 'Scheduled'
-    | 'Delivered'
-    | 'Rejected' = 'All Orders';
+  activeFilter: OrderFilter = 'All Orders';
 
   // Temporary sample data for interface design.
   // We will connect this to Firebase later.
@@ -49,7 +76,9 @@ export class SilkOrders {
       silkType: 'Silk yarn',
       quantity: 24,
       deliveryDate: '2026-10-26',
-      status: 'Scheduled',
+      status: 'Ready for Dispatch',
+      trackingId: 'PTRI-TRK-2026-001',
+      trackingGenerated: true,
     },
     {
       orderId: 'ORD-2026-002',
@@ -58,7 +87,7 @@ export class SilkOrders {
       silkType: 'Cocoon silk',
       quantity: 18,
       deliveryDate: '2026-10-27',
-      status: 'Preparing',
+      status: 'Preparing Order',
     },
     {
       orderId: 'ORD-2026-003',
@@ -67,7 +96,7 @@ export class SilkOrders {
       silkType: 'Silk yarn',
       quantity: 30,
       deliveryDate: '2026-10-29',
-      status: 'Confirmed',
+      status: 'Order Confirmed',
     },
     {
       orderId: 'ORD-2026-004',
@@ -85,7 +114,7 @@ export class SilkOrders {
       silkType: 'Silk yarn',
       quantity: 20,
       deliveryDate: '2026-11-02',
-      status: 'Confirmed',
+      status: 'Order Confirmed',
     },
     {
       orderId: 'ORD-2026-006',
@@ -98,24 +127,20 @@ export class SilkOrders {
     },
   ];
 
-  filters: Array<
-    | 'All Orders'
-    | 'Pending Review'
-    | 'Confirmed'
-    | 'Preparing'
-    | 'Scheduled'
-    | 'Delivered'
-    | 'Rejected'
-  > = [
+  filters: OrderFilter[] = [
     'All Orders',
     'Pending Review',
-    'Confirmed',
-    'Preparing',
-    'Scheduled',
+    'Order Confirmed',
+    'Preparing Order',
+    'Packing Completed',
+    'Ready for Dispatch',
+    'Dispatched',
+    'In Transit',
     'Delivered',
     'Rejected',
   ];
 
+  // SEARCH AND FILTER
   get filteredOrders(): SilkOrder[] {
     const term = this.searchTerm.trim().toLowerCase();
 
@@ -124,7 +149,8 @@ export class SilkOrders {
         order.orderId.toLowerCase().includes(term) ||
         order.partnerName.toLowerCase().includes(term) ||
         order.location.toLowerCase().includes(term) ||
-        order.silkType.toLowerCase().includes(term);
+        order.silkType.toLowerCase().includes(term) ||
+        (order.trackingId?.toLowerCase().includes(term) ?? false);
 
       const matchesFilter =
         this.activeFilter === 'All Orders' ||
@@ -134,6 +160,7 @@ export class SilkOrders {
     });
   }
 
+  // SUMMARY COUNTERS
   get totalOrders(): number {
     return this.orders.length;
   }
@@ -146,7 +173,9 @@ export class SilkOrders {
 
   get preparingCount(): number {
     return this.orders.filter(
-      (order) => order.status === 'Preparing'
+      (order) =>
+        order.status === 'Preparing Order' ||
+        order.status === 'Packing Completed'
     ).length;
   }
 
@@ -156,10 +185,40 @@ export class SilkOrders {
     ).length;
   }
 
-  setFilter(filter: typeof this.activeFilter): void {
+  get confirmedCount(): number {
+    return this.orders.filter(
+      (order) => order.status === 'Order Confirmed'
+    ).length;
+  }
+
+  get inTransitCount(): number {
+    return this.orders.filter(
+      (order) =>
+        order.status === 'Dispatched' ||
+        order.status === 'In Transit'
+    ).length;
+  }
+
+  // FILTER SELECTION
+  setFilter(filter: OrderFilter): void {
     this.activeFilter = filter;
   }
 
+  // ORDER SELECTION
+  viewOrder(order: SilkOrder): void {
+    this.selectedOrder = order;
+  }
+
+  closeOrderDetails(): void {
+    this.selectedOrder = null;
+  }
+
+  // STATUS LABEL
+  getStatusLabel(status: OrderStatus): string {
+    return status;
+  }
+
+  // TRACK BY
   trackByOrderId(index: number, order: SilkOrder): string {
     return order.orderId;
   }

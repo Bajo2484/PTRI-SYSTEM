@@ -79,4 +79,27 @@ export class MessageService {
       callback(messages);
     });
   }
+
+  
+  listenToAllMessages(
+    callback: (messages: ChatMessage[]) => void,
+    onError?: (error: Error) => void
+  ): Unsubscribe {
+    return onSnapshot(
+      this.messagesCollection,
+      (snapshot) => {
+        const messages = snapshot.docs.map((messageDoc) => ({
+          id: messageDoc.id,
+          ...messageDoc.data()
+        })) as ChatMessage[];
+
+        callback(messages);
+      },
+      (error) => {
+        console.error('Failed to listen to all messages:', error);
+        onError?.(error);
+      }
+    );
+  }
+
 }

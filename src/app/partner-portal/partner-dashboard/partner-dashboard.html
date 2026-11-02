@@ -1,1 +1,234 @@
-<p>partner-dashboard works!</p>
+
+<div class="dashboard-page">
+
+  <!-- WELCOME HEADER -->
+  <section class="welcome-section">
+    <div>
+      <h2>Good morning, Maria</h2>
+      <p>Here's the latest for Habing Pilipino Weavers Cooperative.</p>
+    </div>
+    <span class="welcome-date">Friday, 23 October 2026</span>
+  </section>
+
+  <!-- PTRI COMMUNICATION BANNER -->
+  <section class="ptri-banner">
+    <div class="banner-content">
+      <span class="banner-label">▧ YOUR DIRECT CONNECTION TO PTRI</span>
+      <h2>One place for every conversation.</h2>
+      <p>Order questions, delivery updates and support — all with PTRI Staff.</p>
+    </div>
+
+    <div class="banner-action">
+      <a routerLink="/partner/messages" class="open-messages-btn">
+        ↗ Open messages
+      </a>
+      <span>3 unread messages from PTRI Staff</span>
+    </div>
+  </section>
+
+  <!-- SUMMARY CARDS -->
+  <section class="summary-grid">
+
+    <div class="summary-card">
+      <div class="summary-top">
+        <span>Active orders</span>
+        <span class="summary-icon green">▣</span>
+      </div>
+      <h3>04</h3>
+      <p>1 preparing · 1 scheduled</p>
+    </div>
+
+    <div class="summary-card">
+      <div class="summary-top">
+        <span>Deliveries this month</span>
+        <span class="summary-icon green">▣</span>
+      </div>
+      <h3>06</h3>
+      <p>4 received · 1 scheduled</p>
+    </div>
+
+    <div class="summary-card">
+      <div class="summary-top">
+        <span>Awaiting your receipt</span>
+        <span class="summary-icon green">⛶</span>
+      </div>
+      <h3>01</h3>
+      <p>DEL-2026-0318 · arrived today</p>
+    </div>
+
+    <div class="summary-card">
+      <div class="summary-top">
+        <span>Unread PTRI messages</span>
+        <span class="summary-icon green">▱</span>
+      </div>
+      <h3>03</h3>
+      <p>Across 2 conversations</p>
+    </div>
+
+  </section>
+
+  <!-- MAIN CONTENT -->
+  <section class="dashboard-grid">
+
+    <!-- RECENT ORDERS -->
+    <div class="dashboard-panel orders-panel">
+
+      <div class="panel-header">
+        <div>
+          <h3>Recent orders</h3>
+          <p>Your organization's latest material requests</p>
+        </div>
+        <a routerLink="/partner/orders" class="view-all">View all orders →</a>
+      </div>
+
+      <div class="orders-table-wrapper">
+        <table class="orders-table">
+          <thead>
+            <tr>
+              <th>ORDER</th>
+              <th>MATERIALS</th>
+              <th>STATUS</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            <tr>
+              <td>
+                <strong>ORD-2026-0842</strong>
+                <small>12 Oct 2026</small>
+              </td>
+              <td>
+                <strong>Silk cocoons + Silk yarn</strong>
+                <small>120 kg total</small>
+              </td>
+              <td><span class="status-badge awaiting">Awaiting receipt</span></td>
+            </tr>
+
+            <tr>
+              <td>
+                <strong>ORD-2026-0856</strong>
+                <small>19 Oct 2026</small>
+              </td>
+              <td>
+                <strong>Silk yarn</strong>
+                <small>30 kg · reeled silk</small>
+              </td>
+              <td><span class="status-badge scheduled">Scheduled</span></td>
+            </tr>
+
+            <tr>
+              <td>
+                <strong>ORD-2026-0863</strong>
+                <small>21 Oct 2026</small>
+              </td>
+              <td>
+                <strong>Silk cocoons</strong>
+                <small>150 kg · dried</small>
+              </td>
+              <td><span class="status-badge preparing">Preparing</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+
+    <!-- LATEST FROM PTRI -->
+    <div class="dashboard-panel messages-panel">
+
+      <div class="panel-header">
+        <div>
+          <h3>Latest from PTRI</h3>
+        </div>
+        <a routerLink="/partner/messages" class="view-all">Messages →</a>
+      </div>
+
+      <div class="message-preview">
+        <div class="sender-row">
+          <div class="sender-avatar">AS</div>
+          <div class="sender-info">
+            <strong>Ana Santos · PTRI Staff</strong>
+            <small>8:42 AM · Delivery coordination</small>
+          </div>
+        </div>
+
+        <p class="message-text">
+          "Your materials have arrived. Please check the quantities and scan
+          the delivery QR to confirm receipt. Let us know if anything needs attention."
+        </p>
+
+        <span class="message-reference">▣ DEL-2026-0318</span>
+
+        <a routerLink="/partner/messages" class="reply-btn">
+          ↶ Read and reply
+        </a>
+      </div>
+
+    </div>
+
+    <!-- DELIVERY NEEDS YOUR ATTENTION -->
+    <div class="dashboard-panel delivery-panel">
+
+      <div class="panel-header">
+        <div>
+          <h3>Delivery needs your attention</h3>
+        </div>
+        <a routerLink="/partner/deliveries" class="view-all">View delivery →</a>
+      </div>
+
+      <div class="delivery-details">
+        <div class="delivery-icon">📦</div>
+
+        <div class="delivery-info">
+          <strong>DEL-2026-0318</strong>
+          <p>Arrived today, 8:35 AM · ORD-2026-0842</p>
+        </div>
+
+        <span class="status-badge awaiting">Awaiting receipt</span>
+      </div>
+
+      <div class="delivery-bottom">
+        <p>
+          Check 100 kg silk cocoons and 20 kg silk yarn, then confirm
+          using the delivery QR.
+        </p>
+
+        <button type="button" class="confirm-btn">
+          ▦ Confirm receipt
+        </button>
+      </div>
+
+    </div>
+
+    <!-- RECENT UPDATES -->
+    <div class="dashboard-panel updates-panel">
+
+      <div class="panel-header">
+        <div>
+          <h3>Recent updates</h3>
+        </div>
+      </div>
+
+      <div class="update-item">
+        <div class="update-icon">▤</div>
+        <div>
+          <strong>Delivery arrived</strong>
+          <p>DEL-2026-0318 is ready to receive.</p>
+          <small>Today · 8:35 AM</small>
+        </div>
+      </div>
+
+      <div class="update-item">
+        <div class="update-icon">♧</div>
+        <div>
+          <strong>Delivery scheduled</strong>
+          <p>ORD-2026-0856 · 30 kg, at 9 AM–2 PM</p>
+          <small>Yesterday · 2:20 PM</small>
+        </div>
+      </div>
+
+    </div>
+
+  </section>
+
+</div>

@@ -10,7 +10,11 @@
     </div>
 
     <div class="header-actions">
-      <button class="btn btn-outline" type="button" (click)="searchTerm = ''">
+      <button
+        class="btn btn-outline"
+        type="button"
+        (click)="searchTerm = ''; setFilter('All Orders')"
+      >
         <span>↻</span> Reset Search
       </button>
     </div>
@@ -68,11 +72,25 @@
         (click)="setFilter(filter)"
       >
         {{ filter }}
+
         <span class="tab-count" *ngIf="filter === 'All Orders'">
           {{ totalOrders }}
         </span>
+
         <span class="tab-count" *ngIf="filter === 'Pending Review'">
           {{ pendingReviewCount }}
+        </span>
+
+        <span class="tab-count" *ngIf="filter === 'Order Confirmed'">
+          {{ confirmedCount }}
+        </span>
+
+        <span class="tab-count" *ngIf="filter === 'In Transit'">
+          {{ inTransitCount }}
+        </span>
+
+        <span class="tab-count" *ngIf="filter === 'Delivered'">
+          {{ deliveredCount }}
         </span>
       </button>
     </nav>
@@ -81,12 +99,14 @@
     <div class="table-toolbar">
       <label class="search-box">
         <span>⌕</span>
+
         <input
           type="text"
           [(ngModel)]="searchTerm"
-          placeholder="Search order, partner, location, or silk type..."
+          placeholder="Search order, partner, location, silk type, or tracking ID..."
           aria-label="Search silk orders"
         />
+
         <button
           *ngIf="searchTerm"
           type="button"
@@ -125,6 +145,10 @@
             <td>
               <div class="order-id">{{ order.orderId }}</div>
               <small class="muted">Silk supply order</small>
+
+              <small class="muted" *ngIf="order.trackingId">
+                {{ order.trackingId }}
+              </small>
             </td>
 
             <td>
@@ -145,11 +169,12 @@
                 class="status-badge"
                 [ngClass]="{
                   'status-pending': order.status === 'Pending Review',
-                  'status-confirmed': order.status === 'Confirmed',
-                  'status-preparing': order.status === 'Preparing',
-                  'status-scheduled': order.status === 'Scheduled',
+                  'status-confirmed': order.status === 'Order Confirmed',
+                  'status-preparing': order.status === 'Preparing Order' || order.status === 'Packing Completed',
+                  'status-scheduled': order.status === 'Ready for Dispatch' || order.status === 'Dispatched',
                   'status-delivered': order.status === 'Delivered',
-                  'status-rejected': order.status === 'Rejected'
+                  'status-rejected': order.status === 'Rejected',
+                  'status-transit': order.status === 'In Transit'
                 }"
               >
                 <span class="status-dot"></span>
@@ -161,7 +186,7 @@
               <button
                 type="button"
                 class="view-btn"
-                (click)="selectedOrder = order"
+                (click)="viewOrder(order)"
               >
                 View <span>→</span>
               </button>
@@ -173,6 +198,7 @@
               <div class="empty-icon">⌕</div>
               <strong>No orders found</strong>
               <p>Try another search term or select a different status.</p>
+
               <button
                 type="button"
                 class="btn btn-outline"
@@ -190,6 +216,7 @@
       <span>
         Showing {{ filteredOrders.length }} of {{ totalOrders }} orders
       </span>
+
       <span>PTRI Silk Supply Management</span>
     </footer>
 
@@ -199,7 +226,7 @@
   <div
     class="modal-overlay"
     *ngIf="selectedOrder"
-    (click)="selectedOrder = null"
+    (click)="closeOrderDetails()"
   >
     <section
       class="order-modal"
@@ -208,6 +235,8 @@
       aria-labelledby="order-modal-title"
       (click)="$event.stopPropagation()"
     >
+
+      <!-- MODAL HEADER -->
       <header class="modal-header">
         <div>
           <span class="eyebrow">ORDER INFORMATION</span>
@@ -217,20 +246,24 @@
         <button
           type="button"
           class="modal-close"
-          (click)="selectedOrder = null"
+          (click)="closeOrderDetails()"
           aria-label="Close order details"
         >
           ×
         </button>
       </header>
 
+      <!-- MODAL BODY -->
       <div class="modal-body">
+
         <div class="detail-order-id">
           <span>Order reference</span>
           <strong>{{ selectedOrder.orderId }}</strong>
         </div>
 
+        <!-- ORDER INFORMATION -->
         <div class="detail-grid">
+
           <div class="detail-item">
             <span>Partner</span>
             <strong>{{ selectedOrder.partnerName }}</strong>
@@ -253,30 +286,171 @@
 
           <div class="detail-item">
             <span>Requested delivery</span>
-            <strong>{{ selectedOrder.deliveryDate | date:'dd MMM yyyy' }}</strong>
+            <strong>
+              {{ selectedOrder.deliveryDate | date:'dd MMM yyyy' }}
+            </strong>
           </div>
 
           <div class="detail-item">
             <span>Current status</span>
             <strong>{{ selectedOrder.status }}</strong>
           </div>
+
+        </div>
+
+        <!-- TRACKING INFORMATION -->
+        <section class="tracking-section">
+
+          <div class="tracking-heading">
+            <div>
+              <span class="eyebrow">ORDER MONITORING</span>
+              <h3>Tracking Information</h3>
+            </div>
+          </div>
+
+          <ng-container *ngIf="selectedOrder.trackingGenerated; else trackingPending">
+
+            <div class="tracking-id-card">
+              <span>Tracking ID</span>
+              <strong>{{ selectedOrder.trackingId }}</strong>
+            </div>
+
+            <div class="tracking-code-grid">
+
+              <!-- QR CODE -->
+              <div class="tracking-code-card">
+                <span>QR Code</span>
+
+                <div class="code-placeholder">
+                  <ng-container *ngIf="selectedOrder.qrCode; else qrPending">
+                    <img
+                      [src]="selectedOrder.qrCode"
+                      alt="Order tracking QR code"
+                    />
+                  </ng-container>
+
+                  <ng-template #qrPending>
+                    <span class="code-symbol">▦</span>
+                    <small>QR code will appear here</small>
+                  </ng-template>
+                </div>
+
+                <small>Scan to track order</small>
+              </div>
+
+              <!-- BARCODE -->
+              <div class="tracking-code-card">
+                <span>Barcode</span>
+
+                <div class="code-placeholder barcode-placeholder">
+                  <ng-container *ngIf="selectedOrder.barcode; else barcodePending">
+                    <img
+                      [src]="selectedOrder.barcode"
+                      alt="Order tracking barcode"
+                    />
+                  </ng-container>
+
+                  <ng-template #barcodePending>
+                    <span class="code-symbol">▥</span>
+                    <small>Barcode will appear here</small>
+                  </ng-template>
+                </div>
+
+                <small>Order identification</small>
+              </div>
+
+            </div>
+
+          </ng-container>
+
+          <ng-template #trackingPending>
+            <div class="tracking-empty">
+              <span class="code-symbol">⌕</span>
+              <strong>Tracking not yet available</strong>
+              <p>
+                Tracking ID, QR code, and barcode will be generated
+                automatically once the order is confirmed.
+              </p>
+            </div>
+          </ng-template>
+
+        </section>
+
+        <!-- STATUS HISTORY -->
+        <section class="history-section">
+
+          <div class="tracking-heading">
+            <div>
+              <span class="eyebrow">ORDER PROGRESS</span>
+              <h3>Status History</h3>
+            </div>
+          </div>
+
+          <ng-container
+            *ngIf="selectedOrder.statusHistory?.length; else noHistory"
+          >
+            <div class="history-list">
+
+              <div
+                class="history-item"
+                *ngFor="let history of selectedOrder.statusHistory"
+              >
+                <span class="history-dot"></span>
+
+                <div class="history-content">
+                  <strong>{{ history.status }}</strong>
+
+                  <small>
+                    {{ history.updatedAt | date:'dd MMM yyyy, hh:mm a' }}
+                  </small>
+
+                  <p *ngIf="history.remarks">
+                    {{ history.remarks }}
+                  </p>
+                </div>
+
+              </div>
+
+            </div>
+          </ng-container>
+
+          <ng-template #noHistory>
+            <p class="history-empty">
+              No status updates recorded yet.
+            </p>
+          </ng-template>
+
+        </section>
+
+        <!-- REJECTION REASON -->
+        <div
+          class="rejection-notice"
+          *ngIf="selectedOrder.status === 'Rejected'"
+        >
+          <strong>Rejection Reason</strong>
+          <p>
+            {{ selectedOrder.rejectionReason || 'No rejection reason recorded.' }}
+          </p>
         </div>
 
         <p class="modal-note">
-          This is a preview using sample data. Order review, stock allocation,
-          and status updates will be connected to Firebase in the next steps.
+          Order tracking and status updates will be connected to Firebase
+          in the next implementation step.
         </p>
+
       </div>
 
+      <!-- MODAL FOOTER -->
       <footer class="modal-footer">
         <button
           type="button"
           class="btn btn-outline"
-          (click)="selectedOrder = null"
+          (click)="closeOrderDetails()"
         >
           Close
         </button>
       </footer>
+
     </section>
   </div>
 

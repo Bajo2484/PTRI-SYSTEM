@@ -6,7 +6,9 @@ import {
   query,
   where,
   orderBy,
-  serverTimestamp
+  serverTimestamp,
+  doc,
+  updateDoc
 } from 'firebase/firestore';
 
 import { db } from './firebase';
@@ -21,7 +23,7 @@ export interface FarmerProductionRecord {
   unit: string;
   expectedAvailability: string;
   notes: string;
-  status: 'Pending Review' | 'Approved' | 'Revision Requested';
+  status: 'Pending Review' | 'Reviewed';
   createdAt?: unknown;
 }
 
@@ -50,6 +52,36 @@ export class FarmerProductionService {
       ...productionDoc.data()
     })) as FarmerProductionRecord[];
   }
+
+  async getAllProductions(): Promise<FarmerProductionRecord[]> {
+  const productionQuery = query(
+    this.productionCollection,
+    orderBy('createdAt', 'desc')
+  );
+
+  const snapshot = await getDocs(productionQuery);
+
+  return snapshot.docs.map((productionDoc) => ({
+    id: productionDoc.id,
+    ...productionDoc.data()
+  })) as FarmerProductionRecord[];
+}
+
+async updateProductionStatus(
+  productionId: string,
+  status: 'Pending Review' | 'Reviewed'
+): Promise<void> {
+  const productionRef = doc(
+    db,
+    'farmer-production',
+    productionId
+  );
+
+  await updateDoc(productionRef, {
+    status,
+    updatedAt: serverTimestamp()
+  });
+}
 
   async addProduction(
     production: Omit<FarmerProductionRecord, 'id' | 'createdAt'>
