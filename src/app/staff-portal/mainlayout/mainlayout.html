@@ -1,90 +1,73 @@
-<div class="staff-layout">
 
-  <!-- Sidebar -->
+<div class="staff-layout" [class.sidebar-expanded]="isSidebarExpanded" [class.menu-open]="isMobileMenuOpen">
+
+  <!-- SIDEBAR -->
   <aside class="sidebar">
     <div class="brand">
-      <div class="brand-logo">PTRI</div>
-      <div class="brand-text">
-        <h2>DOST–PTRI</h2>
-        <p>Silk Supply System</p>
-      </div>
+      <div class="brand-icon"><span>PTRI</span></div>
+      <div class="brand-text"><h2>DOST–PTRI</h2><p>Silk Supply System</p></div>
     </div>
 
-    <div class="portal-label">STAFF PORTAL</div>
+    <div class="sidebar-heading">
+      <span class="menu-label">STAFF PORTAL</span>
+      <button type="button" class="expand-toggle" (click)="toggleSidebar()" aria-label="Expand or collapse sidebar">☰</button>
+    </div>
 
+    <!-- NAVIGATION -->
     <nav class="sidebar-nav">
-      <a routerLink="/staff/dashboard" routerLinkActive="active">
-        <span class="nav-icon">▦</span>
-        <span>Dashboard</span>
+      <a class="menu-item" routerLink="/staff/dashboard" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}" (click)="closeMobileMenu()">
+        <span class="menu-icon">▦</span><span class="menu-item-label">Dashboard</span>
       </a>
-
-      <a routerLink="/staff/partners" routerLinkActive="active">
-        <span class="nav-icon">♙</span>
-        <span>Partner Management</span>
+      <a class="menu-item" routerLink="/staff/partners" routerLinkActive="active" (click)="closeMobileMenu()">
+        <span class="menu-icon">♙</span><span class="menu-item-label">Partner Management</span>
       </a>
-
-      <a routerLink="/staff/farmers" routerLinkActive="active">
-        <span class="nav-icon">♧</span>
-        <span>Farmer Management</span>
+      <a class="menu-item" routerLink="/staff/farmers" routerLinkActive="active" (click)="closeMobileMenu()">
+        <span class="menu-icon">♧</span><span class="menu-item-label">Farmer Management</span>
       </a>
-
-      <a routerLink="/staff/messages" routerLinkActive="active">
-  <span class="nav-icon">✉</span>
-  <span>Messages</span>
-</a>
-
-<a routerLink="/staff/farmer-production" routerLinkActive="active">
-  <span class="nav-icon">🌿</span>
-  <span>Farmer Production</span>
-</a>
-
-
-      <a routerLink="/staff/orders" routerLinkActive="active">
-        <span class="nav-icon">▤</span>
-        <span>Silk Orders</span>
+      <a class="menu-item" routerLink="/staff/messages" routerLinkActive="active" (click)="closeMobileMenu()">
+        <span class="menu-icon">✉</span><span class="menu-item-label">Messages</span>
       </a>
-
-      <a routerLink="/staff/deliveries" routerLinkActive="active">
-        <span class="nav-icon">⇄</span>
-        <span>Supply & Delivery</span>
+      <a class="menu-item" routerLink="/staff/farmer-production" routerLinkActive="active" (click)="closeMobileMenu()">
+        <span class="menu-icon">🌿</span><span class="menu-item-label">Farmer Production</span>
       </a>
-
-      <a routerLink="/staff/reports" routerLinkActive="active">
-        <span class="nav-icon">▥</span>
-        <span>Reports</span>
+      <a class="menu-item" routerLink="/staff/orders" routerLinkActive="active" (click)="closeMobileMenu()">
+        <span class="menu-icon">▤</span><span class="menu-item-label">Silk Orders</span>
+      </a>
+      <a class="menu-item" routerLink="/staff/deliveries" routerLinkActive="active" (click)="closeMobileMenu()">
+        <span class="menu-icon">⇄</span><span class="menu-item-label">Supply & Delivery</span>
+      </a>
+      <a class="menu-item" routerLink="/staff/reports" routerLinkActive="active" (click)="closeMobileMenu()">
+        <span class="menu-icon">▥</span><span class="menu-item-label">Reports</span>
       </a>
     </nav>
 
-    <div class="sidebar-footer">
-      <div class="staff-avatar">S</div>
-      <div class="staff-info">
-        <h4>Staff Account</h4>
-        <p>PTRI Staff</p>
+    <!-- STAFF PROFILE -->
+    <div class="sidebar-bottom">
+      <div class="sidebar-footer">
+        <div class="staff-avatar">S</div>
+        <div class="staff-info"><h4>Staff Account</h4><p>PTRI Staff</p></div>
       </div>
     </div>
   </aside>
 
-  <!-- Main Area -->
+  <!-- MOBILE OVERLAY -->
+  <button type="button" class="sidebar-overlay" (click)="closeMobileMenu()" aria-label="Close sidebar"></button>
+
+  <!-- MAIN AREA -->
   <div class="main-area">
-
-    <!-- Topbar -->
     <header class="topbar">
-      <div class="page-heading">
-        <h1>Staff Portal</h1>
-        <p>Silk Supply and Delivery Communication System</p>
+      <div class="topbar-left">
+        <button type="button" class="menu-toggle" (click)="toggleSidebar()" aria-label="Toggle sidebar">☰</button>
+        <div class="topbar-title"><h1>Staff Portal</h1><p>Silk Supply and Delivery Communication System</p></div>
       </div>
-
-      <button class="logout-btn" type="button" (click)="logout()">
-        <span>↪</span>
-        Logout
-      </button>
+      <div class="topbar-right">
+        <button class="logout-button" type="button" (click)="logout()"><span class="logout-icon">↪</span><span class="logout-label">Logout</span></button>
+      </div>
     </header>
 
-    <!-- Page Content -->
-    <main class="content-area">
+    <!-- PAGE CONTENT -->
+    <main class="page-content">
       <router-outlet></router-outlet>
     </main>
-
   </div>
-
 </div>

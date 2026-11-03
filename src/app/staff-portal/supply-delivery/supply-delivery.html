@@ -1,58 +1,40 @@
 
 <div class="delivery-page">
-
-  <!-- PAGE HEADER -->
+  <!-- HEADER -->
   <div class="page-header">
     <div>
       <span class="page-eyebrow">PTRI • LOGISTICS MANAGEMENT</span>
       <h1>Supply & Deliveries</h1>
       <p>Monitor approved partner orders and manage shipment progress.</p>
     </div>
-
-    <button class="refresh-btn" type="button" (click)="loadShipments()">
-      ↻ Refresh Shipments
-    </button>
+    <div class="header-actions">
+      <button class="refresh-btn" type="button" (click)="loadShipments()">↻ Refresh</button>
+      <button class="scan-shipment-btn" type="button" (click)="openScannerModal()">▣ Scan Shipment</button>
+    </div>
   </div>
 
-  <!-- SUMMARY CARDS -->
+  <!-- SUMMARY -->
   <section class="summary-grid">
-
     <div class="summary-card">
-      <div class="summary-top">
-        <span>Total Shipments</span>
-        <span class="card-icon">▣</span>
-      </div>
+      <div class="summary-top"><span>Total Shipments</span><span class="card-icon">▣</span></div>
       <h2>{{ totalShipments }}</h2>
       <p>Approved orders for delivery</p>
     </div>
-
     <div class="summary-card">
-      <div class="summary-top">
-        <span>Preparing</span>
-        <span class="card-icon">◈</span>
-      </div>
+      <div class="summary-top"><span>Preparing</span><span class="card-icon">◈</span></div>
       <h2>{{ preparingCount }}</h2>
       <p>Orders being prepared and packed</p>
     </div>
-
     <div class="summary-card">
-      <div class="summary-top">
-        <span>In Transit</span>
-        <span class="card-icon">➜</span>
-      </div>
+      <div class="summary-top"><span>In Transit</span><span class="card-icon">➜</span></div>
       <h2>{{ inTransitCount }}</h2>
       <p>Shipments dispatched or in transit</p>
     </div>
-
     <div class="summary-card delivered-card">
-      <div class="summary-top">
-        <span>Delivered</span>
-        <span class="card-icon">✓</span>
-      </div>
+      <div class="summary-top"><span>Delivered</span><span class="card-icon">✓</span></div>
       <h2>{{ deliveredCount }}</h2>
       <p>Successfully received shipments</p>
     </div>
-
   </section>
 
   <!-- LOADING -->
@@ -68,24 +50,33 @@
     <button type="button" (click)="loadShipments()">Try Again</button>
   </div>
 
-  <!-- SHIPMENT LIST -->
-  <section class="shipments-section"
-    *ngIf="!isLoading && !loadError && shipments.length > 0">
-
+  <!-- SHIPMENT RECORDS -->
+  <section class="shipments-section" *ngIf="!isLoading && !loadError && shipments.length > 0">
     <div class="shipments-header">
       <div>
         <h2>Shipment Records</h2>
         <p>Approved partner orders currently under shipment management.</p>
       </div>
-
-      <span class="record-count">
-        {{ shipments.length }} Records
-      </span>
+      <span class="record-count">{{ filteredShipments.length }} Records</span>
     </div>
 
+    <!-- SEARCH AND FILTERS -->
+    <div class="shipment-toolbar">
+      <div class="shipment-search">
+        <span>⌕</span>
+        <input type="text" [(ngModel)]="searchTerm" placeholder="Search Order ID, Partner or Tracking ID..." />
+      </div>
+      <div class="shipment-filters">
+        <button type="button" class="filter-btn" [class.active]="selectedStatusFilter === 'All'" (click)="selectedStatusFilter = 'All'">All</button>
+        <button type="button" class="filter-btn" [class.active]="selectedStatusFilter === 'Preparing'" (click)="selectedStatusFilter = 'Preparing'">Preparing</button>
+        <button type="button" class="filter-btn" [class.active]="selectedStatusFilter === 'In Transit'" (click)="selectedStatusFilter = 'In Transit'">In Transit</button>
+        <button type="button" class="filter-btn" [class.active]="selectedStatusFilter === 'Delivered'" (click)="selectedStatusFilter = 'Delivered'">Delivered</button>
+      </div>
+    </div>
+
+    <!-- TABLE -->
     <div class="shipment-table-wrapper">
       <table class="shipment-table">
-
         <thead>
           <tr>
             <th>ORDER DETAILS</th>
@@ -97,384 +88,279 @@
             <th>ACTION</th>
           </tr>
         </thead>
-
         <tbody>
-          <tr *ngFor="let order of shipments">
-
-            <td>
-              <strong>{{ order.orderId }}</strong>
-              <small>{{ order.trackingId || 'Tracking ID pending' }}</small>
-            </td>
-
+          <tr *ngFor="let order of filteredShipments">
+            <td><strong>{{ order.orderId }}</strong><small>{{ order.trackingId || 'Tracking ID pending' }}</small></td>
             <td>{{ order.partnerName }}</td>
-
             <td>{{ order.silkType }}</td>
-
             <td>{{ order.quantity }} kg</td>
-
             <td>{{ order.location }}</td>
-
             <td>
-              <span class="status-label"
-                [ngClass]="{
-                  'status-preparing': order.status === 'Order Confirmed' || order.status === 'Preparing Order' || order.status === 'Packing Completed',
-                  'status-transit': order.status === 'Ready for Dispatch' || order.status === 'Dispatched' || order.status === 'In Transit',
-                  'status-delivered': order.status === 'Delivered'
-                }">
-                {{ order.status }}
-              </span>
+              <span class="status-label" [ngClass]="{
+                'status-preparing': ['Order Confirmed', 'Preparing Order', 'Packing Completed'].includes(order.status),
+                'status-transit': ['Ready for Dispatch', 'Dispatched', 'In Transit'].includes(order.status),
+                'status-delivered': order.status === 'Delivered',
+                'status-rejected': order.status === 'Rejected'
+              }">{{ order.status }}</span>
             </td>
-
-            <td>
-              <button
-                type="button"
-                class="view-action"
-                (click)="viewShipment(order)">
-                View
-              </button>
-            </td>
-
+            <td><button type="button" class="view-action" (click)="viewShipment(order)">View</button></td>
           </tr>
         </tbody>
-
       </table>
+      <div class="empty-filter-result" *ngIf="filteredShipments.length === 0">
+        No shipment records match your search or selected filter.
+      </div>
     </div>
-
   </section>
 
-  <!-- EMPTY -->
-  <div class="state-message"
-    *ngIf="!isLoading && !loadError && shipments.length === 0">
+  <!-- EMPTY SHIPMENTS -->
+  <div class="state-message" *ngIf="!isLoading && !loadError && shipments.length === 0">
     <strong>No shipments available</strong>
     <p>Approved partner orders will appear here once they are ready for shipment processing.</p>
   </div>
 
   <!-- SHIPMENT DETAILS MODAL -->
-  <div class="modal-overlay"
-    *ngIf="showShipmentDetails && selectedShipment"
-    (click)="closeShipmentDetails()">
-
+  <div class="modal-overlay" *ngIf="showShipmentDetails && selectedShipment" (click)="closeShipmentDetails()">
     <div class="shipment-modal" (click)="$event.stopPropagation()">
-
       <div class="modal-header">
         <div>
           <span class="modal-eyebrow">PTRI • SHIPMENT INFORMATION</span>
           <h2>Shipment Details</h2>
-          <p>Review the order and its current delivery progress.</p>
+          <p>Review shipment information, progress and receiving records.</p>
         </div>
-
-        <button type="button" class="close-modal"
-          (click)="closeShipmentDetails()">×</button>
+        <button type="button" class="close-modal" (click)="closeShipmentDetails()">×</button>
       </div>
 
-      <div class="modal-body">
+      <!-- TABS -->
+      <div class="shipment-tabs">
+        <button type="button" class="shipment-tab" [class.active]="activeShipmentTab === 'overview'" (click)="activeShipmentTab = 'overview'">Overview</button>
+        <button type="button" class="shipment-tab" [class.active]="activeShipmentTab === 'progress'" (click)="activeShipmentTab = 'progress'">Progress</button>
+        <button type="button" class="shipment-tab" [class.active]="activeShipmentTab === 'receiving'" (click)="activeShipmentTab = 'receiving'">Receiving</button>
+      </div>
 
+      <!-- OVERVIEW TAB -->
+      <div class="tab-panel" *ngIf="activeShipmentTab === 'overview'">
         <div class="shipment-status-banner">
           <span>Current Shipment Status</span>
           <strong>{{ selectedShipment.status }}</strong>
         </div>
 
         <div class="shipment-info-grid">
-
-          <div class="info-item">
-            <span>Order ID</span>
-            <strong>{{ selectedShipment.orderId }}</strong>
-          </div>
-
-          <div class="info-item">
-            <span>Tracking ID</span>
-            <strong>{{ selectedShipment.trackingId || 'Not yet generated' }}</strong>
-          </div>
-
-          <div class="info-item">
-            <span>Partner Name</span>
-            <strong>{{ selectedShipment.partnerName }}</strong>
-          </div>
-
-          <div class="info-item">
-            <span>Silk Type</span>
-            <strong>{{ selectedShipment.silkType }}</strong>
-          </div>
-
-          <div class="info-item">
-            <span>Quantity</span>
-            <strong>{{ selectedShipment.quantity }} kg</strong>
-          </div>
-
-          <div class="info-item">
-            <span>Delivery Destination</span>
-            <strong>{{ selectedShipment.location }}</strong>
-          </div>
-
-          <div class="info-item">
-            <span>Expected Delivery</span>
-            <strong>{{ selectedShipment.deliveryDate || 'Not specified' }}</strong>
-          </div>
-
+          <div class="info-item"><span>Order ID</span><strong>{{ selectedShipment.orderId }}</strong></div>
+          <div class="info-item"><span>Tracking ID</span><strong>{{ selectedShipment.trackingId || 'Not yet generated' }}</strong></div>
+          <div class="info-item"><span>Partner Name</span><strong>{{ selectedShipment.partnerName }}</strong></div>
+          <div class="info-item"><span>Silk Type</span><strong>{{ selectedShipment.silkType }}</strong></div>
+          <div class="info-item"><span>Ordered Quantity</span><strong>{{ selectedShipment.quantity }} kg</strong></div>
+          <div class="info-item"><span>Destination</span><strong>{{ selectedShipment.location }}</strong></div>
+          <div class="info-item"><span>Expected Delivery</span><strong>{{ selectedShipment.deliveryDate || 'Not specified' }}</strong></div>
         </div>
 
         <div class="shipment-notes" *ngIf="selectedShipment.notes">
           <span>Partner's Order Notes</span>
           <p>{{ selectedShipment.notes }}</p>
         </div>
+      </div>
 
-        <!-- SHIPMENT PROGRESS -->
+      <!-- PROGRESS TAB -->
+      <div class="tab-panel" *ngIf="activeShipmentTab === 'progress'">
         <div class="shipment-progress-section">
-
           <div class="progress-heading">
             <div>
               <h3>Shipment Progress</h3>
               <p>Track every stage of this order's delivery.</p>
             </div>
-
-            <span class="progress-count">
-              {{ currentStepIndex >= 0 ? currentStepIndex + 1 : 0 }}
-              of {{ shipmentSteps.length }} stages
-            </span>
+            <span class="progress-count">{{ currentStepIndex >= 0 ? currentStepIndex + 1 : 0 }} of {{ shipmentSteps.length }} stages</span>
           </div>
 
-          <!-- PROGRESS BAR -->
           <div class="shipment-progress-bar">
-            <div
-              class="shipment-progress-fill"
-              [style.width.%]="currentStepIndex >= 0
-                ? ((currentStepIndex + 1) / shipmentSteps.length) * 100
-                : 0">
-            </div>
+            <div class="shipment-progress-fill" [style.width.%]="currentStepIndex >= 0 ? ((currentStepIndex + 1) / shipmentSteps.length) * 100 : 0"></div>
           </div>
 
-          <!-- TIMELINE -->
           <div class="shipment-timeline">
-
-            <div
-              class="timeline-item"
-              *ngFor="let step of shipmentSteps; let i = index"
-              [ngClass]="{
-                'completed': isStepCompleted(step),
-                'current': isCurrentStep(step),
-                'upcoming': !isStepCompleted(step) && !isCurrentStep(step)
-              }">
-
+            <div class="timeline-item" *ngFor="let step of shipmentSteps; let i = index" [ngClass]="{
+              'completed': isStepCompleted(step),
+              'current': isCurrentStep(step),
+              'upcoming': !isStepCompleted(step) && !isCurrentStep(step)
+            }">
               <div class="timeline-marker">
                 <span *ngIf="isStepCompleted(step)">✓</span>
-                <span *ngIf="isCurrentStep(step)">{{ i + 1 }}</span>
-                <span *ngIf="!isStepCompleted(step) && !isCurrentStep(step)">
-                  {{ i + 1 }}
-                </span>
+                <span *ngIf="isCurrentStep(step) || (!isStepCompleted(step) && !isCurrentStep(step))">{{ i + 1 }}</span>
               </div>
-
               <div class="timeline-content">
                 <strong>{{ step }}</strong>
-
-                <span *ngIf="isStepCompleted(step)" class="timeline-state">
-                  Completed
-                </span>
-
-                <span *ngIf="isCurrentStep(step)" class="timeline-state">
-                  Current Stage
-                </span>
-
-                <span *ngIf="getStepDate(step)" class="timeline-date">
-                  {{ getStepDate(step) | date:'dd MMM yyyy, hh:mm a' }}
-                </span>
+                <span *ngIf="isStepCompleted(step)" class="timeline-state">Completed</span>
+                <span *ngIf="isCurrentStep(step)" class="timeline-state">Current Stage</span>
+                <span *ngIf="getStepDate(step)" class="timeline-date">{{ getStepDate(step) | date:'dd MMM yyyy, hh:mm a' }}</span>
               </div>
-
             </div>
-
           </div>
 
-          <!-- UPDATE ACTION -->
           <div class="shipment-update-area">
-
             <div *ngIf="canUpdateShipment" class="next-stage-notice">
               <span>NEXT STAGE</span>
               <strong>{{ nextShipmentStatus }}</strong>
             </div>
-
-            <button
-              *ngIf="canUpdateShipment"
-              type="button"
-              class="update-shipment-button"
-              (click)="updateShipmentStatus()">
-              ↻ Update Shipment Status
-            </button>
-
-            <!-- RECEIVING NOTICE -->
-            <div
-              *ngIf="selectedShipment.status === 'In Transit'"
-              class="receiving-notice">
-
+            <button *ngIf="canUpdateShipment" type="button" class="update-shipment-button" (click)="updateShipmentStatus()">↻ Update Shipment Status</button>
+            <div *ngIf="selectedShipment.status === 'In Transit'" class="receiving-notice">
               <strong>Awaiting Receiving Confirmation</strong>
-
-              <p>
-                Verify the actual shipment and record the receiving details
-                before confirming delivery.
-              </p>
-
-              <button
-                type="button"
-                class="update-shipment-button"
-                (click)="openReceivingForm()">
-                Confirm Receiving
-              </button>
-
+              <p>Verify the actual shipment before recording delivery.</p>
+              <button type="button" class="open-receiving-button" (click)="openReceivingForm()">Confirm Receiving</button>
             </div>
-
-            <!-- DELIVERED NOTICE -->
-            <div
-              *ngIf="selectedShipment.status === 'Delivered'"
-              class="delivered-notice">
-
+            <div *ngIf="selectedShipment.status === 'Delivered'" class="delivered-notice">
               <strong>✓ Shipment Delivered</strong>
-
               <p>Receiving confirmation has been recorded.</p>
-
             </div>
-
           </div>
+        </div>
+      </div>
 
-          <!-- RECEIVING FORM -->
-          <div
-            class="receiving-form-section"
-            *ngIf="showReceivingForm && selectedShipment.status === 'In Transit'">
+      <!-- RECEIVING TAB -->
+      <div class="tab-panel" *ngIf="activeShipmentTab === 'receiving'">
+        <h3>Receiving Information</h3>
+        <p class="tab-description">Review the shipment's actual receiving details.</p>
 
-            <div class="receiving-form-heading">
-              <div>
-                <span class="page-eyebrow">DELIVERY VERIFICATION</span>
-                <h3>Receiving Confirmation</h3>
-                <p>Record the actual shipment received at the destination.</p>
-              </div>
-            </div>
-
-            <div class="receiving-form-fields">
-
-              <!-- RECEIVER NAME -->
-              <div class="form-group">
-                <label for="receiverName">Received By *</label>
-
-                <input
-                  id="receiverName"
-                  type="text"
-                  [(ngModel)]="receiverName"
-                  placeholder="Enter receiver's full name" />
-              </div>
-
-              <!-- ACTUAL QUANTITY -->
-              <div class="form-group">
-                <label for="actualQuantity">Actual Quantity Received (kg) *</label>
-
-                <input
-                  id="actualQuantity"
-                  type="number"
-                  min="1"
-                  [(ngModel)]="actualQuantityReceived"
-                  placeholder="Enter actual quantity" />
-
-                <small>
-                  Ordered Quantity: {{ selectedShipment.quantity }} kg
-                </small>
-              </div>
-
-              <!-- PACKAGE CONDITION -->
-              <div class="form-group">
-                <label for="packageCondition">Package Condition *</label>
-
-                <select
-                  id="packageCondition"
-                  [(ngModel)]="packageCondition">
-
-                  <option value="Good">Good Condition</option>
-                  <option value="Damaged">Damaged</option>
-                  <option value="Incomplete">Incomplete</option>
-
-                </select>
-              </div>
-
-              <!-- REMARKS -->
-              <div class="form-group">
-                <label for="receivingRemarks">Receiving Remarks</label>
-
-                <textarea
-                  id="receivingRemarks"
-                  rows="3"
-                  [(ngModel)]="receivingRemarks"
-                  placeholder="Add notes about the received shipment...">
-                </textarea>
-              </div>
-
-            </div>
-
-            <!-- RECEIVING FORM ACTIONS -->
-            <div class="receiving-form-actions">
-
-              <button
-                type="button"
-                class="cancel-receiving-button"
-                (click)="closeReceivingForm()"
-                [disabled]="isConfirmingDelivery">
-                Cancel
-              </button>
-
-              <button
-                type="button"
-                class="confirm-receiving-button"
-                (click)="confirmDelivery()"
-                [disabled]="isConfirmingDelivery">
-
-                {{ isConfirmingDelivery
-                  ? 'Confirming...'
-                  : 'Confirm Delivery' }}
-
-              </button>
-
-            </div>
-
-          </div>
-
-          <!-- SAVED RECEIVING DETAILS -->
-          <div
-            *ngIf="selectedShipment.status === 'Delivered'"
-            class="receiving-notice">
-
-            <strong>Receiving Details</strong>
-
-            <p>
-              <b>Received By:</b>
-              {{ selectedShipment.receiverName || 'Not recorded' }}
-            </p>
-
-            <p>
-              <b>Actual Quantity:</b>
-              {{ selectedShipment.actualQuantityReceived ?? 'Not recorded' }} kg
-            </p>
-
-            <p>
-              <b>Package Condition:</b>
-              {{ selectedShipment.packageCondition || 'Not recorded' }}
-            </p>
-
-            <p>
-              <b>Receiving Remarks:</b>
-              {{ selectedShipment.receivingRemarks || 'None' }}
-            </p>
-
-            <p *ngIf="selectedShipment.receivedAt">
-              <b>Received At:</b>
-              {{ selectedShipment.receivedAt | date:'dd MMM yyyy, hh:mm a' }}
-            </p>
-
-          </div>
-
+        <div *ngIf="selectedShipment.status === 'Delivered'" class="delivered-notice">
+          <strong>✓ Receiving Confirmation Completed</strong>
+          <p>The shipment has been verified and marked as delivered.</p>
         </div>
 
+        <div class="receiving-details-grid" *ngIf="selectedShipment.status === 'Delivered'">
+          <div class="receiving-detail-card"><span>Received By</span><strong>{{ selectedShipment.receiverName || 'Not recorded' }}</strong></div>
+          <div class="receiving-detail-card"><span>Actual Quantity</span><strong>{{ selectedShipment.actualQuantityReceived ?? 'Not recorded' }} kg</strong></div>
+          <div class="receiving-detail-card"><span>Package Condition</span><strong>{{ selectedShipment.packageCondition || 'Not recorded' }}</strong></div>
+          <div class="receiving-detail-card"><span>Received At</span><strong>{{ selectedShipment.receivedAt ? (selectedShipment.receivedAt | date:'dd MMM yyyy, hh:mm a') : 'Not recorded' }}</strong></div>
+        </div>
+
+        <div class="shipment-notes" *ngIf="selectedShipment.status === 'Delivered' && selectedShipment.receivingRemarks">
+          <span>Receiving Remarks</span>
+          <p>{{ selectedShipment.receivingRemarks }}</p>
+        </div>
+
+        <div class="receiving-notice" *ngIf="selectedShipment.status === 'In Transit'">
+          <strong>Awaiting Receiving Confirmation</strong>
+          <p>Record the receiver's information and verify the actual quantity and package condition before marking this shipment as Delivered.</p>
+          <button type="button" class="open-receiving-button" (click)="openReceivingForm()">Open Receiving Confirmation</button>
+        </div>
+
+        <div class="receiving-empty" *ngIf="selectedShipment.status !== 'In Transit' && selectedShipment.status !== 'Delivered'">
+          <strong>Receiving Not Yet Available</strong>
+          <p>Receiving confirmation will become available once the shipment reaches In Transit status.</p>
+        </div>
       </div>
 
       <div class="modal-footer">
-        <button type="button" class="close-btn"
-          (click)="closeShipmentDetails()">Close</button>
+        <button type="button" class="close-btn" (click)="closeShipmentDetails()">Close</button>
       </div>
-
     </div>
   </div>
 
+  <!-- SCANNER MODAL -->
+  <div class="modal-overlay" *ngIf="showScannerModal" (click)="closeScannerModal()">
+    <div class="scanner-modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div>
+          <span class="modal-eyebrow">PTRI • SHIPMENT IDENTIFICATION</span>
+          <h2>Scan Shipment</h2>
+          <p>Scan the shipment QR code or barcode to find its order record.</p>
+        </div>
+        <button type="button" class="close-modal" (click)="closeScannerModal()">×</button>
+      </div>
+
+      <div class="scanner-content">
+        <p class="scanner-instruction">Position the shipment code inside the scanner frame. You can also enter the Tracking ID manually.</p>
+
+        <div class="scanner-viewport">
+          <video #scannerVideo id="scannerVideo" autoplay playsinline muted></video>
+          <div class="scanner-placeholder" *ngIf="!isScannerActive">
+            <strong>Camera Scanner</strong>
+            <p>Start the camera to scan a shipment QR code or barcode.</p>
+          </div>
+          <div class="scanner-guide"></div>
+        </div>
+
+        <div class="scanner-actions">
+          <button type="button" class="scanner-view-button" *ngIf="!isScannerActive" (click)="startScanner()">Start Camera</button>
+          <button type="button" class="scanner-view-button" *ngIf="isScannerActive" (click)="stopScanner()">Stop Camera</button>
+        </div>
+
+        <div class="scanner-error" *ngIf="scannerError">{{ scannerError }}</div>
+
+        <div class="scanner-divider">OR ENTER TRACKING ID</div>
+
+        <div class="manual-tracking-form">
+          <input type="text" class="manual-tracking-input" [(ngModel)]="manualTrackingId" placeholder="Enter shipment Tracking ID" />
+          <button type="button" class="manual-tracking-button" (click)="findShipmentByTrackingId()">Find Shipment</button>
+        </div>
+
+        <div class="scanner-result" *ngIf="scannedShipment">
+          <strong>Shipment Found</strong>
+          <p><b>Order ID:</b> {{ scannedShipment.orderId }}</p>
+          <p><b>Partner:</b> {{ scannedShipment.partnerName }}</p>
+          <p><b>Silk Type:</b> {{ scannedShipment.silkType }}</p>
+          <p><b>Tracking ID:</b> {{ scannedShipment.trackingId }}</p>
+          <p><b>Status:</b> {{ scannedShipment.status }}</p>
+          <div class="scanner-actions">
+            <button type="button" class="scanner-view-button" (click)="openScannedShipment()">View Shipment</button>
+            <button type="button" class="scanner-receive-button" *ngIf="scannedShipment.status === 'In Transit'" (click)="openReceivingFromScanner()">Proceed to Receiving</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RECEIVING CONFIRMATION MODAL -->
+  <div class="modal-overlay" *ngIf="showReceivingForm && selectedShipment" (click)="closeReceivingForm()">
+    <div class="receiving-modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div>
+          <span class="modal-eyebrow">PTRI • DELIVERY VERIFICATION</span>
+          <h2>Receiving Confirmation</h2>
+          <p>Verify the actual shipment received at its destination.</p>
+        </div>
+        <button type="button" class="close-modal" (click)="closeReceivingForm()">×</button>
+      </div>
+
+      <div class="receiving-content">
+        <div class="receiving-summary">
+          <div class="receiving-summary-item"><span>Order ID</span><strong>{{ selectedShipment.orderId }}</strong></div>
+          <div class="receiving-summary-item"><span>Tracking ID</span><strong>{{ selectedShipment.trackingId || 'Not available' }}</strong></div>
+          <div class="receiving-summary-item"><span>Silk Type</span><strong>{{ selectedShipment.silkType }}</strong></div>
+          <div class="receiving-summary-item"><span>Ordered Quantity</span><strong>{{ selectedShipment.quantity }} kg</strong></div>
+        </div>
+
+        <h3 class="receiving-form-title">Actual Receiving Details</h3>
+        <div class="receiving-form-grid">
+          <div class="form-group">
+            <label for="receiverName">Received By *</label>
+            <input id="receiverName" type="text" [(ngModel)]="receiverName" placeholder="Enter receiver's full name" />
+          </div>
+          <div class="form-group">
+            <label for="actualQuantity">Actual Quantity Received (kg) *</label>
+            <input id="actualQuantity" type="number" min="1" [(ngModel)]="actualQuantityReceived" placeholder="Enter actual quantity" />
+          </div>
+          <div class="form-group full-width">
+            <label for="packageCondition">Package Condition *</label>
+            <select id="packageCondition" [(ngModel)]="packageCondition">
+              <option value="Good">Good Condition</option>
+              <option value="Damaged">Damaged</option>
+              <option value="Incomplete">Incomplete</option>
+            </select>
+          </div>
+          <div class="form-group full-width">
+            <label for="receivingRemarks">Receiving Remarks</label>
+            <textarea id="receivingRemarks" rows="3" [(ngModel)]="receivingRemarks" placeholder="Add notes about the received shipment..."></textarea>
+          </div>
+        </div>
+
+        <div class="receiving-hint">Please verify the actual quantity and package condition before confirming. Scanning the code alone does not mark the shipment as Delivered.</div>
+      </div>
+
+      <div class="receiving-actions">
+        <button type="button" class="cancel-receiving-button" (click)="closeReceivingForm()" [disabled]="isConfirmingDelivery">Cancel</button>
+        <button type="button" class="confirm-delivery-button" (click)="confirmDelivery()" [disabled]="isConfirmingDelivery">
+          {{ isConfirmingDelivery ? 'Confirming...' : 'Confirm Delivery' }}
+        </button>
+      </div>
+    </div>
+  </div>
 </div>

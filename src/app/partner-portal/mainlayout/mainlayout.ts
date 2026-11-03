@@ -16,7 +16,22 @@ import { auth } from '../../services/firebase';
   styleUrl: './mainlayout.css',
 })
 export class Mainlayout {
+  isSidebarExpanded = false;
+  isMobileMenuOpen = false;
+
   constructor(private router: Router) {}
+
+  toggleSidebar() {
+    this.isSidebarExpanded = !this.isSidebarExpanded;
+  }
+
+  toggleMobileMenu() {
+    this.isMobileMenuOpen = !this.isMobileMenuOpen;
+  }
+
+  closeMobileMenu() {
+    this.isMobileMenuOpen = false;
+  }
 
   async logout() {
     try {
