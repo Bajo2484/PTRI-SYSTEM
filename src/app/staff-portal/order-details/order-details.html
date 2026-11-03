@@ -25,16 +25,10 @@
     <!-- PAGE HEADER -->
     <header class="page-header">
 
-      <button type="button" class="back-button" (click)="goBack()">
-        <span>←</span> Back to Silk Orders
-      </button>
-
-      <div class="header-content">
-        <div>
-          <span class="eyebrow">STAFF PORTAL / ORDER MANAGEMENT</span>
-          <h1>Order Details</h1>
-          <p>Review order information and monitor delivery progress.</p>
-        </div>
+      <div class="header-top">
+        <button type="button" class="back-button" (click)="goBack()">
+          <span>←</span> Back to Silk Orders
+        </button>
 
         <span
           class="status-badge"
@@ -53,17 +47,31 @@
         </span>
       </div>
 
-      <!-- ORDER REFERENCE -->
+      <div class="header-content">
+        <div>
+          <span class="eyebrow">STAFF PORTAL / ORDER MANAGEMENT</span>
+          <h1>Order Details</h1>
+          <p>Review order information and monitor delivery progress.</p>
+        </div>
+      </div>
+
+      <!-- ORDER REFERENCE BANNER -->
       <div class="order-reference">
 
-        <div>
+        <div class="reference-item">
           <span>ORDER REFERENCE</span>
           <strong>{{ order.orderId }}</strong>
         </div>
 
-        <div>
+        <div class="reference-divider"></div>
+
+        <div class="reference-item">
           <span>TRACKING ID</span>
           <strong>{{ order.trackingId || 'Not yet generated' }}</strong>
+        </div>
+
+        <div class="reference-decoration">
+          <span>PTRI</span>
         </div>
 
       </div>
@@ -71,235 +79,396 @@
     </header>
 
 
-    <!-- ORDER INFORMATION GRID -->
-    <div class="information-grid">
+    <!-- MAIN TWO-COLUMN LAYOUT -->
+    <div class="order-details-layout">
 
-      <!-- ORDER OVERVIEW -->
-      <section class="details-section">
-        <div class="section-heading">
-          <span class="section-icon">▤</span>
+      <!-- LEFT CONTENT -->
+      <main class="order-main-content">
 
-          <div>
-            <h2>Order Overview</h2>
-            <p>Basic order information</p>
-          </div>
-        </div>
+        <!-- 01 ORDER INFORMATION -->
+        <section class="details-section information-section">
 
-        <div class="information-list">
+          <div class="section-heading">
+            <span class="section-number">01</span>
 
-          <div class="information-item">
-            <span>Order ID</span>
-            <strong>{{ order.orderId }}</strong>
+            <div>
+              <h2>Order Information</h2>
+              <p>Complete details of the partner's silk order.</p>
+            </div>
           </div>
 
-          <div class="information-item">
-            <span>Requested Delivery</span>
-            <strong>{{ order.deliveryDate | date:'dd MMM yyyy' }}</strong>
+          <div class="information-grid">
+
+            <!-- ORDER OVERVIEW -->
+            <div class="information-column">
+              <div class="column-heading">
+                <span class="section-icon">▤</span>
+                <h3>Order Overview</h3>
+              </div>
+
+              <div class="information-list">
+
+                <div class="information-item">
+                  <span>Order ID</span>
+                  <strong>{{ order.orderId }}</strong>
+                </div>
+
+                <div class="information-item">
+                  <span>Requested Delivery</span>
+                  <strong>{{ order.deliveryDate | date:'dd MMM yyyy' }}</strong>
+                </div>
+
+                <div class="information-item">
+                  <span>Current Status</span>
+                  <strong>{{ order.status }}</strong>
+                </div>
+
+              </div>
+            </div>
+
+            <!-- PARTNER INFORMATION -->
+            <div class="information-column">
+              <div class="column-heading">
+                <span class="section-icon">♙</span>
+                <h3>Partner Information</h3>
+              </div>
+
+              <div class="information-list">
+
+                <div class="information-item">
+                  <span>Partner Name</span>
+                  <strong>{{ order.partnerName }}</strong>
+                </div>
+
+                <div class="information-item">
+                  <span>Delivery Location</span>
+                  <strong>{{ order.location }}</strong>
+                </div>
+
+              </div>
+            </div>
+
+            <!-- PRODUCT INFORMATION -->
+            <div class="information-column product-column">
+              <div class="column-heading">
+                <span class="section-icon">◇</span>
+                <h3>Product Information</h3>
+              </div>
+
+              <div class="product-highlight">
+
+                <div>
+                  <span>SILK TYPE</span>
+                  <strong>{{ order.silkType }}</strong>
+                </div>
+
+                <div class="quantity-display">
+                  <strong>{{ order.quantity }}</strong>
+                  <span>kg</span>
+                </div>
+
+              </div>
+
+              <div class="information-item notes-item">
+                <span>Additional Notes</span>
+                <p>{{ order.notes || 'No additional notes provided.' }}</p>
+              </div>
+            </div>
+
           </div>
 
-          <div class="information-item">
-            <span>Current Status</span>
+        </section>
+
+
+        <!-- 02 TRACKING DETAILS -->
+        <section
+          class="details-section tracking-section"
+          *ngIf="order.trackingId && order.trackingGenerated"
+        >
+
+          <div class="section-heading">
+            <span class="section-number">02</span>
+
+            <div>
+              <h2>Tracking Details</h2>
+              <p>Unique tracking number and generated identification codes.</p>
+            </div>
+          </div>
+
+          <!-- UNIQUE TRACKING NUMBER -->
+          <div class="tracking-number-panel">
+            <div>
+              <span class="tracking-label">UNIQUE TRACKING NUMBER</span>
+              <strong>{{ order.trackingId }}</strong>
+              <p>Use this reference to identify and track the shipment.</p>
+            </div>
+
+            <div class="tracking-number-icon">
+              <span>PTRI</span>
+            </div>
+          </div>
+
+          <!-- QR AND BARCODE -->
+          <div class="tracking-code-grid">
+
+            <!-- QR CODE -->
+            <div class="tracking-code-card">
+
+              <div class="tracking-card-heading">
+                <span class="code-icon">▦</span>
+                <h3>QR Code</h3>
+              </div>
+
+              <div class="code-image-container">
+                <img
+                  *ngIf="qrCodeImage"
+                  [src]="qrCodeImage"
+                  alt="Order Tracking QR Code"
+                />
+
+                <span *ngIf="!qrCodeImage">
+                  Generating QR Code...
+                </span>
+              </div>
+
+              <p>Scan to access the tracking reference.</p>
+
+              <button
+  class="download-code-button"
+  (click)="downloadShipmentLabel()">
+  Download Shipment Label
+</button>
+
+            </div>
+
+
+            <!-- BARCODE -->
+            <div class="tracking-code-card">
+
+              <div class="tracking-card-heading">
+                <span class="code-icon">▥</span>
+                <h3>Barcode</h3>
+              </div>
+
+              <div class="code-image-container barcode-container">
+                <img
+                  *ngIf="barcodeImage"
+                  [src]="barcodeImage"
+                  alt="Order Tracking Barcode"
+                />
+
+                <span *ngIf="!barcodeImage">
+                  Generating Barcode...
+                </span>
+              </div>
+
+              <p>For shipment and package identification.</p>
+
+              <button
+                type="button"
+                class="download-code-button"
+                [disabled]="!barcodeImage"
+                (click)="downloadBarcode()"
+              >
+                ↓ Download Barcode
+              </button>
+
+            </div>
+
+          </div>
+
+        </section>
+
+
+        <!-- ORDER REVIEW -->
+        <section
+          class="details-section review-section"
+          *ngIf="order.status === 'Pending Review'"
+        >
+
+          <div class="section-heading">
+            <span class="section-number">04</span>
+
+            <div>
+              <h2>Order Review</h2>
+              <p>This order is waiting for staff review.</p>
+            </div>
+          </div>
+
+          <div class="review-notice">
+            <strong>Action Required</strong>
+            <p>
+              Review the partner's order information before approving
+              or rejecting this request.
+            </p>
+          </div>
+
+          <div class="review-actions">
+
+            <button
+              type="button"
+              class="approve-button"
+              (click)="approveOrder(order)"
+            >
+              ✓ Approve Order
+            </button>
+
+            <button
+              type="button"
+              class="reject-button"
+              (click)="rejectOrder(order)"
+            >
+              Reject Order
+            </button>
+
+          </div>
+
+        </section>
+
+
+        <!-- REJECTION NOTICE -->
+        <section
+          class="details-section rejection-section"
+          *ngIf="order.status === 'Rejected'"
+        >
+
+          <div class="section-heading">
+            <span class="section-number">04</span>
+
+            <div>
+              <h2>Rejection Notice</h2>
+              <p>This order request was rejected.</p>
+            </div>
+          </div>
+
+          <div class="rejection-notice">
+            <strong>Reason for Rejection</strong>
+            <p>{{ order.rejectionReason || 'No rejection reason recorded.' }}</p>
+          </div>
+
+        </section>
+
+      </main>
+
+
+      <!-- RIGHT CONTENT: SHIPMENT PROGRESS -->
+      <aside
+        class="shipment-sidebar"
+        *ngIf="order.status !== 'Rejected' && order.status !== 'Pending Review'"
+      >
+
+        <section class="details-section shipment-section">
+
+          <div class="section-heading">
+            <span class="section-number">03</span>
+
+            <div>
+              <h2>Shipment Progress</h2>
+              <p>Monitor the order's delivery stages.</p>
+            </div>
+          </div>
+
+          <!-- CURRENT STATUS -->
+          <div class="shipment-current-status">
+            <span class="tracking-label">CURRENT SHIPMENT STATUS</span>
+
             <strong>{{ order.status }}</strong>
+
+            <div class="shipment-progress-bar">
+              <div
+                class="shipment-progress-fill"
+                [style.width.%]="
+                  currentStepIndex >= 0
+                    ? ((currentStepIndex + 1) / shipmentSteps.length) * 100
+                    : 0
+                "
+              ></div>
+            </div>
+
+            <span class="progress-count">
+              {{ currentStepIndex + 1 }} of {{ shipmentSteps.length }} stages
+            </span>
           </div>
 
-        </div>
-      </section>
+          <!-- SHIPMENT TIMELINE -->
+          <div class="shipment-timeline">
 
+            <div
+              class="timeline-item"
+              *ngFor="let step of shipmentSteps; let i = index"
+              [ngClass]="{
+                'completed': isStepCompleted(step),
+                'current': isCurrentStep(step),
+                'upcoming': !isStepCompleted(step) && !isCurrentStep(step)
+              }"
+            >
 
-      <!-- PARTNER INFORMATION -->
-      <section class="details-section">
-        <div class="section-heading">
-          <span class="section-icon">♙</span>
+              <div class="timeline-marker">
+                <span *ngIf="isStepCompleted(step)">✓</span>
+                <span *ngIf="isCurrentStep(step)">{{ i + 1 }}</span>
+                <span *ngIf="!isStepCompleted(step) && !isCurrentStep(step)">{{ i + 1 }}</span>
+              </div>
 
-          <div>
-            <h2>Partner Information</h2>
-            <p>Order requesting organization</p>
-          </div>
-        </div>
+              <div class="timeline-content">
+                <strong>{{ step }}</strong>
 
-        <div class="information-list">
+                <span *ngIf="isStepCompleted(step)" class="timeline-state">
+                  Completed
+                </span>
 
-          <div class="information-item">
-            <span>Partner Name</span>
-            <strong>{{ order.partnerName }}</strong>
-          </div>
+                <span *ngIf="isCurrentStep(step)" class="timeline-state">
+                  Current Stage
+                </span>
 
-          <div class="information-item">
-            <span>Delivery Location</span>
-            <strong>{{ order.location }}</strong>
-          </div>
+                <span *ngIf="getStepDate(step)" class="timeline-date">
+                  {{ getStepDate(step) | date:'dd MMM yyyy, hh:mm a' }}
+                </span>
 
-        </div>
-      </section>
+              </div>
 
+            </div>
 
-      <!-- PRODUCT INFORMATION -->
-      <section class="details-section product-section">
-        <div class="section-heading">
-          <span class="section-icon">◇</span>
-
-          <div>
-            <h2>Product Information</h2>
-            <p>Requested silk supply details</p>
-          </div>
-        </div>
-
-        <div class="product-highlight">
-
-          <div>
-            <span>SILK TYPE</span>
-            <strong>{{ order.silkType }}</strong>
           </div>
 
-          <div class="quantity-display">
-            <strong>{{ order.quantity }}</strong>
-            <span>kg</span>
+
+          <!-- UPDATE STATUS ACTION -->
+          <div class="shipment-update-area">
+
+            <div *ngIf="canUpdateShipment" class="next-stage-notice">
+              <span>NEXT STAGE</span>
+              <strong>{{ nextShipmentStatus }}</strong>
+            </div>
+
+            <button
+              *ngIf="canUpdateShipment"
+              type="button"
+              class="update-shipment-button"
+              (click)="updateShipmentStatus()"
+            >
+              <span>↻</span>
+              Update Shipment Status
+            </button>
+
+            <div *ngIf="order.status === 'In Transit'" class="receiving-notice">
+              <strong>Awaiting Receiving Confirmation</strong>
+              <p>
+                The final Delivered status must be confirmed through
+                the Receiving Scanner.
+              </p>
+            </div>
+
+            <div *ngIf="order.status === 'Delivered'" class="delivered-notice">
+              <strong>✓ Shipment Delivered</strong>
+              <p>Receiving confirmation has been recorded.</p>
+            </div>
+
           </div>
 
-        </div>
+        </section>
 
-        <div class="information-item notes-item">
-          <span>Additional Notes</span>
-          <p>{{ order.notes || 'No additional notes provided.' }}</p>
-        </div>
-
-      </section>
-
-
-      <!-- ORDER REVIEW -->
-      <section
-        class="details-section review-section"
-        *ngIf="order.status === 'Pending Review'"
-      >
-        <div class="section-heading">
-          <span class="section-icon">✓</span>
-
-          <div>
-            <h2>Order Review</h2>
-            <p>This order is waiting for staff review.</p>
-          </div>
-        </div>
-
-        <div class="review-notice">
-          <strong>Action Required</strong>
-
-          <p>
-            Review the partner's order information before approving
-            or rejecting this request.
-          </p>
-        </div>
-
-        <div class="review-actions">
-
-          <button
-            type="button"
-            class="approve-button"
-            (click)="approveOrder(order)"
-          >
-            Approve Order
-          </button>
-
-          <button
-            type="button"
-            class="reject-button"
-            (click)="rejectOrder(order)"
-          >
-            Reject Order
-          </button>
-
-        </div>
-      </section>
-
-
-      <!-- REJECTION NOTICE -->
-      <section
-        class="details-section rejection-section"
-        *ngIf="order.status === 'Rejected'"
-      >
-        <div class="section-heading">
-          <span class="section-icon">!</span>
-
-          <div>
-            <h2>Rejection Notice</h2>
-            <p>This order request was rejected.</p>
-          </div>
-        </div>
-
-        <div class="rejection-notice">
-          <strong>Reason for Rejection</strong>
-          <p>{{ order.rejectionReason || 'No rejection reason recorded.' }}</p>
-        </div>
-
-      </section>
+      </aside>
 
     </div>
-
-
-    <!-- TRACKING INFORMATION -->
-    <section
-      class="details-section tracking-section"
-      *ngIf="order.trackingId && order.trackingGenerated"
-    >
-
-      <div class="section-heading">
-        <span class="section-icon">⌁</span>
-
-        <div>
-          <h2>Tracking Information</h2>
-          <p>Scan or download the generated order tracking codes.</p>
-        </div>
-      </div>
-
-      <div class="tracking-code-grid">
-
-        <!-- QR CODE -->
-        <div class="tracking-code-card">
-
-          <span class="tracking-label">QR CODE</span>
-
-          <div class="code-image-container">
-            <img
-              *ngIf="qrCodeImage"
-              [src]="qrCodeImage"
-              alt="Order Tracking QR Code"
-            />
-
-            <span *ngIf="!qrCodeImage">
-              Generating QR Code...
-            </span>
-          </div>
-
-          <strong>{{ order.trackingId }}</strong>
-          <p>Scan to access the tracking reference.</p>
-
-        </div>
-
-
-        <!-- BARCODE -->
-        <div class="tracking-code-card">
-
-          <span class="tracking-label">BARCODE</span>
-
-          <div class="code-image-container barcode-container">
-            <img
-              *ngIf="barcodeImage"
-              [src]="barcodeImage"
-              alt="Order Tracking Barcode"
-            />
-
-            <span *ngIf="!barcodeImage">
-              Generating Barcode...
-            </span>
-          </div>
-
-          <strong>{{ order.trackingId }}</strong>
-          <p>Barcode for order identification.</p>
-
-        </div>
-
-      </div>
-
-    </section>
 
   </ng-container>
 

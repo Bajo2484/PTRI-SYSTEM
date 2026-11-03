@@ -58,7 +58,15 @@ export interface SilkOrder {
   dispatchedAt?: string;
   inTransitAt?: string;
   deliveredAt?: string;
-  rejectedAt?: string;
+   rejectedAt?: string;
+
+  // RECEIVING DETAILS
+  receiverName?: string;
+  actualQuantityReceived?: number;
+  packageCondition?: 'Good' | 'Damaged' | 'Incomplete';
+  receivingRemarks?: string;
+  receivedAt?: string;
+  receiptGenerated?: boolean;
 
   rejectionReason?: string;
   statusHistory?: OrderStatusHistory[];
