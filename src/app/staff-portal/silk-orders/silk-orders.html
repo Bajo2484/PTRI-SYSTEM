@@ -139,8 +139,35 @@
         </thead>
 
         <tbody>
+
+          <!-- LOADING STATE -->
+<tr *ngIf="isLoading">
+  <td colspan="7" class="empty-state">
+    <div class="empty-icon">◷</div>
+    <strong>Loading Silk Orders...</strong>
+    <p>Please wait while we retrieve partner order requests.</p>
+  </td>
+</tr>
+
+<!-- ERROR STATE -->
+<tr *ngIf="!isLoading && loadError">
+  <td colspan="7" class="empty-state">
+    <div class="empty-icon">!</div>
+    <strong>Unable to Load Orders</strong>
+    <p>{{ loadError }}</p>
+
+    <button
+      type="button"
+      class="btn btn-outline"
+      (click)="loadOrders()"
+    >
+      Try Again
+    </button>
+  </td>
+</tr>
           <tr
-            *ngFor="let order of filteredOrders; trackBy: trackByOrderId"
+           *ngFor="let order of filteredOrders; trackBy: trackByOrderId"
+[hidden]="isLoading || !!loadError"
           >
             <td>
               <div class="order-id">{{ order.orderId }}</div>
@@ -184,16 +211,16 @@
 
             <td>
               <button
-                type="button"
-                class="view-btn"
-                (click)="viewOrder(order)"
-              >
-                View <span>→</span>
-              </button>
+  type="button"
+  class="view-btn"
+  (click)="openOrderDetails(order)"
+>
+  View <span>→</span>
+</button>
             </td>
           </tr>
 
-          <tr *ngIf="filteredOrders.length === 0">
+          <tr *ngIf="!isLoading && !loadError && filteredOrders.length === 0">
             <td colspan="7" class="empty-state">
               <div class="empty-icon">⌕</div>
               <strong>No orders found</strong>
@@ -296,6 +323,28 @@
             <strong>{{ selectedOrder.status }}</strong>
           </div>
 
+          <!-- ORDER REVIEW ACTIONS -->
+<div
+  class="review-actions"
+  *ngIf="selectedOrder.status === 'Pending Review'"
+>
+  <button
+    type="button"
+    class="btn btn-primary"
+    (click)="approveOrder(selectedOrder)"
+  >
+    Approve Order
+  </button>
+
+  <button
+    type="button"
+    class="btn btn-outline"
+    (click)="rejectOrder(selectedOrder)"
+  >
+    Reject Order
+  </button>
+</div>
+
         </div>
 
         <!-- TRACKING INFORMATION -->
@@ -322,12 +371,12 @@
                 <span>QR Code</span>
 
                 <div class="code-placeholder">
-                  <ng-container *ngIf="selectedOrder.qrCode; else qrPending">
-                    <img
-                      [src]="selectedOrder.qrCode"
-                      alt="Order tracking QR code"
-                    />
-                  </ng-container>
+                  <ng-container *ngIf="qrCodeImage; else qrPending">
+  <img
+    [src]="qrCodeImage"
+    alt="Order tracking QR code"
+  />
+</ng-container>
 
                   <ng-template #qrPending>
                     <span class="code-symbol">▦</span>
@@ -343,12 +392,12 @@
                 <span>Barcode</span>
 
                 <div class="code-placeholder barcode-placeholder">
-                  <ng-container *ngIf="selectedOrder.barcode; else barcodePending">
-                    <img
-                      [src]="selectedOrder.barcode"
-                      alt="Order tracking barcode"
-                    />
-                  </ng-container>
+                  <ng-container *ngIf="barcodeImage; else barcodePending">
+  <img
+    [src]="barcodeImage"
+    alt="Order tracking barcode"
+  />
+</ng-container>
 
                   <ng-template #barcodePending>
                     <span class="code-symbol">▥</span>
@@ -432,11 +481,6 @@
             {{ selectedOrder.rejectionReason || 'No rejection reason recorded.' }}
           </p>
         </div>
-
-        <p class="modal-note">
-          Order tracking and status updates will be connected to Firebase
-          in the next implementation step.
-        </p>
 
       </div>
 

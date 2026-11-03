@@ -73,6 +73,14 @@ export const routes: Routes = [
             (m) => m.SilkOrders
           )
       },
+
+      {
+  path: 'silk-orders/:id',
+  loadComponent: () =>
+    import('./staff-portal/order-details/order-details').then(
+      (m) => m.OrderDetails
+    )
+},
       {
         path: 'deliveries',
         redirectTo: 'supply-delivery',

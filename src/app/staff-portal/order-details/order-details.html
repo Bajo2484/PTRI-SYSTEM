@@ -1,0 +1,306 @@
+
+<div class="order-details-page">
+
+  <!-- LOADING STATE -->
+  <div *ngIf="isLoading" class="state-message">
+    <div class="loading-spinner"></div>
+    <strong>Loading Order Details...</strong>
+    <p>Please wait while we retrieve the order information.</p>
+  </div>
+
+  <!-- ERROR STATE -->
+  <div *ngIf="!isLoading && loadError" class="state-message error">
+    <div class="state-icon">!</div>
+    <strong>Unable to Load Order</strong>
+    <p>{{ loadError }}</p>
+
+    <button type="button" class="back-button" (click)="goBack()">
+      ← Back to Silk Orders
+    </button>
+  </div>
+
+  <!-- ORDER DETAILS -->
+  <ng-container *ngIf="!isLoading && order">
+
+    <!-- PAGE HEADER -->
+    <header class="page-header">
+
+      <button type="button" class="back-button" (click)="goBack()">
+        <span>←</span> Back to Silk Orders
+      </button>
+
+      <div class="header-content">
+        <div>
+          <span class="eyebrow">STAFF PORTAL / ORDER MANAGEMENT</span>
+          <h1>Order Details</h1>
+          <p>Review order information and monitor delivery progress.</p>
+        </div>
+
+        <span
+          class="status-badge"
+          [ngClass]="{
+            'status-pending': order.status === 'Pending Review',
+            'status-confirmed': order.status === 'Order Confirmed',
+            'status-preparing': order.status === 'Preparing Order' || order.status === 'Packing Completed',
+            'status-dispatch': order.status === 'Ready for Dispatch' || order.status === 'Dispatched',
+            'status-transit': order.status === 'In Transit',
+            'status-delivered': order.status === 'Delivered',
+            'status-rejected': order.status === 'Rejected'
+          }"
+        >
+          <span class="status-dot"></span>
+          {{ order.status }}
+        </span>
+      </div>
+
+      <!-- ORDER REFERENCE -->
+      <div class="order-reference">
+
+        <div>
+          <span>ORDER REFERENCE</span>
+          <strong>{{ order.orderId }}</strong>
+        </div>
+
+        <div>
+          <span>TRACKING ID</span>
+          <strong>{{ order.trackingId || 'Not yet generated' }}</strong>
+        </div>
+
+      </div>
+
+    </header>
+
+
+    <!-- ORDER INFORMATION GRID -->
+    <div class="information-grid">
+
+      <!-- ORDER OVERVIEW -->
+      <section class="details-section">
+        <div class="section-heading">
+          <span class="section-icon">▤</span>
+
+          <div>
+            <h2>Order Overview</h2>
+            <p>Basic order information</p>
+          </div>
+        </div>
+
+        <div class="information-list">
+
+          <div class="information-item">
+            <span>Order ID</span>
+            <strong>{{ order.orderId }}</strong>
+          </div>
+
+          <div class="information-item">
+            <span>Requested Delivery</span>
+            <strong>{{ order.deliveryDate | date:'dd MMM yyyy' }}</strong>
+          </div>
+
+          <div class="information-item">
+            <span>Current Status</span>
+            <strong>{{ order.status }}</strong>
+          </div>
+
+        </div>
+      </section>
+
+
+      <!-- PARTNER INFORMATION -->
+      <section class="details-section">
+        <div class="section-heading">
+          <span class="section-icon">♙</span>
+
+          <div>
+            <h2>Partner Information</h2>
+            <p>Order requesting organization</p>
+          </div>
+        </div>
+
+        <div class="information-list">
+
+          <div class="information-item">
+            <span>Partner Name</span>
+            <strong>{{ order.partnerName }}</strong>
+          </div>
+
+          <div class="information-item">
+            <span>Delivery Location</span>
+            <strong>{{ order.location }}</strong>
+          </div>
+
+        </div>
+      </section>
+
+
+      <!-- PRODUCT INFORMATION -->
+      <section class="details-section product-section">
+        <div class="section-heading">
+          <span class="section-icon">◇</span>
+
+          <div>
+            <h2>Product Information</h2>
+            <p>Requested silk supply details</p>
+          </div>
+        </div>
+
+        <div class="product-highlight">
+
+          <div>
+            <span>SILK TYPE</span>
+            <strong>{{ order.silkType }}</strong>
+          </div>
+
+          <div class="quantity-display">
+            <strong>{{ order.quantity }}</strong>
+            <span>kg</span>
+          </div>
+
+        </div>
+
+        <div class="information-item notes-item">
+          <span>Additional Notes</span>
+          <p>{{ order.notes || 'No additional notes provided.' }}</p>
+        </div>
+
+      </section>
+
+
+      <!-- ORDER REVIEW -->
+      <section
+        class="details-section review-section"
+        *ngIf="order.status === 'Pending Review'"
+      >
+        <div class="section-heading">
+          <span class="section-icon">✓</span>
+
+          <div>
+            <h2>Order Review</h2>
+            <p>This order is waiting for staff review.</p>
+          </div>
+        </div>
+
+        <div class="review-notice">
+          <strong>Action Required</strong>
+
+          <p>
+            Review the partner's order information before approving
+            or rejecting this request.
+          </p>
+        </div>
+
+        <div class="review-actions">
+
+          <button
+            type="button"
+            class="approve-button"
+            (click)="approveOrder(order)"
+          >
+            Approve Order
+          </button>
+
+          <button
+            type="button"
+            class="reject-button"
+            (click)="rejectOrder(order)"
+          >
+            Reject Order
+          </button>
+
+        </div>
+      </section>
+
+
+      <!-- REJECTION NOTICE -->
+      <section
+        class="details-section rejection-section"
+        *ngIf="order.status === 'Rejected'"
+      >
+        <div class="section-heading">
+          <span class="section-icon">!</span>
+
+          <div>
+            <h2>Rejection Notice</h2>
+            <p>This order request was rejected.</p>
+          </div>
+        </div>
+
+        <div class="rejection-notice">
+          <strong>Reason for Rejection</strong>
+          <p>{{ order.rejectionReason || 'No rejection reason recorded.' }}</p>
+        </div>
+
+      </section>
+
+    </div>
+
+
+    <!-- TRACKING INFORMATION -->
+    <section
+      class="details-section tracking-section"
+      *ngIf="order.trackingId && order.trackingGenerated"
+    >
+
+      <div class="section-heading">
+        <span class="section-icon">⌁</span>
+
+        <div>
+          <h2>Tracking Information</h2>
+          <p>Scan or download the generated order tracking codes.</p>
+        </div>
+      </div>
+
+      <div class="tracking-code-grid">
+
+        <!-- QR CODE -->
+        <div class="tracking-code-card">
+
+          <span class="tracking-label">QR CODE</span>
+
+          <div class="code-image-container">
+            <img
+              *ngIf="qrCodeImage"
+              [src]="qrCodeImage"
+              alt="Order Tracking QR Code"
+            />
+
+            <span *ngIf="!qrCodeImage">
+              Generating QR Code...
+            </span>
+          </div>
+
+          <strong>{{ order.trackingId }}</strong>
+          <p>Scan to access the tracking reference.</p>
+
+        </div>
+
+
+        <!-- BARCODE -->
+        <div class="tracking-code-card">
+
+          <span class="tracking-label">BARCODE</span>
+
+          <div class="code-image-container barcode-container">
+            <img
+              *ngIf="barcodeImage"
+              [src]="barcodeImage"
+              alt="Order Tracking Barcode"
+            />
+
+            <span *ngIf="!barcodeImage">
+              Generating Barcode...
+            </span>
+          </div>
+
+          <strong>{{ order.trackingId }}</strong>
+          <p>Barcode for order identification.</p>
+
+        </div>
+
+      </div>
+
+    </section>
+
+  </ng-container>
+
+</div>
