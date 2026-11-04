@@ -8,10 +8,6 @@
       <p>Coordinate expected cocoon output and record progress against farmer commitments.</p>
     </div>
 
-    <button class="update-production-btn" type="button" (click)="openUpdateProduction()">
-      <span>▣</span>
-      Update production
-    </button>
   </header>
 
   <!-- SUMMARY CARDS -->
@@ -136,7 +132,7 @@
 
           <!-- LOADING -->
           <tr *ngIf="isLoading">
-            <td colspan="7" class="no-production-records">
+            <td colspan="8" class="no-production-records">
               Loading farmer production records...
             </td>
           </tr>

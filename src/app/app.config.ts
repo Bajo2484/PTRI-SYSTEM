@@ -30,7 +30,8 @@ import {
   Building2,
   ClipboardList,
   Clock,
-  MessageSquare,
+MessageSquare,
+Loader,
 } from 'lucide-angular';
 
 import { routes } from './app.routes';
@@ -64,6 +65,7 @@ export const appConfig: ApplicationConfig = {
         ClipboardList,
         Clock,
         MessageSquare,
+        Loader,
       })
     )
   ]

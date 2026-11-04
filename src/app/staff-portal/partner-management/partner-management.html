@@ -110,67 +110,75 @@
             </thead>
 
             <tbody>
-              @for (partner of filteredPartners; track partner.id) {
-                <tr
-                  [class.selected-row]="selectedPartner?.id === partner.id"
-                  (click)="selectPartner(partner)"
-                  tabindex="0"
-                  (keydown.enter)="selectPartner(partner)"
-                  (keydown.space)="selectPartner(partner); $event.preventDefault()"
-                  [attr.aria-label]="'View details for ' + partner.organizationName"
-                >
-                  <td>
-                    <div class="organization-cell">
-                      <div class="organization-avatar">
-                        <i-lucide name="building-2"></i-lucide>
-                      </div>
-
-                      <div>
-                        <strong>{{ partner.organizationName }}</strong>
-                        <span>{{ partner.locality }}</span>
-                      </div>
-                    </div>
-                  </td>
-
-                  <td>
-                    <div class="contact-cell">
-                      <strong>{{ partner.contactPerson }}</strong>
-                      <span>{{ partner.phone }}</span>
-                    </div>
-                  </td>
-
-                  <td>{{ partner.activeOrders }}</td>
-                  <td>{{ partner.pendingReviews }}</td>
-
-                  <td>
-                    <span
-                      class="status-badge"
-                      [class.status-active]="partner.status === 'Active'"
-                      [class.status-inactive]="partner.status === 'Inactive'"
-                    >
-                      <span class="status-dot"></span>
-                      {{ partner.status }}
-                    </span>
-                  </td>
-                </tr>
-              } @empty {
-                <tr>
-                  <td colspan="5">
-                    <div class="empty-state">
-                      <i-lucide name="building-2"></i-lucide>
-                      <h3>No partners found</h3>
-                      <p>Try changing your search or filters.</p>
-                    </div>
-                  </td>
-                </tr>
-              }
-            </tbody>
+  @if (isLoadingPartners) {
+    <tr>
+      <td colspan="5">
+        <div class="empty-state">
+          <i-lucide name="loader"></i-lucide>
+          <h3>Loading partners...</h3>
+          <p>Please wait while partner records are being retrieved.</p>
+        </div>
+      </td>
+    </tr>
+  } @else {
+    @for (partner of filteredPartners; track partner.id) {
+      <tr
+        [class.selected-row]="selectedPartner?.id === partner.id"
+        (click)="selectPartner(partner)"
+        tabindex="0"
+        (keydown.enter)="selectPartner(partner)"
+        (keydown.space)="selectPartner(partner); $event.preventDefault()"
+        [attr.aria-label]="'View details for ' + partner.organizationName"
+      >
+        <td>
+          <div class="organization-cell">
+            <div class="organization-avatar">
+              <i-lucide name="building-2"></i-lucide>
+            </div>
+            <div>
+              <strong>{{ partner.organizationName }}</strong>
+              <span>{{ partner.locality }}</span>
+            </div>
+          </div>
+        </td>
+        <td>
+          <div class="contact-cell">
+            <strong>{{ partner.contactPerson }}</strong>
+            <span>{{ partner.phone }}</span>
+          </div>
+        </td>
+        <td>{{ partner.activeOrders }}</td>
+        <td>{{ partner.pendingReviews }}</td>
+        <td>
+          <span
+            class="status-badge"
+            [class.status-active]="partner.status === 'Active'"
+            [class.status-inactive]="partner.status === 'Inactive'"
+          >
+            <span class="status-dot"></span>
+            {{ partner.status }}
+          </span>
+        </td>
+      </tr>
+    } @empty {
+      <tr>
+        <td colspan="5">
+          <div class="empty-state">
+            <i-lucide name="building-2"></i-lucide>
+            <h3>No partners found</h3>
+            <p>Try changing your search or filters.</p>
+          </div>
+        </td>
+      </tr>
+    }
+  }
+</tbody>
           </table>
         </div>
 
         <div class="table-footer">
           <span>
-            Showing {{ filteredPartners.length }} partner organization(s)
+            {{ isLoadingPartners ? 'Loading partner records...' : 'Showing ' + filteredPartners.length + ' partner organization(s)' }}
           </span>
         </div>
       </div>
@@ -453,17 +461,22 @@
 
           <div class="modal-footer">
             <button
-              class="secondary-btn"
-              type="button"
-              (click)="closePartnerModal()"
-            >
-              Cancel
-            </button>
+  class="secondary-btn"
+  type="button"
+  (click)="closePartnerModal()"
+  [disabled]="isSavingPartner"
+>
+  Cancel
+</button>
 
-            <button class="primary-btn" type="submit">
-              <i-lucide name="save"></i-lucide>
-              {{ editingPartnerId !== null ? 'Save changes' : 'Add partner' }}
-            </button>
+            <button
+  class="primary-btn"
+  type="submit"
+  [disabled]="isSavingPartner"
+>
+  <i-lucide name="save"></i-lucide>
+  {{ isSavingPartner ? 'Please wait...' : (editingPartnerId !== null ? 'Save changes' : 'Add partner') }}
+</button>
           </div>
         </form>
       </section>

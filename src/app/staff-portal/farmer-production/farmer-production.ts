@@ -238,10 +238,6 @@ async reviewProduction(commitment: ProductionCommitment): Promise<void> {
     this.filtersVisible = !this.filtersVisible;
   }
 
-  openUpdateProduction(): void {
-    alert('Update Production: connect this button to your production form.');
-  }
-
   openCommunication(): void {
     alert('Open Communication: connect this button to your communication page.');
   }

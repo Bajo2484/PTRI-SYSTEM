@@ -1,6 +1,7 @@
 import { MessageCacheService } from '../../cache/message-cache.service';
 import Swal from 'sweetalert2';
-import { Component, OnInit,ChangeDetectorRef, OnDestroy, } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, OnDestroy } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MessageService } from '../../services/message.service';
@@ -50,8 +51,9 @@ export class Messages implements OnInit, OnDestroy {
   private messageService: MessageService,
   private farmerAccountService: FarmerAccountService,
   private partnerAccountService: PartnerAccountService,
+  private messageCache: MessageCacheService,
   private cdr: ChangeDetectorRef,
-  private messageCache: MessageCacheService
+  private route: ActivatedRoute
 ) {}
 
 ngOnDestroy(): void {
@@ -66,10 +68,30 @@ ngOnDestroy(): void {
 
 async ngOnInit(): Promise<void> {
   this.conversations = this.messageCache.conversations;
-
   await this.loadAccounts();
-
   this.loadAllConversations();
+
+  const recipientUid = this.route.snapshot.queryParamMap.get('recipientUid');
+  const recipientRole = this.route.snapshot.queryParamMap.get('recipientRole');
+
+  if (recipientUid && recipientRole === 'farmer') {
+    const farmer = this.availableContacts.find(
+      contact => contact.uid === recipientUid && contact.role.toLowerCase() === 'farmer'
+    );
+
+    if (farmer) {
+      this.startConversationWith(farmer);
+    } else {
+      await Swal.fire({
+        icon: 'warning',
+        title: 'Farmer Not Found',
+        text: 'The selected farmer account could not be found.',
+        confirmButtonColor: '#245638',
+        background: '#fffdf8',
+        color: '#493a2c'
+      });
+    }
+  }
 }
 
 loadAllConversations(): void {

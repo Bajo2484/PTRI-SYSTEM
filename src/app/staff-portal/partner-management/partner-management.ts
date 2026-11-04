@@ -1,5 +1,5 @@
 
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { LucideAngularModule } from 'lucide-angular';
@@ -41,7 +41,8 @@ interface Partner {
 })
 export class PartnerManagement implements OnInit {
   constructor(
-    private partnerAccountService: PartnerAccountService
+    private partnerAccountService: PartnerAccountService,
+     private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
@@ -56,49 +57,82 @@ export class PartnerManagement implements OnInit {
   showPartnerModal = false;
   editingPartnerId: string | null = null;
 
+  isLoadingPartners = false;
+  isSavingPartner = false;
+
   partners: Partner[] = [];
 
   partnerForm = this.emptyPartner();
 
-  async loadPartners(): Promise<void> {
-    try {
-      const records = await this.partnerAccountService.getPartners();
+  async loadPartners(showLoading = true): Promise<void> {
+  if (showLoading) {
+    this.isLoadingPartners = true;
 
-      this.partners = records.map((record, index) => ({
-        id: record.id,
-        reference: `PTRI-P${String(index + 1).padStart(3, '0')}`,
-        organizationName: record.organizationName,
-        contactPerson: record.fullName,
-        email: record.email,
-        phone: record.phone,
-        locality: record.locality,
-        address: record.address || record.locality,
-        username: record.username,
-        authUid: record.authUid,
-        status: record.status === 'Inactive' ? 'Inactive' : 'Active',
-        orders: [],
-        activeOrders: 0,
-        pendingReviews: 0
-      }));
-
-      if (
-        this.selectedPartner &&
-        !this.partners.some(
-          partner => partner.id === this.selectedPartner?.id
-        )
-      ) {
-        this.selectedPartner = null;
-      }
-    } catch (error) {
-      console.error('Error loading partners:', error);
-
-      await Swal.fire({
-        icon: 'error',
-        title: 'Unable to Load Partners',
-        text: 'Please check your Firebase connection and permissions.'
-      });
-    }
+    Swal.fire({
+      title: 'Loading Partners',
+      text: 'Please wait while we retrieve partner records...',
+      allowOutsideClick: false,
+      allowEscapeKey: false,
+      showConfirmButton: false,
+      background: '#ffffff',
+      color: '#24352b',
+      didOpen: () => Swal.showLoading()
+    });
   }
+
+  try {
+    const records = await this.partnerAccountService.getPartners();
+
+    this.partners = records.map((record, index) => ({
+      id: record.id,
+      reference: `PTRI-P${String(index + 1).padStart(3, '0')}`,
+      organizationName: record.organizationName,
+      contactPerson: record.fullName,
+      email: record.email,
+      phone: record.phone,
+      locality: record.locality,
+      address: record.address || record.locality,
+      username: record.username,
+      authUid: record.authUid,
+      status: record.status === 'Inactive' ? 'Inactive' : 'Active',
+      orders: [],
+      activeOrders: 0,
+      pendingReviews: 0
+    }));
+
+    if (
+      this.selectedPartner &&
+      !this.partners.some(
+        partner => partner.id === this.selectedPartner?.id
+      )
+    ) {
+      this.selectedPartner = null;
+    }
+
+    this.cdr.detectChanges();
+
+  } catch (error) {
+    console.error('Error loading partners:', error);
+
+    if (showLoading) {
+      Swal.close();
+    }
+
+    await Swal.fire({
+      icon: 'error',
+      title: 'Unable to Load Partners',
+      text: 'Please check your Firebase connection and permissions.'
+    });
+
+  } finally {
+    if (showLoading) {
+      this.isLoadingPartners = false;
+      Swal.close();
+    }
+
+    this.cdr.detectChanges();
+  }
+}
 
   get locations(): string[] {
     return [
@@ -175,61 +209,27 @@ export class PartnerManagement implements OnInit {
   }
 
   async savePartner(): Promise<void> {
-    const form = this.partnerForm;
+  const form = this.partnerForm;
 
-    if (
-      !form.organizationName.trim() ||
-      !form.contactPerson.trim() ||
-      !form.email.trim() ||
-      !form.phone.trim() ||
-      !form.locality.trim() ||
-      !form.address.trim()
-    ) {
-      await Swal.fire({
-        icon: 'warning',
-        title: 'Missing Information',
-        text: 'Please complete all required partner information.'
-      });
-      return;
-    }
+  if (
+    !form.organizationName.trim() ||
+    !form.contactPerson.trim() ||
+    !form.email.trim() ||
+    !form.phone.trim() ||
+    !form.locality.trim() ||
+    !form.address.trim()
+  ) {
+    await Swal.fire({
+      icon: 'warning',
+      title: 'Missing Information',
+      text: 'Please complete all required partner information.'
+    });
+    return;
+  }
 
-    if (this.editingPartnerId !== null) {
-      try {
-        await this.partnerAccountService.updatePartner(
-          this.editingPartnerId,
-          {
-            fullName: form.contactPerson.trim(),
-            organizationName: form.organizationName.trim(),
-            locality: form.locality.trim(),
-            address: form.address.trim(),
-            phone: form.phone.trim(),
-            email: form.email.trim(),
-            status: form.status
-          }
-        );
+  const isEditing = this.editingPartnerId !== null;
 
-        await this.loadPartners();
-
-        await Swal.fire({
-          icon: 'success',
-          title: 'Partner Updated',
-          text: 'Partner information has been updated.'
-        });
-
-        this.closePartnerModal();
-      } catch (error) {
-        console.error('Error updating partner:', error);
-
-        await Swal.fire({
-          icon: 'error',
-          title: 'Update Failed',
-          text: 'Unable to update the partner information.'
-        });
-      }
-
-      return;
-    }
-
+  if (!isEditing) {
     if (!form.username.trim() || !form.password) {
       await Swal.fire({
         icon: 'warning',
@@ -247,8 +247,38 @@ export class PartnerManagement implements OnInit {
       });
       return;
     }
+  }
 
-    try {
+  if (this.isSavingPartner) return;
+
+  this.isSavingPartner = true;
+
+  Swal.fire({
+    title: isEditing ? 'Updating Partner' : 'Creating Partner Account',
+    text: 'Please wait while we process your request...',
+    allowOutsideClick: false,
+    allowEscapeKey: false,
+    showConfirmButton: false,
+    background: '#ffffff',
+    color: '#24352b',
+    didOpen: () => Swal.showLoading()
+  });
+
+  try {
+    if (isEditing && this.editingPartnerId) {
+      await this.partnerAccountService.updatePartner(
+        this.editingPartnerId,
+        {
+          fullName: form.contactPerson.trim(),
+          organizationName: form.organizationName.trim(),
+          locality: form.locality.trim(),
+          address: form.address.trim(),
+          phone: form.phone.trim(),
+          email: form.email.trim(),
+          status: form.status
+        }
+      );
+    } else {
       await this.partnerAccountService.createPartnerLogin(
         {
           fullName: form.contactPerson.trim(),
@@ -262,26 +292,44 @@ export class PartnerManagement implements OnInit {
         },
         form.password
       );
-
-      await this.loadPartners();
-
-      await Swal.fire({
-        icon: 'success',
-        title: 'Partner Account Created',
-        text: 'The partner login account has been created successfully.'
-      });
-
-      this.closePartnerModal();
-    } catch (error) {
-      console.error('Error creating partner account:', error);
-
-      await Swal.fire({
-        icon: 'error',
-        title: 'Account Creation Failed',
-        text: 'Unable to create the partner account. Please check whether the username already exists and verify Firebase permissions.'
-      });
     }
+
+    // Refresh partner records without opening another loading alert.
+    await this.loadPartners(false);
+
+    this.closePartnerModal();
+
+    Swal.close();
+
+    await Swal.fire({
+      icon: 'success',
+      title: isEditing ? 'Partner Updated' : 'Partner Account Created',
+      text: isEditing
+        ? 'Partner information has been updated.'
+        : 'The partner login account has been created successfully.'
+    });
+
+  } catch (error) {
+    console.error(
+      isEditing ? 'Error updating partner:' : 'Error creating partner account:',
+      error
+    );
+
+    Swal.close();
+
+    await Swal.fire({
+      icon: 'error',
+      title: isEditing ? 'Update Failed' : 'Account Creation Failed',
+      text: isEditing
+        ? 'Unable to update the partner information.'
+        : 'Unable to create the partner account. Please check whether the username already exists and verify Firebase permissions.'
+    });
+
+  } finally {
+    this.isSavingPartner = false;
+    this.cdr.detectChanges();
   }
+}
 
   messagePartner(partner: Partner): void {
     console.log('Selected partner for messaging:', partner.email);
