@@ -1,69 +1,424 @@
 
 <section class="page-container">
+
+  <!-- PAGE HEADER -->
   <div class="page-header">
     <div>
-      <h2>Deliveries</h2>
-      <p>Monitor the delivery status of your silk supply orders.</p>
+      <span class="eyebrow">PARTNER PORTAL / LOGISTICS</span>
+      <h2>My Deliveries <span>✦</span></h2>
+      <p>Monitor your silk shipments and follow their delivery progress.</p>
+    </div>
+    <div class="header-decoration">
+      <span class="decoration-icon">📦</span>
     </div>
   </div>
 
-  <div class="summary-grid">
-    <div class="summary-card">
-      <div class="summary-icon">▤</div>
-      <div>
-        <p>Total Deliveries</p>
-        <h3>0</h3>
-      </div>
-    </div>
+  <!-- LOADING -->
+  <div class="loading-container" *ngIf="isLoading">
+    <div class="loader"></div>
+    <h3>Loading your shipments...</h3>
+    <p>Please wait while we retrieve your delivery information.</p>
+  </div>
 
-    <div class="summary-card">
-      <div class="summary-icon pending">◷</div>
-      <div>
-        <p>In Transit</p>
-        <h3>0</h3>
-      </div>
-    </div>
-
-    <div class="summary-card">
-      <div class="summary-icon completed">✓</div>
-      <div>
-        <p>Delivered</p>
-        <h3>0</h3>
-      </div>
+  <!-- ERROR -->
+  <div class="message-card error-card" *ngIf="!isLoading && loadError">
+    <span class="message-icon">!</span>
+    <div>
+      <h3>Unable to Load Deliveries</h3>
+      <p>{{ loadError }}</p>
+      <button class="retry-button" (click)="refreshShipments()">Try Again</button>
     </div>
   </div>
 
-  <div class="deliveries-panel">
-    <div class="panel-header">
+  <!-- SHIPMENT LIST -->
+  <ng-container *ngIf="!isLoading && !loadError">
+
+    <div class="section-heading">
       <div>
-        <h3>Delivery Records</h3>
-        <p>View the status and schedule of your deliveries.</p>
+        <span class="section-label">YOUR SHIPMENTS</span>
+        <h3>Shipment Overview</h3>
+        <p>Select a shipment to view its complete tracking information.</p>
       </div>
-      <span class="record-count">0 records</span>
+
+      <span class="live-indicator">
+        <span></span>
+        Live Updates
+      </span>
     </div>
 
-    <div class="table-wrapper">
-      <table>
-        <thead>
-          <tr>
-            <th>Delivery ID</th>
-            <th>Order ID</th>
-            <th>Silk Quantity</th>
-            <th>Expected Date</th>
-            <th>Delivery Status</th>
-          </tr>
-        </thead>
+    <!-- SHIPMENT CARDS -->
+    <div class="shipment-list">
 
-        <tbody>
-          <tr>
-            <td colspan="5" class="empty-state">
-              <div class="empty-icon">⇄</div>
-              <h4>No delivery records yet</h4>
-              <p>Your delivery information will appear here once available.</p>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+      <div class="shipment-card" *ngFor="let shipment of filteredShipments">
+
+        <!-- CARD HEADER -->
+        <div class="shipment-card-header">
+          <div class="shipment-card-title">
+            <div class="shipment-icon">📦</div>
+            <div>
+              <span class="card-label">TRACKING NUMBER</span>
+              <h3>{{ shipment.trackingId || 'Tracking ID Pending' }}</h3>
+              <p>Order ID: {{ shipment.orderId }}</p>
+            </div>
+          </div>
+
+          <span class="status-badge"
+                [ngClass]="shipment.status.toLowerCase().replaceAll(' ', '-')">
+            {{ shipment.status }}
+          </span>
+        </div>
+
+        <!-- CARD DETAILS -->
+        <div class="shipment-detail">
+          <span>Silk Type</span>
+          <strong>{{ shipment.silkType }}</strong>
+        </div>
+
+        <div class="shipment-detail">
+          <span>Ordered Quantity</span>
+          <strong>{{ shipment.quantity }} kg</strong>
+        </div>
+
+        <div class="shipment-detail">
+          <span>Expected Delivery</span>
+          <strong>
+            {{ shipment.expectedDeliveryDate ? (shipment.expectedDeliveryDate | date:'dd MMM yyyy') : 'Not scheduled' }}
+          </strong>
+        </div>
+
+        <div class="shipment-detail">
+          <span>Delivery Location</span>
+          <strong>{{ shipment.location || 'Not specified' }}</strong>
+        </div>
+
+        <!-- CARD FOOTER -->
+        <div class="shipment-card-footer">
+
+          <span class="shipment-footer-note"
+                *ngIf="shipment.status !== 'Delivered' && shipment.status !== 'Rejected'">
+            <span class="footer-status-dot"></span>
+            Follow your shipment progress
+          </span>
+
+          <span class="shipment-footer-note delivered-note"
+                *ngIf="shipment.status === 'Delivered'">
+            <span class="footer-status-dot"></span>
+            Delivery completed
+          </span>
+
+          <span class="shipment-footer-note rejected-note"
+                *ngIf="shipment.status === 'Rejected'">
+            Order was rejected
+          </span>
+
+          <button type="button"
+                  class="view-shipment-button"
+                  (click)="openTrackingModal(shipment)">
+            <span>View Shipment Details</span>
+            <span class="button-arrow">→</span>
+          </button>
+
+        </div>
+
+      </div>
+
     </div>
-  </div>
+
+    <!-- EMPTY STATE -->
+    <div class="empty-state" *ngIf="filteredShipments.length === 0">
+      <div class="empty-icon">📦</div>
+      <h3>No Shipments Yet</h3>
+      <p>
+        Your shipment records will appear here once your silk orders
+        have been submitted to PTRI Staff.
+      </p>
+    </div>
+
+  </ng-container>
 </section>
+
+
+<!-- ========================================= -->
+<!-- SHIPMENT DETAILS MODAL                    -->
+<!-- ========================================= -->
+
+<div class="tracking-modal-overlay"
+     *ngIf="showTrackingModal && selectedShipment"
+     (click)="closeTrackingModal()">
+
+  <div class="tracking-modal"
+       (click)="$event.stopPropagation()">
+
+    <!-- MODAL HEADER -->
+    <div class="tracking-modal-header">
+      <div>
+        <span class="modal-eyebrow">PTRI SILK LOGISTICS</span>
+        <h2>Shipment Details</h2>
+        <p>Track your shipment from preparation to delivery.</p>
+      </div>
+
+      <button type="button"
+              class="modal-close-button"
+              (click)="closeTrackingModal()"
+              aria-label="Close shipment details">
+        ×
+      </button>
+    </div>
+
+    <!-- TRACKING SUMMARY -->
+    <div class="tracking-id-banner">
+      <div>
+        <span>TRACKING NUMBER</span>
+        <h3>{{ selectedShipment.trackingId || 'Tracking ID Pending' }}</h3>
+        <p>Order ID: {{ selectedShipment.orderId }}</p>
+      </div>
+
+      <span class="status-badge"
+            [ngClass]="selectedShipment.status.toLowerCase().replaceAll(' ', '-')">
+        {{ selectedShipment.status }}
+      </span>
+    </div>
+
+    <!-- MODAL BODY -->
+    <div class="tracking-modal-content">
+
+      <!-- SHIPMENT INFORMATION -->
+      <section class="modal-section">
+
+        <div class="modal-section-heading">
+          <div>
+            <span class="section-label">ORDER INFORMATION</span>
+            <h3>Shipment Information</h3>
+          </div>
+        </div>
+
+        <div class="modal-order-grid">
+
+          <div class="modal-info-item">
+            <span>Silk Type</span>
+            <strong>{{ selectedShipment.silkType }}</strong>
+          </div>
+
+          <div class="modal-info-item">
+            <span>Ordered Quantity</span>
+            <strong>{{ selectedShipment.quantity }} kg</strong>
+          </div>
+
+          <div class="modal-info-item">
+            <span>Requested Delivery</span>
+            <strong>
+              {{ selectedShipment.deliveryDate ? (selectedShipment.deliveryDate | date:'dd MMM yyyy') : 'Not specified' }}
+            </strong>
+          </div>
+
+          <div class="modal-info-item">
+            <span>Expected Delivery</span>
+            <strong>
+              {{ selectedShipment.expectedDeliveryDate ? (selectedShipment.expectedDeliveryDate | date:'dd MMM yyyy') : 'Not yet scheduled' }}
+            </strong>
+          </div>
+
+          <div class="modal-info-item">
+            <span>Delivery Location</span>
+            <strong>{{ selectedShipment.location || 'Not specified' }}</strong>
+          </div>
+
+          <div class="modal-info-item">
+            <span>Current Status</span>
+            <strong>{{ selectedShipment.status }}</strong>
+          </div>
+
+        </div>
+
+      </section>
+
+      <!-- REJECTED NOTICE -->
+      <div class="rejected-notice"
+           *ngIf="selectedShipment.status === 'Rejected'">
+
+        <strong>Order Rejected</strong>
+        <p>
+          {{ selectedShipment.rejectionReason ||
+          'Please contact PTRI Staff for more information.' }}
+        </p>
+
+        <span *ngIf="selectedShipment.rejectedAt">
+          {{ formatDate(selectedShipment.rejectedAt) }}
+        </span>
+
+      </div>
+
+      <!-- SHIPMENT TRACKING TIMELINE -->
+      <section class="modal-section timeline-section"
+               *ngIf="selectedShipment.status !== 'Rejected'">
+
+        <div class="modal-section-heading">
+          <div>
+            <span class="section-label">SHIPMENT JOURNEY</span>
+            <h3>Delivery Progress</h3>
+            <p>See the latest updates made by PTRI Staff.</p>
+          </div>
+
+          <span class="timeline-live-dot"></span>
+        </div>
+
+        <div class="shipment-timeline">
+
+          <div class="timeline-step"
+               *ngFor="let step of shipmentSteps"
+               [class.completed]="isStepCompleted(step)"
+               [class.current]="isCurrentStep(step)"
+               [class.pending]="isStepPending(step)">
+
+            <div class="timeline-marker">
+              <span *ngIf="isStepCompleted(step)">✓</span>
+              <span *ngIf="isCurrentStep(step)">●</span>
+              <span *ngIf="isStepPending(step)">○</span>
+            </div>
+
+            <div class="timeline-content">
+
+              <div class="timeline-title-row">
+                <h4>{{ getStatusLabel(step) }}</h4>
+
+                <span class="timeline-current-label"
+                      *ngIf="isCurrentStep(step)">
+                  CURRENT STATUS
+                </span>
+
+                <span class="timeline-done-label"
+                      *ngIf="isStepCompleted(step)">
+                  COMPLETED
+                </span>
+              </div>
+
+              <p class="timeline-date"
+                 *ngIf="getStepHistory(step)?.updatedAt">
+                {{ formatDate(getStepHistory(step)?.updatedAt) }}
+              </p>
+
+              <p class="timeline-remarks"
+                 *ngIf="getStepHistory(step)?.remarks">
+                {{ getStepHistory(step)?.remarks }}
+              </p>
+
+              <p class="timeline-waiting"
+                 *ngIf="isStepPending(step)">
+                Waiting for this shipment stage.
+              </p>
+
+              <p class="timeline-waiting"
+                 *ngIf="isCurrentStep(step) && !getStepHistory(step)?.updatedAt">
+                Latest shipment status.
+              </p>
+
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- RECEIVING DETAILS -->
+      <section class="modal-section receiving-section"
+               *ngIf="selectedShipment.status === 'Delivered'">
+
+        <div class="modal-section-heading">
+          <div>
+            <span class="section-label">DELIVERY CONFIRMATION</span>
+            <h3>Receiving Details</h3>
+          </div>
+
+          <span class="status-badge delivered">Delivered</span>
+        </div>
+
+        <div class="modal-order-grid">
+
+          <div class="modal-info-item">
+            <span>Received By</span>
+            <strong>{{ selectedShipment.receiverName || 'Not recorded' }}</strong>
+          </div>
+
+          <div class="modal-info-item">
+            <span>Actual Quantity Received</span>
+            <strong>
+              {{ selectedShipment.actualQuantityReceived ?? 'Not recorded' }}
+              <span *ngIf="selectedShipment.actualQuantityReceived !== undefined">kg</span>
+            </strong>
+          </div>
+
+          <div class="modal-info-item">
+            <span>Package Condition</span>
+            <strong>{{ selectedShipment.packageCondition || 'Not recorded' }}</strong>
+          </div>
+
+          <div class="modal-info-item">
+            <span>Received Date</span>
+            <strong>{{ formatDate(selectedShipment.receivedAt) }}</strong>
+          </div>
+
+        </div>
+
+        <div class="receiving-remarks"
+             *ngIf="selectedShipment.receivingRemarks">
+          <span>Receiving Remarks</span>
+          <p>{{ selectedShipment.receivingRemarks }}</p>
+        </div>
+
+      </section>
+
+      <!-- DELIVERY CONFIRMATION RECEIPT -->
+      <section class="modal-section receipt-section"
+               *ngIf="selectedShipment.status === 'Delivered'">
+
+        <div class="delivery-receipt-card"
+             *ngIf="selectedShipment.receiptGenerated">
+
+          <div class="receipt-card-icon">📄</div>
+
+          <div class="receipt-card-content">
+            <span class="section-label">DELIVERY DOCUMENT</span>
+            <h3>Delivery Confirmation Receipt</h3>
+            <p>
+              Your delivery has been confirmed. Your proof of delivery
+              receipt is available.
+            </p>
+            <span class="receipt-status-label">
+              <span></span>
+              Receipt Generated
+            </span>
+          </div>
+
+        </div>
+
+        <div class="receipt-waiting-card"
+             *ngIf="!selectedShipment.receiptGenerated">
+
+          <span class="receipt-waiting-icon">📄</span>
+
+          <div>
+            <strong>Delivery Receipt Not Yet Available</strong>
+            <p>
+              Your shipment is marked as delivered, but the delivery
+              confirmation receipt has not been generated yet.
+            </p>
+          </div>
+
+        </div>
+
+      </section>
+
+    </div>
+
+    <!-- MODAL FOOTER -->
+    <div class="tracking-modal-footer">
+      <span>PTRI SILK SUPPLY & DELIVERY</span>
+
+      <button type="button"
+              class="modal-done-button"
+              (click)="closeTrackingModal()">
+        Close Details
+      </button>
+    </div>
+
+  </div>
+</div>

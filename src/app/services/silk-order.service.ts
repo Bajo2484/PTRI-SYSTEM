@@ -1,6 +1,5 @@
-
+import { db } from './firebase';
 import { Injectable } from '@angular/core';
-
 import {
   collection,
   addDoc,
@@ -9,10 +8,10 @@ import {
   where,
   doc,
   updateDoc,
-  serverTimestamp
+  serverTimestamp,
+  onSnapshot,
+  Unsubscribe
 } from 'firebase/firestore';
-
-import { db } from './firebase';
 
 export type OrderStatus =
   | 'Pending Review'
@@ -39,10 +38,11 @@ export interface SilkOrder {
   partnerName: string;
   location: string;
 
-  silkType: string;
+    silkType: string;
   quantity: number;
-  deliveryDate: string;
-    notes?: string;
+  deliveryDate: string; // Partner's Requested Delivery Date
+  expectedDeliveryDate?: string; // Staff's Expected Delivery Date
+  notes?: string;
 
   status: OrderStatus;
 
@@ -106,6 +106,40 @@ export class SilkOrderService {
       return dateB - dateA;
     });
   }
+
+listenToPartnerOrders(
+  partnerUid: string,
+  onUpdate: (orders: SilkOrder[]) => void,
+  onError?: (error: Error) => void
+): Unsubscribe {
+
+  const ordersQuery = query(
+    this.ordersCollection,
+    where('partnerUid', '==', partnerUid)
+  );
+
+  return onSnapshot(
+    ordersQuery,
+    snapshot => {
+      const orders = snapshot.docs.map(orderDoc => ({
+        id: orderDoc.id,
+        ...orderDoc.data()
+      })) as SilkOrder[];
+
+      orders.sort((a, b) => {
+        const dateA = a.createdAt?.toMillis?.() || 0;
+        const dateB = b.createdAt?.toMillis?.() || 0;
+
+        return dateB - dateA;
+      });
+
+      onUpdate(orders);
+    },
+    error => {
+      onError?.(error);
+    }
+  );
+}
 
   async getAllOrders(): Promise<SilkOrder[]> {
 

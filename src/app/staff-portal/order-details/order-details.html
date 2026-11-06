@@ -78,7 +78,6 @@
 
     </header>
 
-
     <!-- MAIN TWO-COLUMN LAYOUT -->
     <div class="order-details-layout">
 
@@ -116,6 +115,17 @@
                 <div class="information-item">
                   <span>Requested Delivery</span>
                   <strong>{{ order.deliveryDate | date:'dd MMM yyyy' }}</strong>
+                </div>
+
+                <div class="information-item">
+                  <span>Expected Delivery</span>
+                  <strong>{{ (order.expectedDeliveryDate || order.deliveryDate) | date:'dd MMM yyyy' }}</strong>
+                  <small class="text-muted" *ngIf="order.expectedDeliveryDate">
+                    Agreed delivery date
+                  </small>
+                  <small class="text-muted" *ngIf="!order.expectedDeliveryDate">
+                    Based on requested delivery date
+                  </small>
                 </div>
 
                 <div class="information-item">
@@ -179,7 +189,6 @@
 
         </section>
 
-
         <!-- 02 TRACKING DETAILS -->
         <section
           class="details-section tracking-section"
@@ -234,13 +243,12 @@
               <p>Scan to access the tracking reference.</p>
 
               <button
-  class="download-code-button"
-  (click)="downloadShipmentLabel()">
-  Download Shipment Label
-</button>
+                class="download-code-button"
+                (click)="downloadShipmentLabel()">
+                Download Shipment Label
+              </button>
 
             </div>
-
 
             <!-- BARCODE -->
             <div class="tracking-code-card">
@@ -278,7 +286,6 @@
           </div>
 
         </section>
-
 
         <!-- ORDER REVIEW -->
         <section
@@ -325,7 +332,6 @@
 
         </section>
 
-
         <!-- REJECTION NOTICE -->
         <section
           class="details-section rejection-section"
@@ -349,7 +355,6 @@
         </section>
 
       </main>
-
 
       <!-- RIGHT CONTENT: SHIPMENT PROGRESS -->
       <aside
@@ -429,7 +434,6 @@
             </div>
 
           </div>
-
 
           <!-- UPDATE STATUS ACTION -->
           <div class="shipment-update-area">

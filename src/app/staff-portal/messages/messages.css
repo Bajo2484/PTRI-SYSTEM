@@ -334,3 +334,62 @@ button:disabled { cursor:not-allowed; opacity:.55; }
 @media (prefers-reduced-motion:reduce) {
   *,*::before,*::after { scroll-behavior:auto!important; animation-duration:.01ms!important; animation-iteration-count:1!important; transition-duration:.01ms!important; }
 }
+
+/* DELIVERY DATE PROPOSAL BUTTON */
+.propose-date-btn { display:inline-flex; align-items:center; justify-content:center; gap:8px; min-height:36px; padding:0 13px; border:1px solid var(--gold); border-radius:8px; background:linear-gradient(135deg,#f4d982,#d6a52d); color:var(--green-dark); font-size:11px; font-weight:900; white-space:nowrap; box-shadow:0 4px 11px rgba(214,165,45,.18); transition:all .2s ease; }
+.propose-date-btn:hover:not(:disabled) { transform:translateY(-2px); border-color:#f0d47d; background:linear-gradient(135deg,#ffe9a6,#d6a52d); box-shadow:0 7px 15px rgba(214,165,45,.25); }
+.propose-date-btn:disabled { opacity:.6; cursor:not-allowed; }
+
+/* DELIVERY DATE PROPOSAL MESSAGE */
+.delivery-proposal-card { width:100%; max-width:390px; overflow:hidden; border:1px solid #e3cf98; border-radius:13px; background:linear-gradient(145deg,#fffdf7,#f8f0dc); box-shadow:0 5px 15px rgba(81,58,31,.09); }
+.proposal-heading { display:flex; align-items:center; gap:10px; padding:13px 15px; border-bottom:1px solid #eadbb7; background:linear-gradient(110deg,#245638,#183f2a); color:#fffdf5; font-size:12px; font-weight:900; }
+.proposal-icon { display:flex; flex:0 0 30px; align-items:center; justify-content:center; width:30px; height:30px; border:1px solid rgba(255,255,255,.35); border-radius:9px; background:rgba(255,255,255,.12); color:#f5d477; font-size:16px; }
+.proposal-body { padding:15px; }
+.proposal-order-label { margin:0 0 5px; color:#9a8053; font-size:10px; font-weight:900; letter-spacing:.6px; }
+.proposal-order-id { margin:0; color:var(--green-dark); font-size:14px; font-weight:900; overflow-wrap:anywhere; }
+.proposal-date { margin:12px 0; padding:11px 12px; border:1px solid #e5d3a2; border-radius:9px; background:linear-gradient(110deg,#fff3d2,#f8edce); color:var(--brown-dark); font-size:13px; font-weight:900; }
+.proposal-description { margin:0; color:#806e55; font-size:11px; line-height:1.7; }
+.proposal-status { display:inline-flex; align-items:center; gap:6px; margin-top:12px; padding:6px 10px; border:1px solid transparent; border-radius:20px; font-size:10px; font-weight:900; }
+.proposal-pending { border-color:#e6cd83; background:#fff3d2; color:#86621b; }
+.proposal-accepted { border-color:#b9d6a9; background:#e8f3e2; color:#32653b; }
+.proposal-declined { border-color:#e6b8a9; background:#f9e8e2; color:#984a35; }
+
+/* DELIVERY DATE PROPOSAL MODAL */
+.delivery-proposal-overlay { position:fixed; inset:0; z-index:2100; display:flex; align-items:center; justify-content:center; padding:20px; overflow-y:auto; background:rgba(25,38,25,.70); backdrop-filter:blur(6px); animation:modalFadeIn .2s ease-out; }
+.delivery-proposal-modal { width:100%; max-width:510px; max-height:90vh; overflow-y:auto; border:1px solid #dfc98f; border-radius:17px; background:#fffdf7; box-shadow:0 25px 75px rgba(25,38,25,.35); animation:modalSlideIn .25s ease-out; }
+.delivery-proposal-header { display:flex; align-items:flex-start; justify-content:space-between; gap:15px; padding:21px 23px 18px; border-bottom:1px solid #e7d8b7; background:linear-gradient(115deg,#245638,#183f2a); }
+.delivery-proposal-header .eyebrow { margin-bottom:6px; color:#f0d17a; }
+.delivery-proposal-header h2 { margin:0; color:#fffdf4; font-size:19px; font-weight:900; }
+.delivery-proposal-header p { margin:7px 0 0; color:#e6ddc3; font-size:11px; line-height:1.6; }
+.close-proposal-btn { display:flex; flex:0 0 35px; align-items:center; justify-content:center; width:35px; height:35px; padding:0; border:1px solid rgba(255,255,255,.3); border-radius:9px; background:rgba(255,255,255,.10); color:#fff8e8; font-size:23px; line-height:1; transition:all .2s ease; }
+.close-proposal-btn:hover { border-color:var(--gold); background:var(--gold); color:var(--green-dark); }
+.proposal-form { display:flex; flex-direction:column; gap:17px; padding:22px 23px 23px; }
+.proposal-form label { display:block; margin-bottom:8px; color:var(--green-dark); font-size:11px; font-weight:900; }
+.proposal-form select,.proposal-form input[type="date"] { display:block; width:100%; min-height:45px; padding:0 13px; border:1px solid #e3d7c2; border-radius:9px; outline:none; background:#faf7ef; color:var(--text); font-size:12px; transition:all .2s ease; }
+.proposal-form select:focus,.proposal-form input[type="date"]:focus { border-color:var(--gold); background:#fff; box-shadow:0 0 0 4px rgba(214,165,45,.13); }
+.selected-order-info { padding:13px 14px; border:1px solid #e5d6b6; border-radius:10px; background:linear-gradient(110deg,#f8f1df,#f2f5e9); }
+.selected-order-info p { margin:0; color:#806c50; font-size:11px; line-height:1.7; }
+.selected-order-info strong { color:var(--green-dark); }
+.proposal-note { display:flex; align-items:flex-start; gap:9px; padding:12px; border:1px solid #e5d6b6; border-radius:9px; background:#fbf5e7; color:#806c50; font-size:10px; line-height:1.7; }
+.proposal-note span { flex:0 0 auto; color:var(--gold-dark); font-size:15px; }
+.proposal-modal-actions { display:flex; justify-content:flex-end; flex-wrap:wrap; gap:9px; padding-top:5px; }
+.cancel-proposal-btn,.send-proposal-btn { display:inline-flex; align-items:center; justify-content:center; gap:7px; min-height:40px; padding:0 16px; border-radius:9px; font-size:11px; font-weight:900; transition:all .2s ease; }
+.cancel-proposal-btn { border:1px solid #dfd2b8; background:#fffaf0; color:var(--brown); }
+.cancel-proposal-btn:hover { border-color:var(--gold); background:#fff2cf; }
+.send-proposal-btn { border:1px solid var(--green); background:linear-gradient(135deg,#2e7048,#1b482e); color:#fff; box-shadow:0 4px 11px rgba(36,86,56,.17); }
+.send-proposal-btn:hover:not(:disabled) { transform:translateY(-2px); border-color:var(--gold); box-shadow:0 7px 16px rgba(36,86,56,.22); }
+.send-proposal-btn:disabled { opacity:.55; cursor:not-allowed; }
+
+/* PROPOSAL MODAL MOBILE */
+@media (max-width:640px) {
+  .chat-header-actions { flex-wrap:wrap; }
+  .propose-date-btn { flex:1 1 auto; min-height:34px; padding:0 9px; font-size:10px; }
+  .delivery-proposal-overlay { align-items:center; padding:12px; }
+  .delivery-proposal-modal { max-height:90dvh; border-radius:14px; }
+  .delivery-proposal-header { padding:17px 15px 14px; }
+  .delivery-proposal-header h2 { font-size:17px; }
+  .proposal-form { gap:14px; padding:17px 15px; }
+  .proposal-modal-actions { flex-direction:column-reverse; }
+  .cancel-proposal-btn,.send-proposal-btn { width:100%; }
+  .delivery-proposal-card { max-width:100%; }
+}

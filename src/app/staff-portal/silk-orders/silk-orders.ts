@@ -83,40 +83,59 @@ private async generateTrackingCodes(trackingId: string): Promise<void> {
   this.barcodeImage = canvas.toDataURL('image/png');
 }
 
+
 async approveOrder(order: SilkOrder): Promise<void> {
   if (!order.id) {
     Swal.fire('Error', 'Order document ID is missing.', 'error');
     return;
   }
 
+  const today = new Date();
+  const minDate = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+
   const result = await Swal.fire({
     title: 'Approve this order?',
-    text: 'A Tracking ID, QR Code, and Barcode will be generated.',
-    icon: 'question',
+    text: 'Set the expected delivery date before approving.',
+    input: 'date',
+    inputLabel: 'Expected Delivery Date',
+    inputAttributes: {
+      min: minDate
+    },
+    inputValue: order.expectedDeliveryDate || '',
     showCancelButton: true,
-    confirmButtonText: 'Yes, approve',
-    cancelButtonText: 'Cancel'
+    confirmButtonText: 'Approve Order',
+    cancelButtonText: 'Cancel',
+    confirmButtonColor: '#245638',
+    background: '#fffdf8',
+    color: '#493a2c',
+    inputValidator: (value) => {
+      if (!value) {
+        return 'Please select an expected delivery date.';
+      }
+      return null;
+    }
   });
 
- if (!result.isConfirmed) return;
+  if (!result.isConfirmed) return;
 
-Swal.fire({
-  title: 'Approving Order...',
-  html: 'Generating Tracking ID, QR Code, and Barcode. Please wait.',
-  allowOutsideClick: false,
-  allowEscapeKey: false,
-  didOpen: () => {
-    Swal.showLoading();
-  }
-});
+  Swal.fire({
+    title: 'Approving Order...',
+    html: 'Generating Tracking ID, QR Code, and Barcode. Please wait.',
+    allowOutsideClick: false,
+    allowEscapeKey: false,
+    didOpen: () => {
+      Swal.showLoading();
+    }
+  });
 
-try {
-   this.cdr.detectChanges();
+  try {
+    this.cdr.detectChanges();
 
-  const trackingId = this.generateTrackingId();
+    const trackingId = this.generateTrackingId();
 
     await this.silkOrderService.updateOrder(order.id, {
       status: 'Order Confirmed',
+      expectedDeliveryDate: result.value,
       trackingId,
       trackingGenerated: true,
       confirmedAt: new Date().toISOString(),
@@ -132,28 +151,98 @@ try {
 
     await this.generateTrackingCodes(trackingId);
 
-this.cdr.detectChanges();
+    this.cdr.detectChanges();
 
-await this.loadOrders();
+    await this.loadOrders();
 
-this.selectedOrder = this.orders.find(
-  item => item.id === order.id
-) || null;
+    this.selectedOrder = this.orders.find(
+      item => item.id === order.id
+    ) || null;
 
-this.cdr.detectChanges();
+    this.cdr.detectChanges();
 
-Swal.fire({
-  title: 'Order Approved!',
-  text: 'Tracking ID, QR Code, and Barcode generated successfully.',
-  icon: 'success',
-  confirmButtonText: 'Done'
-});
+    Swal.fire({
+      title: 'Order Approved!',
+      text: 'Expected delivery date, Tracking ID, QR Code, and Barcode saved successfully.',
+      icon: 'success',
+      confirmButtonText: 'Done',
+      confirmButtonColor: '#245638'
+    });
 
   } catch (error) {
     console.error('Error approving order:', error);
     Swal.fire('Error', 'Unable to approve this order. Please try again.', 'error');
   }
 }
+
+
+async setExpectedDeliveryDate(order: SilkOrder): Promise<void> {
+  if (!order.id) {
+    Swal.fire('Error', 'Order document ID is missing.', 'error');
+    return;
+  }
+
+  const today = new Date();
+  const minDate = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+
+  const result = await Swal.fire({
+    title: 'Set Expected Delivery Date',
+    text: 'Update the expected delivery date for this shipment.',
+    input: 'date',
+    inputLabel: 'Expected Delivery Date',
+    inputAttributes: { min: minDate },
+    inputValue: order.expectedDeliveryDate || '',
+    showCancelButton: true,
+    confirmButtonText: 'Save Date',
+    cancelButtonText: 'Cancel',
+    confirmButtonColor: '#245638',
+    background: '#fffdf8',
+    color: '#493a2c',
+    inputValidator: (value) => {
+      if (!value) {
+        return 'Please select an expected delivery date.';
+      }
+      return null;
+    }
+  });
+
+  if (!result.isConfirmed) return;
+
+  try {
+    Swal.fire({
+      title: 'Saving Date...',
+      text: 'Please wait.',
+      allowOutsideClick: false,
+      allowEscapeKey: false,
+      didOpen: () => Swal.showLoading()
+    });
+
+    await this.silkOrderService.updateOrder(order.id, {
+      expectedDeliveryDate: result.value
+    });
+
+    await this.loadOrders();
+
+    this.selectedOrder = this.orders.find(
+      item => item.id === order.id
+    ) || null;
+
+    this.cdr.detectChanges();
+
+    Swal.fire({
+      title: 'Date Updated!',
+      text: 'The expected delivery date has been saved successfully.',
+      icon: 'success',
+      confirmButtonColor: '#245638'
+    });
+
+  } catch (error) {
+    console.error('Error updating expected delivery date:', error);
+    Swal.fire('Error', 'Unable to save the expected delivery date.', 'error');
+  }
+}
+
+
 
 async rejectOrder(order: SilkOrder): Promise<void> {
   if (!order.id) {

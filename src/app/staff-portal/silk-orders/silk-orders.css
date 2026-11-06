@@ -239,3 +239,6 @@
   .modal-overlay { padding:7px; }
   .tracking-code-card { padding:13px; }
 }
+
+.expected-date-btn { margin-top:10px; width:100%; font-size:12px; padding:9px 12px; border-color:#c6a044; color:#245638; background:#fffdf8; }
+.expected-date-btn:hover { background:#f5edda; border-color:#245638; }

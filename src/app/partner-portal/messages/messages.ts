@@ -13,12 +13,18 @@ import Swal from 'sweetalert2';
 
 import { auth, db } from '../../services/firebase';
 import { MessageService, ChatMessage } from '../../services/message.service';
+import { SilkOrderService } from '../../services/silk-order.service';
 
 interface Message {
   id: string;
   sender: 'staff' | 'other';
   text: string;
   time: string;
+  messageType?: 'text' | 'delivery-date-proposal';
+  orderDocId?: string;
+  orderId?: string;
+  proposedDeliveryDate?: string;
+  proposalStatus?: 'pending' | 'accepted' | 'declined';
 }
 
 interface Conversation {
@@ -40,6 +46,7 @@ interface Conversation {
 export class Messages implements OnInit, OnDestroy {
   constructor(
     private messageService: MessageService,
+    private silkOrderService: SilkOrderService,
     private cdr: ChangeDetectorRef
   ) {}
 
@@ -50,6 +57,7 @@ export class Messages implements OnInit, OnDestroy {
   staffUid = '';
   isLoadingMessages = false;
   isSending = false;
+  isRespondingToProposal = false;
   loadError = '';
 
   private messagesUnsubscribe: Unsubscribe | null = null;
@@ -153,7 +161,12 @@ export class Messages implements OnInit, OnDestroy {
                 hour: '2-digit',
                 minute: '2-digit'
               })
-            : ''
+            : '',
+          messageType: message.messageType || 'text',
+          orderDocId: message.orderDocId,
+          orderId: message.orderId,
+          proposedDeliveryDate: message.proposedDeliveryDate,
+          proposalStatus: message.proposalStatus
         }));
 
         const latestMessage =
@@ -173,6 +186,90 @@ export class Messages implements OnInit, OnDestroy {
         this.cdr.detectChanges();
       }
     );
+  }
+
+  async respondToDeliveryDateProposal(
+    message: Message,
+    response: 'accepted' | 'declined'
+  ): Promise<void> {
+    const user = auth.currentUser;
+
+    if (!user || this.isRespondingToProposal) return;
+
+    if (
+      message.messageType !== 'delivery-date-proposal' ||
+      message.proposalStatus !== 'pending'
+    ) {
+      return;
+    }
+
+    if (
+      !message.orderDocId ||
+      !message.proposedDeliveryDate
+    ) {
+      await Swal.fire({
+        icon: 'error',
+        title: 'Invalid Proposal',
+        text: 'The delivery-date proposal is missing its order information.'
+      });
+      return;
+    }
+
+    const confirmation = await Swal.fire({
+      icon: 'question',
+      title: response === 'accepted'
+        ? 'Accept Proposed Delivery Date?'
+        : 'Decline Proposed Delivery Date?',
+      text: response === 'accepted'
+        ? `You are agreeing to the proposed delivery date of ${message.proposedDeliveryDate}.`
+        : 'PTRI Staff will be informed that you declined this proposed date.',
+      showCancelButton: true,
+      confirmButtonText: response === 'accepted' ? 'Yes, Accept' : 'Yes, Decline',
+      cancelButtonText: 'Cancel',
+      confirmButtonColor: response === 'accepted' ? '#245638' : '#795033'
+    });
+
+    if (!confirmation.isConfirmed) return;
+
+    this.isRespondingToProposal = true;
+
+    try {
+      if (response === 'accepted') {
+        // Save the agreed date to the actual silk order first.
+        await this.silkOrderService.updateOrder(message.orderDocId, {
+          expectedDeliveryDate: message.proposedDeliveryDate,
+          updatedAt: new Date().toISOString()
+        });
+      }
+
+      // Update the proposal message after the order update succeeds.
+      await this.messageService.updateProposalStatus(
+        message.id,
+        response
+      );
+
+      await Swal.fire({
+        icon: 'success',
+        title: response === 'accepted' ? 'Date Accepted!' : 'Proposal Declined',
+        text: response === 'accepted'
+          ? 'Your agreed delivery date has been saved. PTRI Staff can now proceed with the order review.'
+          : 'PTRI Staff has been notified of your decision.',
+        confirmButtonColor: '#245638'
+      });
+
+    } catch (error) {
+      console.error('Error responding to delivery-date proposal:', error);
+
+      await Swal.fire({
+        icon: 'error',
+        title: 'Unable to Process Response',
+        text: 'Your response could not be completed. Please try again.'
+      });
+
+    } finally {
+      this.isRespondingToProposal = false;
+      this.cdr.detectChanges();
+    }
   }
 
   async sendMessage(): Promise<void> {

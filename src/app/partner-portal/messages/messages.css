@@ -336,3 +336,169 @@
   .message-bubble { max-width:92%; padding:11px 13px; }
   .message-bubble p { font-size:12px; }
 }
+
+/* =========================================
+   DELIVERY DATE PROPOSAL CARD
+========================================= */
+
+.delivery-proposal-card {
+  width:100%;
+  min-width:230px;
+  padding:16px;
+  border:1px solid #e3cc91;
+  border-radius:14px;
+  background:linear-gradient(145deg,#fffdf6,#f7f0df);
+  color:#493a2c;
+  box-shadow:0 4px 12px rgba(73,58,44,.08);
+}
+
+.proposal-heading {
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding-bottom:13px;
+  border-bottom:1px solid #e8dcc2;
+}
+
+.proposal-icon {
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex-shrink:0;
+  width:43px;
+  height:43px;
+  border:1px solid #e3c77e;
+  border-radius:12px;
+  background:#f5e8c7;
+  font-size:21px;
+}
+
+.proposal-heading strong {
+  display:block;
+  color:#245638;
+  font-size:13px;
+  font-weight:800;
+}
+
+.proposal-heading small {
+  display:block;
+  margin-top:4px;
+  color:#89765d;
+  font-size:10px;
+  text-align:left;
+}
+
+.proposal-order,
+.proposal-date {
+  display:flex;
+  flex-direction:column;
+  gap:5px;
+  padding:12px 0;
+}
+
+.proposal-order span,
+.proposal-date span {
+  color:#8a7966;
+  font-size:10px;
+  font-weight:700;
+  text-transform:uppercase;
+  letter-spacing:.5px;
+}
+
+.proposal-order strong {
+  color:#493a2c;
+  font-size:12px;
+}
+
+.proposal-date {
+  padding:13px;
+  border:1px solid #e5d3a6;
+  border-radius:10px;
+  background:linear-gradient(110deg,#f6edda,#fffaf0);
+}
+
+.proposal-date strong {
+  color:#245638;
+  font-size:17px;
+  font-weight:800;
+}
+
+.proposal-notice {
+  margin:12px 0;
+  padding:11px;
+  border-left:3px solid #d6ae55;
+  border-radius:5px;
+  background:#f5eddb;
+  color:#795033;
+  font-size:11px;
+  line-height:1.6;
+}
+
+.proposal-actions {
+  display:flex;
+  flex-wrap:wrap;
+  gap:9px;
+  margin-top:13px;
+}
+
+.proposal-actions button {
+  min-height:40px;
+  padding:0 15px;
+  border-radius:9px;
+  font-size:11px;
+  font-weight:800;
+  cursor:pointer;
+  transition:transform .2s,box-shadow .2s,filter .2s;
+}
+
+.proposal-accept-btn {
+  flex:1;
+  border:1px solid #245638;
+  background:linear-gradient(135deg,#245638,#39734d);
+  color:#fffdf3;
+  box-shadow:0 3px 8px rgba(36,86,56,.15);
+}
+
+.proposal-decline-btn {
+  border:1px solid #b78b32;
+  background:#fffaf0;
+  color:#795033;
+}
+
+.proposal-actions button:hover:not(:disabled) {
+  transform:translateY(-2px);
+  box-shadow:0 5px 10px rgba(73,58,44,.13);
+}
+
+.proposal-actions button:disabled {
+  opacity:.55;
+  cursor:not-allowed;
+}
+
+.proposal-status {
+  margin-top:13px;
+  padding:11px;
+  border-radius:9px;
+  font-size:11px;
+  font-weight:800;
+  line-height:1.5;
+}
+
+.proposal-status.accepted {
+  border:1px solid #b8d3b5;
+  background:#eaf3e6;
+  color:#245638;
+}
+
+.proposal-status.declined {
+  border:1px solid #dfc49f;
+  background:#f6ecdf;
+  color:#795033;
+}
+
+/* PROPOSAL CARD RESPONSIVENESS */
+@media (max-width:420px) {
+  .delivery-proposal-card { min-width:0; padding:13px; }
+  .proposal-date strong { font-size:15px; }
+  .proposal-actions button { min-height:42px; }
+}

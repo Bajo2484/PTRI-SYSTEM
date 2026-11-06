@@ -1,3 +1,4 @@
+
 <div class="communication-page">
 
   <!-- INBOX VIEW -->
@@ -10,14 +11,13 @@
         <p>Manage conversations with farmers and silk partners.</p>
       </div>
 
-      
-<button
-  type="button"
-  (click)="openNewConversation()"
->
-  <span class="plus-icon">+</span>
-  New conversation
-</button>
+      <button
+        type="button"
+        (click)="openNewConversation()"
+      >
+        <span class="plus-icon">+</span>
+        New conversation
+      </button>
     </header>
 
     <section class="inbox-panel">
@@ -84,12 +84,12 @@
       <div class="conversation-list">
 
         <button
-  type="button"
-  class="conversation-item"
-  *ngFor="let conversation of filteredConversations"
-  [class.unread-conversation]="conversation.unread"
-  (click)="selectConversation(conversation)"
->
+          type="button"
+          class="conversation-item"
+          *ngFor="let conversation of filteredConversations"
+          [class.unread-conversation]="conversation.unread"
+          (click)="selectConversation(conversation)"
+        >
           <div class="avatar">
             {{ conversation.initials }}
           </div>
@@ -98,8 +98,9 @@
 
             <div class="conversation-topline">
               <h3 [class.unread-name]="conversation.unread">
-  {{ conversation.name }}
-</h3>
+                {{ conversation.name }}
+              </h3>
+
               <span class="conversation-time">
                 {{ conversation.time }}
               </span>
@@ -111,11 +112,12 @@
 
             <div class="conversation-bottomline">
               <p
-  class="last-message"
-  [class.unread-preview]="conversation.unread"
->
-  {{ conversation.lastMessage }}
-</p>
+                class="last-message"
+                [class.unread-preview]="conversation.unread"
+              >
+                {{ conversation.lastMessage }}
+              </p>
+
               <span
                 *ngIf="conversation.unread"
                 class="unread-indicator"
@@ -196,6 +198,22 @@
               {{ conversation.role }}
             </span>
 
+            <!-- PROPOSE DELIVERY DATE BUTTON -->
+            <button
+              *ngIf="conversation.role === 'Partner'"
+              type="button"
+              class="propose-date-btn"
+              (click)="openDeliveryDateProposal()"
+              [disabled]="isLoadingProposalOrders"
+            >
+              <span>📅</span>
+              {{
+                isLoadingProposalOrders
+                  ? 'Loading Orders...'
+                  : 'Propose Delivery Date'
+              }}
+            </button>
+
             <button
               type="button"
               class="contact-info-btn"
@@ -259,13 +277,56 @@
                 }}
               </div>
 
+              <!-- DELIVERY DATE PROPOSAL CARD -->
               <div
-                class="message-bubble"
-                [class.staff-bubble]="message.sender === 'staff'"
-                [class.other-bubble]="message.sender === 'other'"
+                *ngIf="message.messageType === 'delivery-date-proposal'; else normalMessage"
+                class="delivery-proposal-card"
               >
-                {{ message.text }}
+
+                <div class="proposal-heading">
+                  <span class="proposal-icon">📅</span>
+
+                  <div>
+                    <strong>Delivery Date Proposal</strong>
+                    <small>Order {{ message.orderId }}</small>
+                  </div>
+                </div>
+
+                <div class="proposal-date">
+                  {{ message.proposedDeliveryDate | date:'MMMM d, y' }}
+                </div>
+
+                <p class="proposal-description">
+                  PTRI Staff proposed this alternative expected delivery date.
+                </p>
+
+                <span
+                  class="proposal-status"
+                  [class.proposal-pending]="message.proposalStatus === 'pending'"
+                  [class.proposal-accepted]="message.proposalStatus === 'accepted'"
+                  [class.proposal-declined]="message.proposalStatus === 'declined'"
+                >
+                  {{
+                    message.proposalStatus === 'accepted'
+                      ? 'Accepted by Partner'
+                      : message.proposalStatus === 'declined'
+                        ? 'Declined by Partner'
+                        : 'Awaiting Partner Response'
+                  }}
+                </span>
+
               </div>
+
+              <!-- NORMAL MESSAGE -->
+              <ng-template #normalMessage>
+                <div
+                  class="message-bubble"
+                  [class.staff-bubble]="message.sender === 'staff'"
+                  [class.other-bubble]="message.sender === 'other'"
+                >
+                  {{ message.text }}
+                </div>
+              </ng-template>
 
               <span class="message-time">
                 {{ message.time }}
@@ -535,97 +596,280 @@
 
   </ng-template>
 
-  <!-- New Conversation Modal -->
-<div
-  class="new-conversation-overlay"
-  *ngIf="showNewConversationModal"
-  (click)="closeNewConversation()"
->
-  <section
-    class="new-conversation-modal"
-    (click)="$event.stopPropagation()"
+
+  <!-- DELIVERY DATE PROPOSAL MODAL -->
+  <div
+    class="delivery-proposal-overlay"
+    *ngIf="showDeliveryProposalModal"
+    (click)="closeDeliveryProposalModal()"
   >
-    <div class="new-conversation-header">
-      <div>
-        <h2>New conversation</h2>
-        <p>Select a Farmer or Partner to start messaging.</p>
+
+    <section
+      class="delivery-proposal-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="delivery-proposal-title"
+      (click)="$event.stopPropagation()"
+    >
+
+      <!-- MODAL HEADER -->
+      <div class="delivery-proposal-header">
+
+        <div>
+          <span class="eyebrow">PARTNER ORDER</span>
+          <h2 id="delivery-proposal-title">Propose Delivery Date</h2>
+          <p>
+            Suggest an alternative expected delivery date to the Partner.
+          </p>
+        </div>
+
+        <button
+          type="button"
+          class="close-proposal-btn"
+          (click)="closeDeliveryProposalModal()"
+          aria-label="Close proposal modal"
+        >
+          ×
+        </button>
+
       </div>
 
-      <button
-        type="button"
-        class="close-modal-btn"
-        (click)="closeNewConversation()"
-        aria-label="Close modal"
-      >
-        &times;
-      </button>
-    </div>
 
-    <input
-      type="text"
-      class="contact-search-input"
-      [(ngModel)]="contactSearchTerm"
-      placeholder="Search name, organization, or location..."
-    />
+      <!-- PROPOSAL FORM -->
+      <div class="proposal-form">
 
-    <div class="contact-filter-tabs">
-      <button
-        type="button"
-        [class.active]="contactFilter === 'All'"
-        (click)="contactFilter = 'All'"
-      >
-        All
-      </button>
+        <label for="proposal-order">
+          Select Partner Order
+        </label>
 
-      <button
-        type="button"
-        [class.active]="contactFilter === 'Farmers'"
-        (click)="contactFilter = 'Farmers'"
-      >
-        Farmers
-      </button>
+        <select
+          id="proposal-order"
+          name="proposalOrder"
+          [(ngModel)]="selectedProposalOrderId"
+          required
+        >
+          <option value="" disabled>
+            Select an order
+          </option>
 
-      <button
-        type="button"
-        [class.active]="contactFilter === 'Partners'"
-        (click)="contactFilter = 'Partners'"
-      >
-        Partners
-      </button>
-    </div>
+          <option
+            *ngFor="let order of availableProposalOrders"
+            [value]="order.id"
+          >
+            {{ order.orderId }} — {{ order.silkType }} ({{ order.quantity }} kg)
+          </option>
 
-    <div class="contact-list">
-      <button
-        type="button"
-        class="contact-option"
-        *ngFor="let contact of availableContacts"
-        (click)="startConversationWith(contact)"
-      >
-        <span class="contact-avatar">
-          {{ contact.name.charAt(0).toUpperCase() }}
-        </span>
+        </select>
 
-        <span class="contact-details">
-          <strong>{{ contact.name }}</strong>
-          <small>{{ contact.organization }}</small>
-          <small *ngIf="contact.location">{{ contact.location }}</small>
-        </span>
 
-        <span class="contact-role">{{ contact.role }}</span>
-      </button>
+        <!-- SELECTED ORDER INFORMATION -->
+        <div
+          class="selected-order-info"
+          *ngIf="selectedProposalOrderId"
+        >
 
-      
-<div class="empty-contacts" *ngIf="availableContacts.length === 0 && !isLoadingAccounts && !accountsLoadError">
-  <p>No matching contacts found.</p>
-  <small>Check the search or make sure the account has an authentication UID.</small>
-</div>
+          <ng-container *ngFor="let order of availableProposalOrders">
 
-<div class="empty-contacts" *ngIf="accountsLoadError">
-  <p>{{ accountsLoadError }}</p>
-  <button type="button" (click)="loadAccounts()">Try again</button>
-</div>
+            <div *ngIf="order.id === selectedProposalOrderId">
 
-    </div>
-  </section>
-</div>
+              <span>Partner's Requested Delivery Date</span>
+
+              <strong>
+                {{ order.deliveryDate | date:'MMMM d, y' }}
+              </strong>
+
+            </div>
+
+          </ng-container>
+
+        </div>
+
+
+        <label for="proposed-date">
+          Proposed Expected Delivery Date
+        </label>
+
+ <input
+  #proposalDateInput
+  id="proposed-date"
+  type="date"
+  name="proposedDate"
+  [value]="proposedDeliveryDate"
+  (change)="proposedDeliveryDate = proposalDateInput.value"
+  required
+/>
+
+        <!-- PROPOSAL INFORMATION -->
+        <div class="proposal-note">
+          <span>i</span>
+
+          <p>
+            The Partner must accept this proposed date before PTRI Staff
+            can approve the order.
+          </p>
+        </div>
+
+      </div>
+
+
+      <!-- MODAL ACTIONS -->
+      <div class="proposal-modal-actions">
+
+        <button
+          type="button"
+          class="cancel-proposal-btn"
+          (click)="closeDeliveryProposalModal()"
+          [disabled]="isSendingProposal"
+        >
+          Cancel
+        </button>
+
+        <button
+          type="button"
+          class="send-proposal-btn"
+          (click)="sendDeliveryDateProposal()"
+          [disabled]="
+            !selectedProposalOrderId ||
+            !proposedDeliveryDate ||
+            isSendingProposal
+          "
+        >
+          {{ isSendingProposal ? 'Sending...' : 'Send Proposal' }}
+        </button>
+
+      </div>
+
+    </section>
+
+  </div>
+
+
+  <!-- NEW CONVERSATION MODAL -->
+  <div
+    class="new-conversation-overlay"
+    *ngIf="showNewConversationModal"
+    (click)="closeNewConversation()"
+  >
+
+    <section
+      class="new-conversation-modal"
+      (click)="$event.stopPropagation()"
+    >
+
+      <div class="new-conversation-header">
+        <div>
+          <h2>New conversation</h2>
+          <p>Select a Farmer or Partner to start messaging.</p>
+        </div>
+
+        <button
+          type="button"
+          class="close-modal-btn"
+          (click)="closeNewConversation()"
+          aria-label="Close modal"
+        >
+          &times;
+        </button>
+      </div>
+
+      <input
+        type="text"
+        class="contact-search-input"
+        [(ngModel)]="contactSearchTerm"
+        placeholder="Search name, organization, or location..."
+      />
+
+      <div class="contact-filter-tabs">
+
+        <button
+          type="button"
+          [class.active]="contactFilter === 'All'"
+          (click)="contactFilter = 'All'"
+        >
+          All
+        </button>
+
+        <button
+          type="button"
+          [class.active]="contactFilter === 'Farmers'"
+          (click)="contactFilter = 'Farmers'"
+        >
+          Farmers
+        </button>
+
+        <button
+          type="button"
+          [class.active]="contactFilter === 'Partners'"
+          (click)="contactFilter = 'Partners'"
+        >
+          Partners
+        </button>
+
+      </div>
+
+      <div class="contact-list">
+
+        <button
+          type="button"
+          class="contact-option"
+          *ngFor="let contact of availableContacts"
+          (click)="startConversationWith(contact)"
+        >
+
+          <span class="contact-avatar">
+            {{ contact.name.charAt(0).toUpperCase() }}
+          </span>
+
+          <span class="contact-details">
+            <strong>{{ contact.name }}</strong>
+            <small>{{ contact.organization }}</small>
+            <small *ngIf="contact.location">
+              {{ contact.location }}
+            </small>
+          </span>
+
+          <span class="contact-role">
+            {{ contact.role }}
+          </span>
+
+        </button>
+
+
+        <!-- EMPTY CONTACTS -->
+        <div
+          class="empty-contacts"
+          *ngIf="
+            availableContacts.length === 0 &&
+            !isLoadingAccounts &&
+            !accountsLoadError
+          "
+        >
+          <p>No matching contacts found.</p>
+          <small>
+            Check the search or make sure the account has an authentication UID.
+          </small>
+        </div>
+
+
+        <!-- ACCOUNT LOAD ERROR -->
+        <div
+          class="empty-contacts"
+          *ngIf="accountsLoadError"
+        >
+          <p>{{ accountsLoadError }}</p>
+
+          <button
+            type="button"
+            (click)="loadAccounts()"
+          >
+            Try again
+          </button>
+        </div>
+
+      </div>
+
+    </section>
+
+  </div>
+
 </div>

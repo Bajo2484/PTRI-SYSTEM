@@ -60,7 +60,71 @@
               [class.own-message]="message.sender === 'other'"
             >
               <div class="message-bubble">
-                <p>{{ message.text }}</p>
+
+                @if (message.messageType === 'delivery-date-proposal') {
+                  <div class="delivery-proposal-card">
+
+                    <div class="proposal-heading">
+                      <span class="proposal-icon">📦</span>
+                      <div>
+                        <strong>Delivery Date Proposal</strong>
+                        <small>PTRI Staff proposed a new delivery date.</small>
+                      </div>
+                    </div>
+
+                    <div class="proposal-order">
+                      <span>Order ID</span>
+                      <strong>{{ message.orderId || 'Not available' }}</strong>
+                    </div>
+
+                    <div class="proposal-date">
+                      <span>Proposed Expected Delivery</span>
+                      <strong>{{ message.proposedDeliveryDate | date:'MMMM d, y' }}</strong>
+                    </div>
+
+                    @if (message.proposalStatus === 'pending' && message.sender === 'staff') {
+                      <div class="proposal-notice">
+                        Please review the proposed delivery date and confirm whether you agree.
+                      </div>
+
+                      <div class="proposal-actions">
+                        <button
+                          type="button"
+                          class="proposal-accept-btn"
+                          [disabled]="isRespondingToProposal"
+                          (click)="respondToDeliveryDateProposal(message, 'accepted')"
+                        >
+                          {{ isRespondingToProposal ? 'Processing...' : '✓ Accept Date' }}
+                        </button>
+
+                        <button
+                          type="button"
+                          class="proposal-decline-btn"
+                          [disabled]="isRespondingToProposal"
+                          (click)="respondToDeliveryDateProposal(message, 'declined')"
+                        >
+                          Decline
+                        </button>
+                      </div>
+                    }
+
+                    @if (message.proposalStatus === 'accepted') {
+                      <div class="proposal-status accepted">
+                        ✓ You accepted this delivery date.
+                      </div>
+                    }
+
+                    @if (message.proposalStatus === 'declined') {
+                      <div class="proposal-status declined">
+                        ✕ You declined this delivery date.
+                      </div>
+                    }
+
+                  </div>
+                } @else {
+                  <p>{{ message.text }}</p>
+                }
+
                 <small>{{ message.time }}</small>
               </div>
             </div>
