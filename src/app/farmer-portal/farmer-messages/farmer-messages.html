@@ -1,14 +1,12 @@
 
 <div class="messages-page">
 
-  <!-- Page Header -->
+  <!-- PAGE HEADER -->
   <header class="page-header">
     <div>
       <p class="eyebrow">FARMER PORTAL</p>
       <h1>Messages</h1>
-      <p class="page-subtitle">
-        Communicate directly with PTRI staff.
-      </p>
+      <p class="page-subtitle">Connect with PTRI staff and other registered farmers.</p>
     </div>
 
     <div class="header-status">
@@ -17,247 +15,328 @@
     </div>
   </header>
 
-  <!-- Messaging Layout -->
   <section class="messaging-layout">
 
-    <!-- Conversation List -->
-    <aside class="conversation-panel">
+    <!-- CONVERSATION LIST -->
+    <aside class="conversation-panel" *ngIf="!showChat">
 
       <div class="conversation-header">
         <div>
-          <h2>Conversations</h2>
-          <p>Your messages with PTRI staff</p>
+          <h2>Messages</h2>
+          <p>Choose who you want to talk to</p>
         </div>
 
-        <span class="conversation-count">2</span>
+        <span class="conversation-count">{{ conversations.length }}</span>
       </div>
 
-      <!-- Search -->
+      <!-- SEARCH FARMERS -->
       <div class="search-box">
-        <lucide-angular
-          [img]="Search"
-          [size]="18"
-          [strokeWidth]="1.8">
+        <lucide-angular [img]="Search" [size]="18" [strokeWidth]="1.8">
         </lucide-angular>
 
         <input
           type="search"
-          placeholder="Search conversations..."
-          aria-label="Search conversations">
+          [(ngModel)]="searchTerm"
+          placeholder="Search farmers..."
+          aria-label="Search farmers">
       </div>
 
-      <!-- Conversation Items -->
       <div class="conversation-list">
 
-        <button class="conversation-item active" type="button">
+        <!-- PTRI STAFF -->
+        <div class="contact-section-heading">
+          <h3>PTRI STAFF</h3>
+          <span class="conversation-label">Official</span>
+        </div>
+
+        <button
+          class="conversation-item"
+          type="button"
+          (click)="openStaffConversation()">
 
           <div class="conversation-avatar staff-avatar">
-            <lucide-angular
-              [img]="Building2"
-              [size]="22"
-              [strokeWidth]="1.8">
+            <lucide-angular [img]="Building2" [size]="22">
             </lucide-angular>
           </div>
 
           <div class="conversation-details">
             <div class="conversation-top">
-              <h3>PTRI Staff</h3>
-              <span class="conversation-time">10:30 AM</span>
+              <h3>PTRI STAFF</h3>
+              <span class="conversation-label">Official</span>
             </div>
 
             <p class="last-message">
-              Please confirm your expected production date.
+              {{ staffConversation?.lastMessage?.text || 'Start a conversation with PTRI Staff' }}
             </p>
 
             <div class="conversation-bottom">
-              <span class="conversation-label">Production</span>
-              <span class="unread-badge">1</span>
-            </div>
-          </div>
+  <span class="conversation-label">PTRI Communication</span>
 
+  <span
+    class="unread-badge"
+    *ngIf="(staffConversation?.unreadCount || 0) > 0">
+    {{ staffConversation?.unreadCount }}
+  </span>
+</div>
+          </div>
         </button>
 
-        <button class="conversation-item" type="button">
+        <!-- RECENT CONVERSATIONS -->
+        <div class="contact-section-heading">
+          <h3>RECENT CONVERSATIONS</h3>
+        </div>
 
-          <div class="conversation-avatar supply-avatar">
+        <div
+          class="chat-empty-state"
+          *ngIf="!isLoadingConversations && conversations.length === 0">
+          <lucide-angular [img]="MessagesSquare" [size]="30">
+          </lucide-angular>
+          <p>No conversations yet.</p>
+        </div>
+
+        <button
+          class="conversation-item"
+          type="button"
+          *ngFor="let conversation of conversations"
+          (click)="openConversation(conversation)">
+
+          <div
+            class="conversation-avatar"
+            [ngClass]="conversation.recipientRole === 'staff' ? 'staff-avatar' : 'farmer-avatar'">
+
             <lucide-angular
-              [img]="MessagesSquare"
-              [size]="21"
-              [strokeWidth]="1.8">
+              [img]="conversation.recipientRole === 'staff' ? Building2 : UserRound"
+              [size]="21">
             </lucide-angular>
           </div>
 
           <div class="conversation-details">
             <div class="conversation-top">
-              <h3>PTRI Staff</h3>
-              <span class="conversation-time">Yesterday</span>
+              <h3>{{ conversation.recipientName }}</h3>
+
+              <span class="conversation-time">
+                {{ conversation.lastMessage?.createdAt?.toDate() | date:'shortTime' }}
+              </span>
             </div>
 
             <p class="last-message">
-              We will update you regarding supply availability.
+              {{ conversation.lastMessage?.senderUid === farmerUid ? 'You: ' : '' }}{{ conversation.lastMessage?.text }}
             </p>
 
             <div class="conversation-bottom">
-              <span class="conversation-label">Supply Update</span>
+              <span class="conversation-label">
+                {{ conversation.recipientRole === 'staff' ? 'PTRI Staff' : conversation.recipientOrganization }}
+              </span>
+
+              <span
+                class="unread-badge"
+                *ngIf="conversation.unreadCount > 0">
+                {{ conversation.unreadCount }}
+              </span>
             </div>
           </div>
+        </button>
 
+        <!-- REGISTERED FARMERS -->
+        <div class="contact-section-heading">
+          <h3>REGISTERED FARMERS</h3>
+          <span class="conversation-label">{{ farmerContacts.length }} farmers</span>
+        </div>
+
+        <div class="chat-empty-state" *ngIf="isLoadingFarmers">
+          <p>Loading registered farmers...</p>
+        </div>
+
+        <div
+          class="chat-empty-state"
+          *ngIf="!isLoadingFarmers && filteredFarmers.length === 0">
+          <lucide-angular [img]="Users" [size]="30">
+          </lucide-angular>
+          <p>No registered farmers found.</p>
+        </div>
+
+        <button
+          class="conversation-item"
+          type="button"
+          *ngFor="let farmer of filteredFarmers"
+          (click)="openFarmerConversation(farmer)">
+
+          <div class="conversation-avatar farmer-avatar">
+            <lucide-angular [img]="UserRound" [size]="21">
+            </lucide-angular>
+          </div>
+
+          <div class="conversation-details">
+            <div class="conversation-top">
+              <h3>{{ farmer.name }}</h3>
+            </div>
+
+            <p class="last-message">{{ farmer.farmName }}</p>
+
+            <div class="conversation-bottom">
+              <span class="conversation-label">{{ farmer.locality }}</span>
+              <span class="start-chat-label">Message</span>
+            </div>
+          </div>
         </button>
 
       </div>
 
       <div class="conversation-help">
-        <lucide-angular
-          [img]="Bell"
-          [size]="17"
-          [strokeWidth]="1.8">
+        <lucide-angular [img]="Bell" [size]="17">
         </lucide-angular>
-
         <p>New messages will appear here.</p>
       </div>
 
     </aside>
 
-    <!-- Chat Panel -->
-    <div class="chat-panel">
+    <!-- CHAT WINDOW -->
+    <div class="chat-panel" *ngIf="showChat && selectedConversation">
 
-      <!-- Chat Header -->
+      <!-- CHAT HEADER -->
       <header class="chat-header">
 
+        <button
+          class="icon-button back-button"
+          type="button"
+          aria-label="Back to conversations"
+          (click)="backToConversations()">
+
+          <lucide-angular [img]="ArrowLeft" [size]="22">
+          </lucide-angular>
+          <span>Back</span>
+        </button>
+
         <div class="chat-contact">
-          <div class="conversation-avatar staff-avatar">
+
+          <div
+            class="conversation-avatar"
+            [ngClass]="selectedConversation.recipientRole === 'staff' ? 'staff-avatar' : 'farmer-avatar'">
+
             <lucide-angular
-              [img]="Building2"
-              [size]="22"
-              [strokeWidth]="1.8">
+              [img]="selectedConversation.recipientRole === 'staff' ? Building2 : UserRound"
+              [size]="22">
             </lucide-angular>
           </div>
 
           <div>
-            <h2>PTRI Staff</h2>
+            <h2>{{ selectedConversation.recipientName }}</h2>
             <p>
               <span class="online-dot"></span>
-              Official communication
+              {{ selectedConversation.recipientOrganization }}
             </p>
           </div>
+
         </div>
 
         <button
           class="icon-button"
           type="button"
           aria-label="Conversation options">
-          <lucide-angular
-            [img]="MoreVertical"
-            [size]="21"
-            [strokeWidth]="1.8">
+          <lucide-angular [img]="MoreVertical" [size]="21">
           </lucide-angular>
         </button>
 
       </header>
-<!-- Firebase Chat Messages -->
-<div class="chat-body">
 
-  <!-- Loading -->
-  <div class="chat-empty-state" *ngIf="isLoadingMessages">
-    <p>Loading messages...</p>
-  </div>
+      <!-- CHAT BODY -->
+      <div class="chat-body">
 
-  <!-- Empty Conversation -->
-  <div
-    class="chat-empty-state"
-    *ngIf="!isLoadingMessages && messages.length === 0">
-
-    <lucide-angular
-      [img]="MessagesSquare"
-      [size]="35">
-    </lucide-angular>
-
-    <h3>No messages yet</h3>
-    <p>Your conversation with PTRI Staff will appear here.</p>
-  </div>
-
-  <!-- Actual Firebase Messages -->
-  <ng-container *ngIf="!isLoadingMessages">
-
-    <div
-      class="message-row"
-      *ngFor="let message of messages"
-      [ngClass]="message.senderRole === 'farmer' ? 'sent' : 'received'">
-
-      <!-- Staff Avatar -->
-      <div
-        class="message-avatar"
-        *ngIf="message.senderRole === 'staff'">
-
-        <lucide-angular
-          [img]="Building2"
-          [size]="16"
-          [strokeWidth]="1.8">
-        </lucide-angular>
-      </div>
-
-      <div class="message-content">
-
-        <span
-          class="message-sender"
-          *ngIf="message.senderRole === 'staff'">
-          PTRI Staff
-        </span>
-
-        <div class="message-bubble">
-          <p>{{ message.text }}</p>
+        <div class="chat-empty-state" *ngIf="isLoadingMessages">
+          <p>Loading messages...</p>
         </div>
 
-        <span class="message-time">
-          {{ message.createdAt?.toDate() | date:'shortTime' }}
+        <div
+          class="chat-empty-state"
+          *ngIf="!isLoadingMessages && messages.length === 0">
 
-          <lucide-angular
-            *ngIf="message.senderRole === 'farmer'"
-            [img]="CheckCheck"
-            [size]="14"
-            [strokeWidth]="1.8">
+          <lucide-angular [img]="MessagesSquare" [size]="35">
           </lucide-angular>
-        </span>
+
+          <h3>Start a conversation</h3>
+          <p>
+            Send your first message to
+            {{ selectedConversation.recipientName }}.
+          </p>
+        </div>
+
+        <ng-container *ngIf="!isLoadingMessages">
+
+          <div
+            class="message-row"
+            *ngFor="let message of messages"
+            [ngClass]="message.senderUid === farmerUid ? 'sent' : 'received'">
+
+            <div
+              class="message-avatar"
+              *ngIf="message.senderUid !== farmerUid">
+
+              <lucide-angular
+                [img]="message.senderRole === 'staff' ? Building2 : UserRound"
+                [size]="16">
+              </lucide-angular>
+
+            </div>
+
+            <div class="message-content">
+
+              <span
+                class="message-sender"
+                *ngIf="message.senderUid !== farmerUid">
+                {{ message.senderRole === 'staff' ? 'PTRI STAFF' : selectedConversation.recipientName }}
+              </span>
+
+              <div class="message-bubble">
+                <p>{{ message.text }}</p>
+              </div>
+
+              <span class="message-time">
+                {{ message.createdAt?.toDate() | date:'shortTime' }}
+
+                <lucide-angular
+                  *ngIf="message.senderUid === farmerUid"
+                  [img]="CheckCheck"
+                  [size]="14">
+                </lucide-angular>
+              </span>
+
+            </div>
+
+          </div>
+
+        </ng-container>
 
       </div>
 
-    </div>
-
-  </ng-container>
-
-</div>
-      <!-- Message Composer -->
+      <!-- MESSAGE COMPOSER -->
       <form class="message-composer" (ngSubmit)="sendMessage()">
 
         <div class="composer-input">
           <input
-  type="text"
-  name="messageText"
-  [(ngModel)]="messageText"
-  placeholder="Write your message..."
-  aria-label="Write your message">
+            type="text"
+            name="messageText"
+            [(ngModel)]="messageText"
+            placeholder="Write your message..."
+            aria-label="Write your message"
+            autocomplete="off">
 
           <button
             class="attachment-button"
             type="button"
             aria-label="Attach a file">
-            <lucide-angular
-              [img]="Paperclip"
-              [size]="20"
-              [strokeWidth]="1.8">
+
+            <lucide-angular [img]="Paperclip" [size]="20">
             </lucide-angular>
           </button>
         </div>
 
         <button
-  class="send-button"
-  type="submit"
-  aria-label="Send message"
-  [disabled]="isSending">
-          <lucide-angular
-            [img]="Send"
-            [size]="19"
-            [strokeWidth]="1.8">
+          class="send-button"
+          type="submit"
+          aria-label="Send message"
+          [disabled]="isSending || !messageText.trim()">
+
+          <lucide-angular [img]="Send" [size]="19">
           </lucide-angular>
           <span>Send</span>
         </button>
@@ -265,7 +344,8 @@
       </form>
 
       <p class="composer-note">
-        Messages are intended for communication with PTRI staff.
+        Messages are intended for communication with
+        {{ selectedConversation.recipientName }}.
       </p>
 
     </div>

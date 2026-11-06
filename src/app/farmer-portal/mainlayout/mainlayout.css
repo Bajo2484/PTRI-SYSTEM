@@ -486,3 +486,67 @@ button:focus-visible,
 .expand-toggle {
   color: #ffffff;
 }
+
+
+/* ==============================
+   FARMER NOTIFICATIONS
+============================== */
+
+.topbar-actions { display:flex; align-items:center; gap:14px; margin-left:auto; }
+.notification-wrapper { position:relative; display:flex; align-items:center; }
+.notification-btn { position:relative; display:grid; place-items:center; width:44px; height:44px; border:1px solid rgba(198,160,68,.35); border-radius:14px; background:#fffaf0; color:#245638; cursor:pointer; transition:all .25s ease; }
+.notification-btn:hover { background:#245638; color:#fff; border-color:#245638; transform:translateY(-2px); box-shadow:0 5px 14px rgba(36,86,56,.18); }
+.notification-badge { position:absolute; top:-7px; right:-7px; min-width:20px; height:20px; padding:0 5px; display:flex; align-items:center; justify-content:center; border:2px solid #fff; border-radius:20px; background:#c58b24; color:#fff; font-size:10px; font-weight:800; box-shadow:0 2px 6px rgba(73,58,44,.2); }
+.notification-dropdown { position:absolute; top:calc(100% + 14px); right:0; z-index:1200; width:360px; max-width:calc(100vw - 28px); overflow:hidden; border:1px solid #e8ddc7; border-radius:18px; background:#fffdf8; box-shadow:0 16px 45px rgba(49,62,43,.2); animation:notificationDrop .2s ease-out; }
+@keyframes notificationDrop { from { opacity:0; transform:translateY(-8px); } to { opacity:1; transform:translateY(0); } }
+.notification-header { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:18px 18px 15px; border-bottom:1px solid #eee5d5; background:linear-gradient(120deg,#f8f4e8,#fffaf0); }
+.notification-header h3 { margin:0; color:#245638; font-size:16px; font-weight:800; }
+.notification-header p { margin:5px 0 0; color:#795033; font-size:12px; }
+.notification-close { display:grid; place-items:center; width:32px; height:32px; border:0; border-radius:9px; background:#eee7d9; color:#493a2c; cursor:pointer; }
+.notification-close:hover { background:#e4d4b5; }
+.notification-list { max-height:360px; overflow-y:auto; }
+.notification-item { position:relative; display:flex; align-items:flex-start; gap:12px; width:100%; padding:15px 16px; border:0; border-bottom:1px solid #f0eadf; background:transparent; text-align:left; cursor:pointer; transition:background .2s ease; }
+.notification-item:hover { background:#f8f5eb; }
+.notification-item.unread { background:#f5f7ed; }
+.notification-icon { flex-shrink:0; display:grid; place-items:center; width:38px; height:38px; border-radius:12px; background:#e8f0e5; color:#245638; }
+.notification-content { display:flex; flex:1; min-width:0; flex-direction:column; gap:5px; }
+.notification-title { color:#493a2c; font-size:13px; font-weight:800; }
+.notification-message { display:-webkit-box; overflow:hidden; color:#695c4b; font-size:12px; line-height:1.5; overflow-wrap:anywhere; -webkit-box-orient:vertical; -webkit-line-clamp:2; line-clamp:2; }
+.notification-time { color:#9a8055; font-size:10px; font-weight:600; }
+.notification-unread-dot { flex-shrink:0; width:9px; height:9px; margin-top:5px; border-radius:50%; background:#c58b24; box-shadow:0 0 0 3px rgba(197,139,36,.13); }
+.notification-empty { display:flex; align-items:center; justify-content:center; flex-direction:column; gap:9px; min-height:175px; padding:25px; color:#9a8055; text-align:center; }
+.notification-empty strong { color:#493a2c; font-size:14px; }
+.notification-empty span { color:#857762; font-size:12px; line-height:1.5; }
+.notification-footer { width:100%; padding:14px; border:0; border-top:1px solid #e9dfcd; background:#245638; color:#fff; font-size:12px; font-weight:800; cursor:pointer; transition:background .2s ease; }
+.notification-footer:hover { background:#173f35; }
+.menu-unread-count { display:inline-flex; align-items:center; justify-content:center; min-width:20px; height:20px; margin-left:auto; padding:0 5px; border-radius:20px; background:#c58b24; color:#fff; font-size:10px; font-weight:800; }
+
+/* Responsive Notifications */
+@media (max-width:600px) {
+  .topbar-actions { gap:9px; }
+  .notification-btn { width:40px; height:40px; border-radius:12px; }
+  .notification-dropdown { position:fixed; top:74px; right:12px; width:360px; max-width:calc(100vw - 24px); }
+  .notification-list { max-height:min(55vh,360px); }
+}
+@media (max-width:380px) {
+  .notification-dropdown { right:8px; max-width:calc(100vw - 16px); }
+  .notification-header { padding:15px; }
+  .notification-item { padding:13px 12px; }
+}
+@media (prefers-reduced-motion:reduce) {
+  .notification-dropdown { animation:none; }
+  .notification-btn { transition:none; }
+}
+
+
+
+/* FARMER TOPBAR SETTINGS */
+.settings-btn { display:inline-flex; align-items:center; justify-content:center; gap:9px; min-height:44px; padding:10px 15px; border:1px solid rgba(198,160,68,.4); border-radius:14px; background:linear-gradient(135deg,#fffaf0,#f5edda); color:#795033; font-size:13px; font-weight:700; text-decoration:none; cursor:pointer; transition:all .25s ease; }
+.settings-btn:hover { transform:translateY(-2px); border-color:#245638; background:#245638; color:#fff; box-shadow:0 5px 14px rgba(36,86,56,.18); }
+.settings-btn lucide-angular { display:inline-flex; align-items:center; justify-content:center; }
+.settings-btn:focus-visible { outline:3px solid #d8b86a; outline-offset:3px; }
+
+@media (max-width:600px) {
+  .settings-btn { width:40px; min-width:40px; height:40px; min-height:40px; padding:8px; border-radius:12px; }
+  .settings-label { display:none; }
+}

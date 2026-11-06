@@ -123,122 +123,132 @@
       </span>
     </div>
 
-    <!-- RESPONSIVE TABLE -->
-    <div class="table-scroll">
-      <table>
-        <thead>
-          <tr>
-            <th>ORDER DETAILS</th>
-            <th>PARTNER</th>
-            <th>SILK TYPE</th>
-            <th>QUANTITY</th>
-            <th>DELIVERY DATE</th>
-            <th>STATUS</th>
-            <th>ACTION</th>
-          </tr>
-        </thead>
+    <!-- MODERN ORDER LIST -->
+    <div class="order-list-container">
 
-        <tbody>
+      <!-- LOADING STATE -->
+      <div class="list-state" *ngIf="isLoading">
+        <div class="empty-icon">◷</div>
+        <strong>Loading Silk Orders...</strong>
+        <p>Please wait while we retrieve partner order requests.</p>
+      </div>
 
-          <!-- LOADING STATE -->
-<tr *ngIf="isLoading">
-  <td colspan="7" class="empty-state">
-    <div class="empty-icon">◷</div>
-    <strong>Loading Silk Orders...</strong>
-    <p>Please wait while we retrieve partner order requests.</p>
-  </td>
-</tr>
+      <!-- ERROR STATE -->
+      <div class="list-state error-state" *ngIf="!isLoading && loadError">
+        <div class="empty-icon">!</div>
+        <strong>Unable to Load Orders</strong>
+        <p>{{ loadError }}</p>
 
-<!-- ERROR STATE -->
-<tr *ngIf="!isLoading && loadError">
-  <td colspan="7" class="empty-state">
-    <div class="empty-icon">!</div>
-    <strong>Unable to Load Orders</strong>
-    <p>{{ loadError }}</p>
+        <button
+          type="button"
+          class="btn btn-outline"
+          (click)="loadOrders()"
+        >
+          Try Again
+        </button>
+      </div>
 
-    <button
-      type="button"
-      class="btn btn-outline"
-      (click)="loadOrders()"
-    >
-      Try Again
-    </button>
-  </td>
-</tr>
-          <tr
-           *ngFor="let order of filteredOrders; trackBy: trackByOrderId"
-[hidden]="isLoading || !!loadError"
-          >
-            <td>
-              <div class="order-id">{{ order.orderId }}</div>
-              <small class="muted">Silk supply order</small>
+      <!-- ORDER ROWS -->
+      <div
+        class="order-list"
+        *ngIf="!isLoading && !loadError && filteredOrders.length > 0"
+      >
 
-              <small class="muted" *ngIf="order.trackingId">
-                {{ order.trackingId }}
-              </small>
-            </td>
+        <article
+          class="order-list-item"
+          *ngFor="let order of filteredOrders; trackBy: trackByOrderId"
+        >
 
-            <td>
-              <div class="partner-name">{{ order.partnerName }}</div>
-              <small class="muted">{{ order.location }}</small>
-            </td>
+          <!-- ORDER REFERENCE -->
+          <div class="order-main">
+            <span class="order-label">ORDER REFERENCE</span>
+            <strong class="order-id">{{ order.orderId }}</strong>
 
-            <td>{{ order.silkType }}</td>
+            <small class="order-tracking" *ngIf="order.trackingId">
+              {{ order.trackingId }}
+            </small>
 
-            <td>
-              <strong>{{ order.quantity }} kg</strong>
-            </td>
+            <small class="order-description" *ngIf="!order.trackingId">
+              Silk supply order
+            </small>
+          </div>
 
-            <td>{{ order.deliveryDate | date:'dd MMM yyyy' }}</td>
+          <!-- PARTNER -->
+          <div class="order-partner">
+            <span class="order-label">PARTNER</span>
+            <strong>{{ order.partnerName }}</strong>
+            <small>{{ order.location }}</small>
+          </div>
 
-            <td>
-              <span
-                class="status-badge"
-                [ngClass]="{
-                  'status-pending': order.status === 'Pending Review',
-                  'status-confirmed': order.status === 'Order Confirmed',
-                  'status-preparing': order.status === 'Preparing Order' || order.status === 'Packing Completed',
-                  'status-scheduled': order.status === 'Ready for Dispatch' || order.status === 'Dispatched',
-                  'status-delivered': order.status === 'Delivered',
-                  'status-rejected': order.status === 'Rejected',
-                  'status-transit': order.status === 'In Transit'
-                }"
-              >
-                <span class="status-dot"></span>
-                {{ order.status }}
-              </span>
-            </td>
+          <!-- SILK DETAILS -->
+          <div class="order-silk">
+            <span class="order-label">SILK DETAILS</span>
+            <strong>{{ order.silkType }}</strong>
+            <small>Quantity: <b>{{ order.quantity }} kg</b></small>
+          </div>
 
-            <td>
-              <button
-  type="button"
-  class="view-btn"
-  (click)="openOrderDetails(order)"
->
-  View <span>→</span>
-</button>
-            </td>
-          </tr>
+          <!-- DELIVERY DATE -->
+          <div class="order-delivery">
+            <span class="order-label">DELIVERY DATE</span>
+            <strong>{{ order.deliveryDate | date:'dd MMM yyyy' }}</strong>
+          </div>
 
-          <tr *ngIf="!isLoading && !loadError && filteredOrders.length === 0">
-            <td colspan="7" class="empty-state">
-              <div class="empty-icon">⌕</div>
-              <strong>No orders found</strong>
-              <p>Try another search term or select a different status.</p>
+          <!-- ORDER STATUS -->
+          <div class="order-status">
+            <span class="order-label">STATUS</span>
 
-              <button
-                type="button"
-                class="btn btn-outline"
-                (click)="searchTerm = ''; setFilter('All Orders')"
-              >
-                Clear filters
-              </button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+            <span
+              class="status-badge"
+              [ngClass]="{
+                'status-pending': order.status === 'Pending Review',
+                'status-confirmed': order.status === 'Order Confirmed',
+                'status-preparing': order.status === 'Preparing Order' || order.status === 'Packing Completed',
+                'status-scheduled': order.status === 'Ready for Dispatch' || order.status === 'Dispatched',
+                'status-delivered': order.status === 'Delivered',
+                'status-rejected': order.status === 'Rejected',
+                'status-transit': order.status === 'In Transit'
+              }"
+            >
+              <span class="status-dot"></span>
+              {{ order.status }}
+            </span>
+          </div>
+
+          <!-- ACTION -->
+          <div class="order-action">
+            <button
+              type="button"
+              class="view-btn"
+              (click)="openOrderDetails(order)"
+            >
+              View Details <span>→</span>
+            </button>
+          </div>
+
+        </article>
+      </div>
+
+      <!-- EMPTY STATE -->
+      <div
+        class="list-state"
+        *ngIf="!isLoading && !loadError && filteredOrders.length === 0"
+      >
+        <div class="empty-icon">⌕</div>
+        <strong>No orders found</strong>
+        <p>Try another search term or select a different status.</p>
+
+        <button
+          type="button"
+          class="btn btn-outline"
+          (click)="searchTerm = ''; setFilter('All Orders')"
+        >
+          Clear filters
+        </button>
+      </div>
+
     </div>
 
+    <!-- TABLE FOOTER -->
     <footer class="table-footer">
       <span>
         Showing {{ filteredOrders.length }} of {{ totalOrders }} orders
@@ -324,26 +334,26 @@
           </div>
 
           <!-- ORDER REVIEW ACTIONS -->
-<div
-  class="review-actions"
-  *ngIf="selectedOrder.status === 'Pending Review'"
->
-  <button
-    type="button"
-    class="btn btn-primary"
-    (click)="approveOrder(selectedOrder)"
-  >
-    Approve Order
-  </button>
+          <div
+            class="review-actions"
+            *ngIf="selectedOrder.status === 'Pending Review'"
+          >
+            <button
+              type="button"
+              class="btn btn-primary"
+              (click)="approveOrder(selectedOrder)"
+            >
+              Approve Order
+            </button>
 
-  <button
-    type="button"
-    class="btn btn-outline"
-    (click)="rejectOrder(selectedOrder)"
-  >
-    Reject Order
-  </button>
-</div>
+            <button
+              type="button"
+              class="btn btn-outline"
+              (click)="rejectOrder(selectedOrder)"
+            >
+              Reject Order
+            </button>
+          </div>
 
         </div>
 
@@ -372,11 +382,11 @@
 
                 <div class="code-placeholder">
                   <ng-container *ngIf="qrCodeImage; else qrPending">
-  <img
-    [src]="qrCodeImage"
-    alt="Order tracking QR code"
-  />
-</ng-container>
+                    <img
+                      [src]="qrCodeImage"
+                      alt="Order tracking QR code"
+                    />
+                  </ng-container>
 
                   <ng-template #qrPending>
                     <span class="code-symbol">▦</span>
@@ -393,11 +403,11 @@
 
                 <div class="code-placeholder barcode-placeholder">
                   <ng-container *ngIf="barcodeImage; else barcodePending">
-  <img
-    [src]="barcodeImage"
-    alt="Order tracking barcode"
-  />
-</ng-container>
+                    <img
+                      [src]="barcodeImage"
+                      alt="Order tracking barcode"
+                    />
+                  </ng-container>
 
                   <ng-template #barcodePending>
                     <span class="code-symbol">▥</span>

@@ -100,6 +100,23 @@ export const routes: Routes = [
             (m) => m.Reports
           )
       },
+            // STAFF PROFILE
+      {
+        path: 'profile',
+        loadComponent: () =>
+          import('./staff-portal/staff-profile/staff-profile').then(
+            (m) => m.StaffProfile
+          )
+      },
+
+      // STAFF SETTINGS
+      {
+        path: 'settings',
+        loadComponent: () =>
+          import('./staff-portal/staff-settings/staff-settings').then(
+            (m) => m.StaffSettings
+          )
+      },
       {
         path: '',
         redirectTo: 'dashboard',
@@ -202,6 +219,7 @@ export const routes: Routes = [
             (m) => m.FarmerProfile
           )
       },
+      { path: 'settings', loadComponent: () => import('./farmer-portal/farmer-settings/farmer-settings').then((m) => m.FarmerSettings) },
       {
         path: '',
         redirectTo: 'dashboard',

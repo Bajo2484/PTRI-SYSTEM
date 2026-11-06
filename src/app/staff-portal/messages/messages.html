@@ -84,11 +84,12 @@
       <div class="conversation-list">
 
         <button
-          type="button"
-          class="conversation-item"
-          *ngFor="let conversation of filteredConversations"
-          (click)="selectConversation(conversation)"
-        >
+  type="button"
+  class="conversation-item"
+  *ngFor="let conversation of filteredConversations"
+  [class.unread-conversation]="conversation.unread"
+  (click)="selectConversation(conversation)"
+>
           <div class="avatar">
             {{ conversation.initials }}
           </div>
@@ -96,7 +97,9 @@
           <div class="conversation-details">
 
             <div class="conversation-topline">
-              <h3>{{ conversation.name }}</h3>
+              <h3 [class.unread-name]="conversation.unread">
+  {{ conversation.name }}
+</h3>
               <span class="conversation-time">
                 {{ conversation.time }}
               </span>
@@ -107,10 +110,12 @@
             </p>
 
             <div class="conversation-bottomline">
-              <p class="last-message">
-                {{ conversation.lastMessage }}
-              </p>
-
+              <p
+  class="last-message"
+  [class.unread-preview]="conversation.unread"
+>
+  {{ conversation.lastMessage }}
+</p>
               <span
                 *ngIf="conversation.unread"
                 class="unread-indicator"

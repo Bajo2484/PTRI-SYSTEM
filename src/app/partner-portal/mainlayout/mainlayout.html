@@ -5,23 +5,19 @@
 
   <!-- SIDEBAR -->
   <aside class="sidebar">
-
     <div class="brand">
-  <div class="brand-icon">
-    <img src="/images/ptri-logo.jpg" alt="DOST-PTRI Logo">
-  </div>
-  <div class="brand-text">
-    <h2>DOST–PTRI</h2>
-    <p>Silk Supply System</p>
-  </div>
-</div>
+      <div class="brand-icon">
+        <img src="/images/ptri-logo.jpg" alt="DOST-PTRI Logo">
+      </div>
+      <div class="brand-text">
+        <h2>DOST–PTRI</h2>
+        <p>Silk Supply System</p>
+      </div>
+    </div>
 
-    <!-- SIDEBAR HEADING -->
     <div class="sidebar-heading">
       <span class="menu-label">PARTNER PORTAL</span>
-
-      <button class="expand-toggle"
-              type="button"
+      <button class="expand-toggle" type="button"
               (click)="toggleSidebar()"
               title="Expand or collapse sidebar">
         {{ isSidebarExpanded ? '‹' : '›' }}
@@ -30,9 +26,7 @@
 
     <!-- NAVIGATION -->
     <nav class="sidebar-nav">
-
-      <a class="menu-item"
-         routerLink="/partner/dashboard"
+      <a class="menu-item" routerLink="/partner/dashboard"
          routerLinkActive="active"
          [routerLinkActiveOptions]="{ exact: true }"
          (click)="closeMobileMenu()">
@@ -40,57 +34,53 @@
         <span class="menu-item-label">Dashboard</span>
       </a>
 
-      <a class="menu-item"
-         routerLink="/partner/orders"
+      <a class="menu-item" routerLink="/partner/orders"
          routerLinkActive="active"
          (click)="closeMobileMenu()">
         <span class="menu-icon">▤</span>
         <span class="menu-item-label">My Orders</span>
       </a>
 
-      <a class="menu-item"
-         routerLink="/partner/deliveries"
+      <a class="menu-item" routerLink="/partner/deliveries"
          routerLinkActive="active"
          (click)="closeMobileMenu()">
         <span class="menu-icon">⇄</span>
         <span class="menu-item-label">Deliveries</span>
       </a>
 
-      <a class="menu-item"
-         routerLink="/partner/messages"
+      <a class="menu-item" routerLink="/partner/messages"
          routerLinkActive="active"
          (click)="closeMobileMenu()">
         <span class="menu-icon">✉</span>
         <span class="menu-item-label">Messages</span>
+        <span class="menu-unread-count"
+              *ngIf="unreadNotificationCount > 0">
+          {{ unreadNotificationCount > 99 ? '99+' : unreadNotificationCount }}
+        </span>
       </a>
 
-      <a class="menu-item"
-         routerLink="/partner/profile"
+      <a class="menu-item" routerLink="/partner/profile"
          routerLinkActive="active"
          (click)="closeMobileMenu()">
         <span class="menu-icon">♙</span>
         <span class="menu-item-label">My Profile</span>
       </a>
-
     </nav>
 
     <!-- PARTNER PROFILE -->
     <div class="sidebar-bottom">
       <div class="sidebar-footer">
         <div class="partner-avatar">P</div>
-
         <div class="partner-info">
           <h4>Partner Account</h4>
           <p>PTRI Partner</p>
         </div>
       </div>
     </div>
-
   </aside>
 
   <!-- MOBILE OVERLAY -->
-  <button class="sidebar-overlay"
-          type="button"
+  <button class="sidebar-overlay" type="button"
           aria-label="Close sidebar"
           (click)="closeMobileMenu()">
   </button>
@@ -100,10 +90,8 @@
 
     <!-- TOPBAR -->
     <header class="topbar">
-
       <div class="topbar-left">
-        <button class="menu-toggle"
-                type="button"
+        <button class="menu-toggle" type="button"
                 (click)="toggleMobileMenu()"
                 aria-label="Open navigation menu">
           ☰
@@ -116,14 +104,424 @@
       </div>
 
       <div class="topbar-right">
-        <button class="logout-button"
-                type="button"
-                (click)="logout()">
+
+        <!-- NOTIFICATIONS -->
+        <div class="notification-wrapper">
+          <button class="notification-button" type="button"
+                  (click)="toggleNotifications()"
+                  aria-label="Notifications"
+                  [attr.aria-expanded]="isNotificationOpen">
+
+            <span class="notification-bell">
+              <svg viewBox="0 0 24 24" fill="none"
+                   stroke="currentColor" stroke-width="1.8"
+                   stroke-linecap="round" stroke-linejoin="round">
+                <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/>
+                <path d="M10 21h4"/>
+              </svg>
+            </span>
+
+            <span class="notification-count"
+                  *ngIf="showUnreadBadge && unreadNotificationCount > 0">
+              {{ unreadNotificationCount > 99 ? '99+' : unreadNotificationCount }}
+            </span>
+          </button>
+
+          <!-- NOTIFICATION DROPDOWN -->
+          <div class="notification-dropdown" *ngIf="isNotificationOpen">
+            <div class="notification-header">
+              <div>
+                <h3>Notifications</h3>
+                <p>You have {{ unreadNotificationCount }} unread notifications</p>
+              </div>
+
+              <button class="notification-close" type="button"
+                      (click)="toggleNotifications()">
+                ✕
+              </button>
+            </div>
+
+            <div class="notification-list">
+              <button class="notification-item" type="button"
+                      *ngFor="let notification of displayedNotifications"
+                      (click)="openMessages()">
+
+                <span class="notification-icon">✉</span>
+
+                <span class="notification-details">
+                  <strong>Message from PTRI Staff</strong>
+                  <span>{{ notification.text }}</span>
+                  <small>{{ notification.createdAt?.toDate?.() | date:'MMM d, y • h:mm a' }}</small>
+                </span>
+
+                <span class="notification-unread-dot"
+                      *ngIf="notification.read === false && showUnreadBadge">
+                </span>
+              </button>
+
+              <div class="notification-empty"
+                   *ngIf="!showMessageNotifications">
+                <span>♧</span>
+                <strong>Notifications are turned off</strong>
+                <p>Enable Message Notifications in Settings to see updates here.</p>
+              </div>
+
+              <div class="notification-empty"
+                   *ngIf="showMessageNotifications && notifications.length === 0">
+                <span>♧</span>
+                <strong>All caught up!</strong>
+                <p>You don't have any notifications yet.</p>
+              </div>
+            </div>
+
+            <div class="notification-footer">
+              <button type="button" (click)="openMessages()">
+                View All Messages →
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- SETTINGS -->
+        <div class="settings-wrapper">
+          <button class="settings-button" type="button"
+                  (click)="toggleSettings()"
+                  aria-label="Settings"
+                  [attr.aria-expanded]="isSettingsOpen">
+            <svg viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="1.8"
+                 stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="3"/>
+              <path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-1.7 2.94-.08-.02a1.7 1.7 0 0 0-1.82.45l-.06.06h-3.4l-.06-.08a1.7 1.7 0 0 0-1.82-.45l-.08.02-1.7-2.94.06-.06A1.7 1.7 0 0 0 9.4 15l-.08-.06v-3.4l.08-.06a1.7 1.7 0 0 0-.34-1.88L9 9.54l1.7-2.94.08.02a1.7 1.7 0 0 0 1.82-.45l.06-.06h3.4l.06.08a1.7 1.7 0 0 0 1.82.45l.08-.02 1.7 2.94-.06.06a1.7 1.7 0 0 0-.34 1.88l.08.06v3.4z"/>
+            </svg>
+          </button>
+
+          <!-- SETTINGS DROPDOWN -->
+          <div class="settings-dropdown" *ngIf="isSettingsOpen">
+
+            <!-- NOTIFICATION PREFERENCES -->
+            <ng-container *ngIf="isNotificationPreferencesOpen; else otherSettingsPage">
+
+              <div class="settings-header">
+                <button type="button" (click)="backToSettings()"
+                        class="settings-back-button">
+                  ← Back to Settings
+                </button>
+                <h3>Notification Preferences</h3>
+                <p>Choose how notifications appear in your portal</p>
+              </div>
+
+              <div class="settings-preference">
+                <div class="settings-section-content">
+                  <strong>Message Notifications</strong>
+                  <small>Show incoming messages from PTRI Staff in your notification panel.</small>
+                </div>
+
+                <button type="button"
+                        class="preference-toggle"
+                        [class.enabled]="showMessageNotifications"
+                        [attr.aria-pressed]="showMessageNotifications"
+                        (click)="toggleMessageNotifications()">
+                  <span class="toggle-indicator"></span>
+                  {{ showMessageNotifications ? 'ON' : 'OFF' }}
+                </button>
+              </div>
+
+              <div class="settings-preference">
+                <div class="settings-section-content">
+                  <strong>Unread Badge</strong>
+                  <small>Show the unread notification count on the bell and Messages menu.</small>
+                </div>
+
+                <button type="button"
+                        class="preference-toggle"
+                        [class.enabled]="showUnreadBadge"
+                        [attr.aria-pressed]="showUnreadBadge"
+                        (click)="toggleUnreadBadge()">
+                  <span class="toggle-indicator"></span>
+                  {{ showUnreadBadge ? 'ON' : 'OFF' }}
+                </button>
+              </div>
+
+            </ng-container>
+
+            <!-- OTHER SETTINGS PAGES -->
+            <ng-template #otherSettingsPage>
+
+              <!-- SECURITY SETTINGS -->
+              <ng-container *ngIf="isSecuritySettingsOpen; else privacyOrMenu">
+
+                <div class="settings-header">
+                  <button type="button" (click)="backToSettings()"
+                          class="settings-back-button">
+                    ← Back to Settings
+                  </button>
+                  <h3>Security Settings</h3>
+                  <p>Keep your partner account secure</p>
+                </div>
+
+                <div class="security-form">
+
+                  <div class="security-intro">
+                    <span class="security-intro-icon">♙</span>
+                    <div>
+                      <strong>Change Password</strong>
+                      <small>Update your password to protect your account.</small>
+                    </div>
+                  </div>
+
+                  <!-- CURRENT PASSWORD -->
+                  <div class="security-field">
+                    <label for="currentPassword">Current Password</label>
+                    <div class="password-input-wrapper">
+                      <input id="currentPassword"
+                             [type]="showCurrentPassword ? 'text' : 'password'"
+                             [value]="currentPassword"
+                             (input)="currentPassword = $any($event.target).value"
+                             placeholder="Enter your current password"
+                             autocomplete="current-password">
+                      <button type="button"
+                              class="password-visibility-button"
+                              (click)="showCurrentPassword = !showCurrentPassword"
+                              [attr.aria-label]="showCurrentPassword ? 'Hide current password' : 'Show current password'">
+                        {{ showCurrentPassword ? 'Hide' : 'Show' }}
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- NEW PASSWORD -->
+                  <div class="security-field">
+                    <label for="newPassword">New Password</label>
+                    <div class="password-input-wrapper">
+                      <input id="newPassword"
+                             [type]="showNewPassword ? 'text' : 'password'"
+                             [value]="newPassword"
+                             (input)="newPassword = $any($event.target).value"
+                             placeholder="Enter your new password"
+                             autocomplete="new-password">
+                      <button type="button"
+                              class="password-visibility-button"
+                              (click)="showNewPassword = !showNewPassword"
+                              [attr.aria-label]="showNewPassword ? 'Hide new password' : 'Show new password'">
+                        {{ showNewPassword ? 'Hide' : 'Show' }}
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- CONFIRM PASSWORD -->
+                  <div class="security-field">
+                    <label for="confirmPassword">Confirm New Password</label>
+                    <div class="password-input-wrapper">
+                      <input id="confirmPassword"
+                             [type]="showConfirmPassword ? 'text' : 'password'"
+                             [value]="confirmPassword"
+                             (input)="confirmPassword = $any($event.target).value"
+                             placeholder="Confirm your new password"
+                             autocomplete="new-password">
+                      <button type="button"
+                              class="password-visibility-button"
+                              (click)="showConfirmPassword = !showConfirmPassword"
+                              [attr.aria-label]="showConfirmPassword ? 'Hide confirmation password' : 'Show confirmation password'">
+                        {{ showConfirmPassword ? 'Hide' : 'Show' }}
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- PASSWORD REQUIREMENTS -->
+                  <div class="password-requirements">
+                    <strong>Password Requirements</strong>
+                    <p [class.requirement-met]="passwordHasMinLength">
+                      <span>{{ passwordHasMinLength ? '✓' : '○' }}</span>
+                      At least 8 characters
+                    </p>
+                    <p [class.requirement-met]="passwordHasUppercase">
+                      <span>{{ passwordHasUppercase ? '✓' : '○' }}</span>
+                      At least one uppercase letter
+                    </p>
+                    <p [class.requirement-met]="passwordHasLowercase">
+                      <span>{{ passwordHasLowercase ? '✓' : '○' }}</span>
+                      At least one lowercase letter
+                    </p>
+                    <p [class.requirement-met]="passwordHasNumber">
+                      <span>{{ passwordHasNumber ? '✓' : '○' }}</span>
+                      At least one number
+                    </p>
+                    <p [class.requirement-met]="passwordHasSpecialCharacter">
+                      <span>{{ passwordHasSpecialCharacter ? '✓' : '○' }}</span>
+                      At least one special character
+                    </p>
+                  </div>
+
+                  <!-- PASSWORD MATCH -->
+                  <p class="password-match-message"
+                     *ngIf="confirmPassword.length > 0"
+                     [class.match]="newPassword === confirmPassword">
+                    {{ newPassword === confirmPassword ? '✓ Passwords match' : 'Passwords do not match' }}
+                  </p>
+
+                  <!-- UPDATE PASSWORD -->
+                  <button type="button"
+                          class="update-password-button"
+                          [disabled]="isChangingPassword"
+                          (click)="changePassword()">
+                    {{ isChangingPassword ? 'Updating Password...' : 'Update Password' }}
+                  </button>
+
+                  <p class="security-note">
+                    For your protection, your current password must be verified before it can be changed.
+                  </p>
+
+                </div>
+              </ng-container>
+
+              <!-- PRIVACY SETTINGS OR MAIN MENU -->
+              <ng-template #privacyOrMenu>
+
+                <!-- PRIVACY SETTINGS PAGE -->
+                <ng-container *ngIf="isPrivacySettingsOpen; else settingsMenu">
+
+                  <div class="settings-header">
+                    <button type="button" (click)="backToSettings()"
+                            class="settings-back-button">
+                      ← Back to Settings
+                    </button>
+                    <h3>Privacy Settings</h3>
+                    <p>Learn how your partner account information is handled</p>
+                  </div>
+
+                  <div class="privacy-content">
+
+                    <div class="privacy-intro">
+                      <span class="privacy-intro-icon">◈</span>
+                      <div>
+                        <strong>Your Privacy Matters</strong>
+                        <p>
+                          This section explains the information used by the
+                          PTRI Silk Supply and Delivery Communication System.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div class="privacy-card">
+                      <span class="privacy-card-icon">♙</span>
+                      <div>
+                        <strong>Account Information</strong>
+                        <p>
+                          Your partner account may contain your name,
+                          organization, address, contact number, email address,
+                          and account details.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div class="privacy-card">
+                      <span class="privacy-card-icon">▤</span>
+                      <div>
+                        <strong>Orders and Deliveries</strong>
+                        <p>
+                          Information submitted through orders, supply requests,
+                          and delivery transactions is used to coordinate
+                          your activities with PTRI.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div class="privacy-card">
+                      <span class="privacy-card-icon">✉</span>
+                      <div>
+                        <strong>Messages and Communication</strong>
+                        <p>
+                          Messages exchanged with PTRI Staff support
+                          coordination, updates, and communication related
+                          to your partner transactions.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div class="privacy-card">
+                      <span class="privacy-card-icon">♧</span>
+                      <div>
+                        <strong>Information Access</strong>
+                        <p>
+                          Account and transaction information should only be
+                          accessed by authorized users according to their
+                          assigned system roles and permissions.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div class="privacy-reminder">
+                      <strong>Keep Your Account Safe</strong>
+                      <ul>
+                        <li>Do not share your password with other people.</li>
+                        <li>Always log out when using a shared device.</li>
+                        <li>Inform PTRI Staff if your account information is incorrect.</li>
+                        <li>Report suspicious or unauthorized account activity.</li>
+                      </ul>
+                    </div>
+
+                    <div class="privacy-note">
+                      <strong>Important Information</strong>
+                      <p>
+                        This page provides privacy information only.
+                        It does not modify account permissions, Firebase
+                        security rules, or data-sharing settings.
+                      </p>
+                    </div>
+
+                  </div>
+                </ng-container>
+
+                <!-- MAIN SETTINGS MENU -->
+                <ng-template #settingsMenu>
+                  <div class="settings-header">
+                    <h3>Settings</h3>
+                    <p>Manage your account preferences</p>
+                  </div>
+
+                  <button class="settings-section" type="button"
+                          (click)="openNotificationPreferences()">
+                    <span class="settings-section-icon">♧</span>
+                    <span class="settings-section-content">
+                      <strong>Notification Preferences</strong>
+                      <small>Manage how you receive updates</small>
+                    </span>
+                    <span class="settings-arrow">›</span>
+                  </button>
+
+                  <button class="settings-section" type="button"
+                          (click)="openSecuritySettings()">
+                    <span class="settings-section-icon">♙</span>
+                    <span class="settings-section-content">
+                      <strong>Security Settings</strong>
+                      <small>Password and account security</small>
+                    </span>
+                    <span class="settings-arrow">›</span>
+                  </button>
+
+                  <button class="settings-section" type="button"
+                          (click)="openPrivacySettings()">
+                    <span class="settings-section-icon">◈</span>
+                    <span class="settings-section-content">
+                      <strong>Privacy Settings</strong>
+                      <small>Learn how your account information is handled</small>
+                    </span>
+                    <span class="settings-arrow">›</span>
+                  </button>
+                </ng-template>
+
+              </ng-template>
+            </ng-template>
+          </div>
+        </div>
+
+        <!-- LOGOUT -->
+        <button class="logout-button" type="button" (click)="logout()">
           <span class="logout-icon">↪</span>
           <span class="logout-label">Logout</span>
         </button>
-      </div>
 
+      </div>
     </header>
 
     <!-- PAGE CONTENT -->
@@ -132,5 +530,4 @@
     </main>
 
   </div>
-
 </div>

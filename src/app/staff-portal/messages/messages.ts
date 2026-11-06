@@ -1,3 +1,4 @@
+import { getAuth } from 'firebase/auth';
 import { MessageCacheService } from '../../cache/message-cache.service';
 import Swal from 'sweetalert2';
 import { Component, OnInit, ChangeDetectorRef, OnDestroy } from '@angular/core';
@@ -191,6 +192,14 @@ conversation.recipientRole = isFarmerConversation
   ? 'farmer'
   : 'partner';
 
+  const staffUid = getAuth().currentUser?.uid;
+
+conversation.unread = chatMessages.some(message =>
+  message.recipientUid === staffUid &&
+  message.recipientRole === 'staff' &&
+  message.read === false
+);
+
           conversation.messages = chatMessages.map(message => ({
             id: message.id as unknown as number,
             sender: message.senderRole === 'staff' ? 'staff' : 'other',
@@ -360,12 +369,35 @@ private listenToSelectedConversation(
           latestMessage?.text || 'Start a conversation';
 
         currentConversation.time = latestMessage?.time || '';
+        
+        // Mark incoming Farmer/Partner messages as read by Staff
+const staffUid = getAuth().currentUser?.uid;
+
+if (
+  staffUid &&
+  messages.some(message =>
+    message.recipientUid === staffUid &&
+    message.recipientRole === 'staff' &&
+    message.read === false
+  )
+) {
+  currentConversation.unread = false;
+
+  this.messageService.markMessagesAsRead(
+    conversation.firebaseConversationId!,
+    staffUid
+  ).catch(error => {
+    console.error('Failed to mark Staff messages as read:', error);
+  });
+}
+
         // Save updated conversations to cache
         this.messageCache.conversations = [...this.conversations];
         this.messageCache.conversationsLoaded = true;
         this.cdr?.detectChanges();
       }
     );
+    
 }
 
 

@@ -168,21 +168,53 @@ await Swal.fire({
   }
 }
 
+
 async loadMyOrders(): Promise<void> {
   if (!this.currentPartnerUid) {
     return;
   }
 
   this.isLoadingOrders = true;
+  this.cdr.detectChanges();
+
+  Swal.fire({
+    title: 'Loading Your Orders',
+    text: 'Please wait while we retrieve your silk orders.',
+    allowOutsideClick: false,
+    allowEscapeKey: false,
+    showConfirmButton: false,
+    background: '#fffdf8',
+    color: '#244b38',
+    didOpen: () => {
+      Swal.showLoading();
+    }
+  });
 
   try {
     this.orders = await this.silkOrderService.getPartnerOrders(
       this.currentPartnerUid
     );
+
+    this.cdr.detectChanges();
+
   } catch (error) {
     console.error('Unable to load partner orders:', error);
+
+    await Swal.fire({
+      icon: 'error',
+      title: 'Unable to Load Orders',
+      text: 'Something went wrong while retrieving your orders. Please try again.',
+      confirmButtonText: 'Okay',
+      confirmButtonColor: '#245638',
+      background: '#fffdf8',
+      color: '#493a2c'
+    });
+
   } finally {
     this.isLoadingOrders = false;
+    Swal.close();
+    this.cdr.detectChanges();
   }
 }
+
 }

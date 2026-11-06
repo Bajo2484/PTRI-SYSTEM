@@ -1,19 +1,31 @@
 
 <section class="profile-page">
   <div class="page-heading">
-    <h2>My Profile</h2>
-    <p>View your partner account information.</p>
+    <div>
+      <span class="eyebrow">PARTNER PORTAL · ACCOUNT</span>
+      <h2>My Profile</h2>
+      <p>Manage and view your registered partner account information.</p>
+    </div>
+
+    <button class="edit-profile-btn" type="button" (click)="openEditModal()" [disabled]="isLoading || !partnerDocId">
+      ✎ Edit Profile
+    </button>
   </div>
 
   <div class="profile-layout">
     <section class="profile-card">
-      <div class="profile-banner"></div>
+      <div class="profile-banner">
+        <span>PTRI PARTNER ACCOUNT</span>
+      </div>
 
       <div class="profile-summary">
-        <div class="profile-avatar">P</div>
-        <h3>Partner Account</h3>
+        <div class="profile-avatar">{{ avatarLetter }}</div>
+        <h3>{{ profile.organizationName || profile.fullName || 'Partner Account' }}</h3>
         <p class="profile-role">PTRI Partner</p>
-        <span class="status-badge">Active Account</span>
+
+        <span class="status-badge" [ngClass]="profile.status.toLowerCase()">
+          {{ profile.status }}
+        </span>
       </div>
 
       <div class="profile-divider"></div>
@@ -21,27 +33,49 @@
       <div class="profile-note">
         <span class="note-icon">✓</span>
         <div>
-          <h4>Partner Portal</h4>
-          <p>Your account provides access to your orders, deliveries, and messages.</p>
+          <h4>Partner Portal Access</h4>
+          <p>Your account provides access to your silk orders, deliveries, and communication with PTRI Staff.</p>
+        </div>
+      </div>
+
+      <div class="profile-contact">
+        <div class="contact-item">
+          <span class="contact-icon">✉</span>
+          <span>{{ profile.email || 'Email not available' }}</span>
+        </div>
+
+        <div class="contact-item">
+          <span class="contact-icon">☎</span>
+          <span>{{ profile.phone || 'Contact number not available' }}</span>
         </div>
       </div>
     </section>
 
     <section class="details-card">
       <div class="details-header">
-        <h3>Account Information</h3>
-        <p>Your registered partner details.</p>
+        <div>
+          <span class="section-eyebrow">ACCOUNT DETAILS</span>
+          <h3>Partner Information</h3>
+          <p>Your registered partner account details.</p>
+        </div>
+
+        <span class="verified-label">✓ Registered</span>
       </div>
 
       <div class="details-list">
         <div class="detail-item">
           <span class="detail-label">Full Name</span>
-          <span class="detail-value">Partner Account</span>
+          <span class="detail-value">{{ profile.fullName || 'Not available' }}</span>
         </div>
 
         <div class="detail-item">
           <span class="detail-label">Email Address</span>
-          <span class="detail-value">Not available</span>
+          <span class="detail-value">{{ profile.email || 'Not available' }}</span>
+        </div>
+
+        <div class="detail-item">
+          <span class="detail-label">Username</span>
+          <span class="detail-value">{{ profile.username || 'Not available' }}</span>
         </div>
 
         <div class="detail-item">
@@ -51,24 +85,87 @@
 
         <div class="detail-item">
           <span class="detail-label">Organization</span>
-          <span class="detail-value">PTRI Partner</span>
+          <span class="detail-value">{{ profile.organizationName || 'Not available' }}</span>
+        </div>
+
+        <div class="detail-item">
+          <span class="detail-label">Locality</span>
+          <span class="detail-value">{{ profile.locality || 'Not available' }}</span>
+        </div>
+
+        <div class="detail-item">
+          <span class="detail-label">Address</span>
+          <span class="detail-value">{{ profile.address || 'Not available' }}</span>
+        </div>
+
+        <div class="detail-item">
+          <span class="detail-label">Contact Number</span>
+          <span class="detail-value">{{ profile.phone || 'Not available' }}</span>
         </div>
 
         <div class="detail-item">
           <span class="detail-label">Account Status</span>
           <span class="detail-value">
-            <span class="status-badge">Active</span>
+            <span class="status-badge" [ngClass]="profile.status.toLowerCase()">
+              {{ profile.status }}
+            </span>
           </span>
         </div>
       </div>
 
       <div class="information-note">
         <span>ⓘ</span>
-        <p>
-          The information shown here is currently a placeholder.
-          Your registered account details can be displayed once connected to Firebase.
-        </p>
+        <p>Your account information is retrieved from your registered PTRI Partner profile. Contact PTRI Staff if you need assistance with your account credentials.</p>
       </div>
     </section>
+  </div>
+
+  <!-- EDIT PROFILE MODAL -->
+  <div class="modal-overlay" *ngIf="showEditModal" (click)="closeEditModal()">
+    <div class="edit-modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div>
+          <span class="section-eyebrow">ACCOUNT SETTINGS</span>
+          <h3>Edit Partner Profile</h3>
+          <p>Update your registered partner information.</p>
+        </div>
+
+        <button class="modal-close" type="button" (click)="closeEditModal()">×</button>
+      </div>
+
+      <form (ngSubmit)="saveProfile()">
+        <div class="form-group">
+          <label for="fullName">Full Name *</label>
+          <input id="fullName" type="text" name="fullName" [(ngModel)]="editForm.fullName" placeholder="Enter your full name" required>
+        </div>
+
+        <div class="form-group">
+          <label for="organizationName">Organization Name *</label>
+          <input id="organizationName" type="text" name="organizationName" [(ngModel)]="editForm.organizationName" placeholder="Enter organization name" required>
+        </div>
+
+        <div class="form-group">
+          <label for="locality">Locality</label>
+          <input id="locality" type="text" name="locality" [(ngModel)]="editForm.locality" placeholder="Enter your locality">
+        </div>
+
+        <div class="form-group">
+          <label for="address">Complete Address</label>
+          <textarea id="address" name="address" [(ngModel)]="editForm.address" rows="3" placeholder="Enter your complete address"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="phone">Contact Number *</label>
+          <input id="phone" type="tel" name="phone" [(ngModel)]="editForm.phone" placeholder="Enter your contact number" required>
+        </div>
+
+        <div class="modal-actions">
+          <button class="cancel-btn" type="button" (click)="closeEditModal()" [disabled]="isSaving">Cancel</button>
+          <button class="save-btn" type="submit" [disabled]="isSaving">
+            {{ isSaving ? 'Saving...' : 'Save Changes' }}
+          </button>
+        </div>
+      </form>
+    </div>
   </div>
 </section>

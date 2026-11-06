@@ -1,5 +1,5 @@
 
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   LucideAngularModule,
@@ -21,6 +21,7 @@ import {
 
 import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { auth, db } from '../../services/firebase';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-farmer-profile',
@@ -50,6 +51,8 @@ export class FarmerProfile implements OnInit {
   readonly BadgeCheck = BadgeCheck;
   readonly CircleUserRound = CircleUserRound;
 
+  constructor(private cdr: ChangeDetectorRef) {}
+
   async ngOnInit(): Promise<void> {
     await this.loadProfile();
   }
@@ -57,6 +60,15 @@ export class FarmerProfile implements OnInit {
   async loadProfile(): Promise<void> {
     this.isLoading = true;
     this.errorMessage = '';
+    this.cdr.detectChanges();
+
+    Swal.fire({
+      title: 'Loading Profile',
+      text: 'Please wait while we retrieve your account information.',
+      allowOutsideClick: false,
+      allowEscapeKey: false,
+      didOpen: () => Swal.showLoading()
+    });
 
     try {
       const currentUser = auth.currentUser;
@@ -103,8 +115,21 @@ export class FarmerProfile implements OnInit {
     } catch (error) {
       console.error('Error loading farmer profile:', error);
       this.errorMessage = 'Unable to load your profile information.';
+
     } finally {
       this.isLoading = false;
+      this.cdr.detectChanges();
+
+      Swal.close();
+
+      if (this.errorMessage) {
+        await Swal.fire({
+          icon: 'error',
+          title: 'Profile Loading Failed',
+          text: this.errorMessage,
+          confirmButtonColor: '#245638'
+        });
+      }
     }
   }
 }

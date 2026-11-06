@@ -1,0 +1,222 @@
+
+<div class="settings-page">
+  <div class="page-heading">
+    <div>
+      <span class="eyebrow">FARMER PORTAL</span>
+      <h1>Settings</h1>
+      <p>Manage your account security and view system information.</p>
+    </div>
+    <div class="heading-icon">
+      <i-lucide [img]="icons.Settings" [size]="30" [strokeWidth]="2"></i-lucide>
+    </div>
+  </div>
+
+  <div class="settings-layout">
+
+    <!-- SETTINGS NAVIGATION -->
+    <aside class="settings-sidebar">
+      <div class="sidebar-title">Settings Menu</div>
+
+      <button
+        type="button"
+        class="settings-nav-item"
+        [class.active]="activeTab === 'security'"
+        (click)="selectTab('security')"
+      >
+        <span class="nav-icon">
+          <i-lucide [img]="icons.ShieldCheck" [size]="20"></i-lucide>
+        </span>
+        <span>
+          <strong>Account Security</strong>
+          <small>Manage your password</small>
+        </span>
+        <i-lucide class="arrow" [img]="icons.ChevronRight" [size]="17"></i-lucide>
+      </button>
+
+      <button
+        type="button"
+        class="settings-nav-item"
+        [class.active]="activeTab === 'system'"
+        (click)="selectTab('system')"
+      >
+        <span class="nav-icon">
+          <i-lucide [img]="icons.Info" [size]="20"></i-lucide>
+        </span>
+        <span>
+          <strong>System Information</strong>
+          <small>About this portal</small>
+        </span>
+        <i-lucide class="arrow" [img]="icons.ChevronRight" [size]="17"></i-lucide>
+      </button>
+    </aside>
+
+    <!-- SETTINGS CONTENT -->
+    <section class="settings-content">
+
+      <!-- ACCOUNT SECURITY -->
+      <div class="settings-panel" *ngIf="activeTab === 'security'">
+        <div class="panel-heading">
+          <div class="panel-icon security-icon">
+            <i-lucide [img]="icons.Lock" [size]="23"></i-lucide>
+          </div>
+          <div>
+            <h2>Account Security</h2>
+            <p>Keep your farmer account safe by updating your password.</p>
+          </div>
+        </div>
+
+        <div class="security-notice">
+          <i-lucide [img]="icons.ShieldCheck" [size]="20"></i-lucide>
+          <span>For your protection, we will verify your current password before saving a new one.</span>
+        </div>
+
+        <form (ngSubmit)="changePassword()" #passwordForm="ngForm">
+          <div class="form-group">
+            <label for="currentPassword">Current Password</label>
+            <div class="password-input">
+              <input
+                id="currentPassword"
+                [type]="showCurrentPassword ? 'text' : 'password'"
+                name="currentPassword"
+                [(ngModel)]="currentPassword"
+                placeholder="Enter your current password"
+                autocomplete="current-password"
+                required
+              />
+              <button type="button" (click)="showCurrentPassword = !showCurrentPassword" aria-label="Toggle current password visibility">
+                <i-lucide [img]="showCurrentPassword ? icons.EyeOff : icons.Eye" [size]="19"></i-lucide>
+              </button>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="newPassword">New Password</label>
+            <div class="password-input">
+              <input
+                id="newPassword"
+                [type]="showNewPassword ? 'text' : 'password'"
+                name="newPassword"
+                [(ngModel)]="newPassword"
+                placeholder="Enter your new password"
+                autocomplete="new-password"
+                required
+              />
+              <button type="button" (click)="showNewPassword = !showNewPassword" aria-label="Toggle new password visibility">
+                <i-lucide [img]="showNewPassword ? icons.EyeOff : icons.Eye" [size]="19"></i-lucide>
+              </button>
+            </div>
+            <small class="field-hint">Use at least 8 characters for your new password.</small>
+          </div>
+
+          <div class="form-group">
+            <label for="confirmPassword">Confirm New Password</label>
+            <div class="password-input">
+              <input
+                id="confirmPassword"
+                [type]="showConfirmPassword ? 'text' : 'password'"
+                name="confirmPassword"
+                [(ngModel)]="confirmPassword"
+                placeholder="Re-enter your new password"
+                autocomplete="new-password"
+                required
+              />
+              <button type="button" (click)="showConfirmPassword = !showConfirmPassword" aria-label="Toggle confirmation password visibility">
+                <i-lucide [img]="showConfirmPassword ? icons.EyeOff : icons.Eye" [size]="19"></i-lucide>
+              </button>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button
+              type="button"
+              class="cancel-btn"
+              (click)="resetPasswordForm()"
+              [disabled]="isSaving"
+            >
+              Clear Fields
+            </button>
+
+            <button
+              type="submit"
+              class="save-btn"
+              [disabled]="isSaving || !passwordForm.valid"
+            >
+              <i-lucide [img]="icons.ShieldCheck" [size]="18"></i-lucide>
+              {{ isSaving ? 'Updating...' : 'Update Password' }}
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- SYSTEM INFORMATION -->
+      <div class="settings-panel" *ngIf="activeTab === 'system'">
+        <div class="panel-heading">
+          <div class="panel-icon system-icon">
+            <i-lucide [img]="icons.Info" [size]="23"></i-lucide>
+          </div>
+          <div>
+            <h2>System Information</h2>
+            <p>Information about the PTRI Silk Supply System.</p>
+          </div>
+        </div>
+
+        <div class="system-banner">
+          <div class="system-logo">PTRI</div>
+          <div>
+            <span>DOST–PTRI</span>
+            <h3>Silk Supply and Delivery</h3>
+            <p>Communication System</p>
+          </div>
+        </div>
+
+        <div class="information-list">
+          <div class="information-item">
+            <span class="info-icon">
+              <i-lucide [img]="icons.Building2" [size]="20"></i-lucide>
+            </span>
+            <div>
+              <small>Organization</small>
+              <strong>Philippine Textile Research Institute</strong>
+            </div>
+          </div>
+
+          <div class="information-item">
+            <span class="info-icon">
+              <i-lucide [img]="icons.UserRound" [size]="20"></i-lucide>
+            </span>
+            <div>
+              <small>Portal Access</small>
+              <strong>Farmer Portal</strong>
+            </div>
+          </div>
+
+          <div class="information-item">
+            <span class="info-icon">
+              <i-lucide [img]="icons.Leaf" [size]="20"></i-lucide>
+            </span>
+            <div>
+              <small>System Purpose</small>
+              <strong>Silk Supply and Delivery Communication</strong>
+            </div>
+          </div>
+
+          <div class="information-item">
+            <span class="info-icon">
+              <i-lucide [img]="icons.Lock" [size]="20"></i-lucide>
+            </span>
+            <div>
+              <small>Account Security</small>
+              <strong>Firebase Authentication</strong>
+            </div>
+          </div>
+        </div>
+
+        <div class="system-footer">
+          <i-lucide [img]="icons.Heart" [size]="17"></i-lucide>
+          Supporting the Philippine silk industry through better communication.
+        </div>
+      </div>
+
+    </section>
+  </div>
+</div>

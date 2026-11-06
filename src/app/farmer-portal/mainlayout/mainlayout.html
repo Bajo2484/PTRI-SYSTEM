@@ -30,10 +30,115 @@
       </div>
     </div>
 
-    <button class="logout-btn" type="button" (click)="logout()">
-      <i-lucide [img]="icons.LogOut" [size]="18" [strokeWidth]="2"></i-lucide>
-      <span class="logout-label">Log Out</span>
-    </button>
+    <!-- Topbar Actions -->
+    <div class="topbar-actions">
+
+      <!-- Notifications -->
+      <div class="notification-wrapper">
+        <button
+          class="notification-btn"
+          type="button"
+          (click)="toggleNotifications()"
+          aria-label="Notifications"
+          [attr.aria-expanded]="isNotificationOpen"
+        >
+          <i-lucide [img]="icons.Bell" [size]="21" [strokeWidth]="2"></i-lucide>
+
+          @if (unreadNotificationCount > 0) {
+            <span class="notification-badge">
+              {{ unreadNotificationCount > 99 ? '99+' : unreadNotificationCount }}
+            </span>
+          }
+        </button>
+
+        @if (isNotificationOpen) {
+          <div class="notification-dropdown">
+            <div class="notification-header">
+              <div>
+                <h3>Notifications</h3>
+                <p>You have {{ unreadNotificationCount }} unread messages</p>
+              </div>
+
+              <button
+                type="button"
+                class="notification-close"
+                (click)="toggleNotifications()"
+                aria-label="Close notifications"
+              >
+                <i-lucide [img]="icons.X" [size]="18"></i-lucide>
+              </button>
+            </div>
+
+            <div class="notification-list">
+              @if (notifications.length > 0) {
+                @for (notification of notifications; track notification.id) {
+                  <button
+                    type="button"
+                    class="notification-item"
+                    [class.unread]="notification.read === false"
+                    (click)="openMessages()"
+                  >
+                    <span class="notification-icon">
+                      <i-lucide [img]="icons.MessageCircle" [size]="19"></i-lucide>
+                    </span>
+
+                    <span class="notification-content">
+                      <span class="notification-title">
+                        Message from PTRI Staff
+                      </span>
+                      <span class="notification-message">
+                        {{ notification.text }}
+                      </span>
+                      <span class="notification-time">
+                        {{ notification.createdAt?.toDate?.() | date:'MMM d, y · h:mm a' }}
+                      </span>
+                    </span>
+
+                    @if (notification.read === false) {
+                      <span class="notification-unread-dot"></span>
+                    }
+                  </button>
+                }
+              } @else {
+                <div class="notification-empty">
+                  <i-lucide [img]="icons.Bell" [size]="30" [strokeWidth]="1.5"></i-lucide>
+                  <strong>No notifications yet</strong>
+                  <span>Messages from PTRI Staff will appear here.</span>
+                </div>
+              }
+            </div>
+
+            <button
+              type="button"
+              class="notification-footer"
+              (click)="openMessages()"
+            >
+              View Messages
+            </button>
+          </div>
+        }
+      </div>
+
+      <!-- Settings -->
+<button
+  class="settings-btn"
+  type="button"
+  routerLink="/farmer/settings"
+  (click)="closeMenu(); isNotificationOpen = false"
+  title="Settings"
+  aria-label="Open Settings"
+>
+  <i-lucide [img]="icons.Settings" [size]="22" [strokeWidth]="2"></i-lucide>
+  <span class="settings-label">Settings</span>
+</button>
+
+      <!-- Logout -->
+      <button class="logout-btn" type="button" (click)="logout()">
+        <i-lucide [img]="icons.LogOut" [size]="18" [strokeWidth]="2"></i-lucide>
+        <span class="logout-label">Log Out</span>
+      </button>
+
+    </div>
   </header>
 
   <!-- Overlay -->
@@ -97,18 +202,21 @@
         <span class="nav-label">Supply Request</span>
       </a>
 
-
-
       <a
-        routerLink="/farmer/messages"
-        routerLinkActive="active"
-        (click)="closeMenu()"
-        title="Messages"
-      >
-        <i-lucide class="nav-icon" [img]="icons.MessageCircle" [size]="21" [strokeWidth]="1.8"></i-lucide>
-        <span class="nav-label">Messages</span>
-      </a>
+  routerLink="/farmer/messages"
+  routerLinkActive="active"
+  (click)="closeMenu()"
+  title="Messages"
+>
+  <i-lucide class="nav-icon" [img]="icons.MessageCircle" [size]="21" [strokeWidth]="1.8"></i-lucide>
+  <span class="nav-label">Messages</span>
 
+  @if (unreadNotificationCount > 0) {
+    <span class="menu-unread-count">
+      {{ unreadNotificationCount > 99 ? '99+' : unreadNotificationCount }}
+    </span>
+  }
+</a>
       <a
         routerLink="/farmer/profile"
         routerLinkActive="active"

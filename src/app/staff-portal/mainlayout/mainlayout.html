@@ -4,14 +4,15 @@
   <!-- SIDEBAR -->
   <aside class="sidebar">
     <div class="brand">
-  <div class="brand-icon">
-    <img src="/images/ptri-logo.jpg" alt="DOST-PTRI Logo">
-  </div>
-  <div class="brand-text">
-    <h2>DOST–PTRI</h2>
-    <p>Silk Supply System</p>
-  </div>
-</div>
+      <div class="brand-icon">
+        <img src="/images/ptri-logo.jpg" alt="DOST-PTRI Logo">
+      </div>
+      <div class="brand-text">
+        <h2>DOST–PTRI</h2>
+        <p>Silk Supply System</p>
+      </div>
+    </div>
+
     <div class="sidebar-heading">
       <span class="menu-label">STAFF PORTAL</span>
       <button type="button" class="expand-toggle" (click)="toggleSidebar()" aria-label="Expand or collapse sidebar">☰</button>
@@ -29,7 +30,11 @@
         <span class="menu-icon">♧</span><span class="menu-item-label">Farmer Management</span>
       </a>
       <a class="menu-item" routerLink="/staff/messages" routerLinkActive="active" (click)="closeMobileMenu()">
-        <span class="menu-icon">✉</span><span class="menu-item-label">Messages</span>
+        <span class="menu-icon">✉</span>
+        <span class="menu-item-label">Messages</span>
+        <span class="menu-unread-count" *ngIf="unreadNotificationCount > 0">
+          {{ unreadNotificationCount > 99 ? '99+' : unreadNotificationCount }}
+        </span>
       </a>
       <a class="menu-item" routerLink="/staff/farmer-production" routerLinkActive="active" (click)="closeMobileMenu()">
         <span class="menu-icon">🌿</span><span class="menu-item-label">Farmer Production</span>
@@ -48,8 +53,11 @@
     <!-- STAFF PROFILE -->
     <div class="sidebar-bottom">
       <div class="sidebar-footer">
-        <div class="staff-avatar">S</div>
-        <div class="staff-info"><h4>Staff Account</h4><p>PTRI Staff</p></div>
+        <div class="staff-avatar">{{ staffProfile.fullName.charAt(0).toUpperCase() }}</div>
+        <div class="staff-info">
+          <h4>{{ staffProfile.fullName }}</h4>
+          <p>{{ staffProfile.role }}</p>
+        </div>
       </div>
     </div>
   </aside>
@@ -60,12 +68,106 @@
   <!-- MAIN AREA -->
   <div class="main-area">
     <header class="topbar">
+
       <div class="topbar-left">
         <button type="button" class="menu-toggle" (click)="toggleSidebar()" aria-label="Toggle sidebar">☰</button>
-        <div class="topbar-title"><h1>Staff Portal</h1><p>Silk Supply and Delivery Communication System</p></div>
+        <div class="topbar-title">
+          <h1>Staff Portal</h1>
+          <p>Silk Supply and Delivery Communication System</p>
+        </div>
       </div>
+
       <div class="topbar-right">
-        <button class="logout-button" type="button" (click)="logout()"><span class="logout-icon">↪</span><span class="logout-label">Logout</span></button>
+
+        <!-- NOTIFICATION -->
+        <div class="notification-wrapper">
+          <button type="button" class="notification-button" (click)="toggleNotifications()" aria-label="Open notifications" [attr.aria-expanded]="isNotificationOpen">
+            <span class="notification-bell">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/>
+                <path d="M10 21h4"/>
+              </svg>
+            </span>
+            <span class="notification-count" *ngIf="unreadNotificationCount > 0">
+              {{ unreadNotificationCount > 99 ? '99+' : unreadNotificationCount }}
+            </span>
+          </button>
+
+          <!-- NOTIFICATION DROPDOWN -->
+          <div class="notification-dropdown" *ngIf="isNotificationOpen">
+            <div class="notification-header">
+              <div>
+                <h3>Notifications</h3>
+                <p>You have {{ unreadNotificationCount }} unread messages</p>
+              </div>
+              <button type="button" class="notification-close" (click)="toggleNotifications()">✕</button>
+            </div>
+
+            <div class="notification-list" *ngIf="notifications.length > 0; else noNotifications">
+              <button type="button" class="notification-item" *ngFor="let notification of notifications" (click)="openMessages()">
+                <span class="notification-icon">✉</span>
+                <span class="notification-details">
+                  <strong>New {{ notification.senderRole }} message</strong>
+                  <span>{{ notification.text }}</span>
+                  <small>{{ notification.createdAt?.toDate?.() | date:'MMM d, h:mm a' }}</small>
+                </span>
+                <span class="notification-unread-dot" *ngIf="notification.read === false"></span>
+              </button>
+            </div>
+
+            <ng-template #noNotifications>
+              <div class="notification-empty">
+                <span>♧</span>
+                <strong>All caught up!</strong>
+                <p>No new notifications yet.</p>
+              </div>
+            </ng-template>
+
+            <div class="notification-footer">
+              <button type="button" (click)="openMessages()">View Messages</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- PROFILE PAGE BUTTON -->
+        <button
+          type="button"
+          class="topbar-profile-button"
+          routerLink="/staff/profile"
+          routerLinkActive="topbar-active"
+          (click)="isNotificationOpen = false"
+          aria-label="Open staff profile">
+
+          <span class="topbar-profile-avatar">
+            {{ staffProfile.fullName.charAt(0).toUpperCase() }}
+          </span>
+
+          <span class="topbar-profile-label">
+            <strong>{{ staffProfile.fullName }}</strong>
+            <small>{{ staffProfile.role }}</small>
+          </span>
+
+          <span class="dropdown-arrow">⌄</span>
+        </button>
+
+        <!-- SETTINGS PAGE BUTTON -->
+        <button
+          type="button"
+          class="settings-button"
+          routerLink="/staff/settings"
+          routerLinkActive="topbar-active"
+          (click)="isNotificationOpen = false"
+          aria-label="Open staff settings"
+          title="Settings">
+          <span>⚙</span>
+        </button>
+
+        <!-- LOGOUT -->
+        <button class="logout-button" type="button" (click)="logout()">
+          <span class="logout-icon">↪</span>
+          <span class="logout-label">Logout</span>
+        </button>
+
       </div>
     </header>
 

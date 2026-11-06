@@ -1,20 +1,18 @@
 
 <section class="page-container">
+  <!-- PAGE HEADER -->
   <div class="page-header">
-  <div>
-    <h2>My Orders</h2>
-    <p>View and monitor your silk supply orders.</p>
+    <div>
+      <h2>My Orders</h2>
+      <p>View and monitor your silk supply orders.</p>
+    </div>
+
+    <button type="button" class="place-order-btn" (click)="openOrderModal()">
+      + Place an Order
+    </button>
   </div>
 
-  <button
-    type="button"
-    class="place-order-btn"
-    (click)="openOrderModal()"
-  >
-    + Place an Order
-  </button>
-</div>
-
+  <!-- SUMMARY CARDS -->
   <div class="summary-grid">
     <div class="summary-card">
       <div class="summary-icon">▤</div>
@@ -41,6 +39,7 @@
     </div>
   </div>
 
+  <!-- ORDER RECORDS -->
   <div class="orders-panel">
     <div class="panel-header">
       <div>
@@ -49,8 +48,8 @@
       </div>
 
       <span class="record-count">
-  {{ totalOrders }} {{ totalOrders === 1 ? 'order' : 'orders' }}
-</span>
+        {{ totalOrders }} {{ totalOrders === 1 ? 'order' : 'orders' }}
+      </span>
     </div>
 
     <div class="table-wrapper">
@@ -65,34 +64,36 @@
           </tr>
         </thead>
 
-        <!-- LOADING STATE -->
-<tr *ngIf="isLoadingOrders">
-  <td colspan="5" class="empty-state">
-    <p>Loading your orders...</p>
-  </td>
-</tr>
+        <tbody>
+          <!-- LOADING STATE -->
+          <tr *ngIf="isLoadingOrders">
+            <td colspan="5" class="empty-state">
+              <p>Loading your orders...</p>
+            </td>
+          </tr>
 
-<!-- EMPTY STATE -->
-<tr *ngIf="!isLoadingOrders && orders.length === 0">
-  <td colspan="5" class="empty-state">
-    <div class="empty-icon">▤</div>
-    <h4>No orders yet</h4>
-    <p>Your silk supply orders will appear here.</p>
-  </td>
-</tr>
+          <!-- EMPTY STATE -->
+          <tr *ngIf="!isLoadingOrders && orders.length === 0">
+            <td colspan="5" class="empty-state">
+              <div class="empty-icon">▤</div>
+              <h4>No orders yet</h4>
+              <p>Your silk supply orders will appear here.</p>
+            </td>
+          </tr>
 
-<!-- ORDER RECORDS -->
-<tr *ngFor="let order of orders">
-  <td>{{ order.orderId }}</td>
-  <td>{{ order.createdAt?.toDate() | date:'dd MMM yyyy' }}</td>
-  <td>{{ order.silkType }} - {{ order.quantity }} kg</td>
-  <td>{{ order.deliveryDate | date:'dd MMM yyyy' }}</td>
-  <td>
-    <span class="status-badge">
-      {{ order.status }}
-    </span>
-  </td>
-</tr>
+          <!-- ORDER RECORDS -->
+          <tr *ngFor="let order of orders">
+            <td>{{ order.orderId }}</td>
+            <td>{{ order.createdAt?.toDate() | date:'dd MMM yyyy' }}</td>
+            <td>{{ order.silkType }} - {{ order.quantity }} kg</td>
+            <td>{{ order.deliveryDate | date:'dd MMM yyyy' }}</td>
+            <td>
+              <span class="status-badge">
+                {{ order.status }}
+              </span>
+            </td>
+          </tr>
+        </tbody>
       </table>
     </div>
   </div>
@@ -109,24 +110,15 @@
         <p>Provide the details of your requested silk supply.</p>
       </div>
 
-      <button
-        type="button"
-        class="modal-close"
-        (click)="closeOrderModal()"
-      >
+      <button type="button" class="modal-close" (click)="closeOrderModal()">
         ×
       </button>
     </div>
 
-   <form (ngSubmit)="submitOrder()">
-
+    <form (ngSubmit)="submitOrder()">
       <div class="form-group">
         <label>Silk Type</label>
-        <select
-          name="silkType"
-          [(ngModel)]="orderForm.silkType"
-          required
-        >
+        <select name="silkType" [(ngModel)]="orderForm.silkType" required>
           <option value="">Select silk type</option>
           <option value="Silk Yarn">Silk Yarn</option>
           <option value="Cocoon Silk">Cocoon Silk</option>
@@ -136,53 +128,31 @@
 
       <div class="form-group">
         <label>Quantity (kg)</label>
-        <input
-          type="number"
-          name="quantity"
-          [(ngModel)]="orderForm.quantity"
-          min="1"
-          placeholder="Enter quantity in kilograms"
-          required
-        />
+        <input type="number" name="quantity" [(ngModel)]="orderForm.quantity"
+          min="1" placeholder="Enter quantity in kilograms" required />
       </div>
 
       <div class="form-group">
         <label>Requested Delivery Date</label>
-        <input
-          type="date"
-          name="deliveryDate"
-          [(ngModel)]="orderForm.deliveryDate"
-          required
-        />
+        <input type="date" name="deliveryDate"
+          [(ngModel)]="orderForm.deliveryDate" required />
       </div>
 
       <div class="form-group">
         <label>Additional Notes (Optional)</label>
-        <textarea
-          name="notes"
-          [(ngModel)]="orderForm.notes"
-          rows="3"
-          placeholder="Enter additional order instructions..."
-        ></textarea>
+        <textarea name="notes" [(ngModel)]="orderForm.notes"
+          rows="3" placeholder="Enter additional order instructions..."></textarea>
       </div>
 
       <div class="modal-actions">
-        <button
-          type="button"
-          class="cancel-btn"
-          (click)="closeOrderModal()"
-        >
+        <button type="button" class="cancel-btn" (click)="closeOrderModal()">
           Cancel
         </button>
 
-        <button
-          type="submit"
-          class="submit-btn"
-        >
+        <button type="submit" class="submit-btn">
           Submit Order Request
         </button>
       </div>
-
     </form>
 
   </div>
