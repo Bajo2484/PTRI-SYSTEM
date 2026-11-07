@@ -33,6 +33,7 @@
           [(ngModel)]="startDate"
           [max]="endDate"
           aria-label="Start date"
+          (change)="generateMonthlyOrderTrend()"
         />
         <span>–</span>
         <input
@@ -40,6 +41,7 @@
           [(ngModel)]="endDate"
           [min]="startDate"
           aria-label="End date"
+          (change)="generateMonthlyOrderTrend()"
         />
       </div>
     </label>
@@ -65,14 +67,14 @@
   <!-- CHARTS -->
   <section class="analytics-grid">
 
-    <!-- STOCK TREND -->
+    <!-- MONTHLY ORDER TREND -->
     <article class="report-card stock-card">
       <div class="card-heading">
         <div>
-          <h2>Silk Yarn Stock Trend</h2>
-          <p>Weekly closing on-hand quantities · kg</p>
+          <h2>Monthly Order Trend</h2>
+          <p>Number of partner orders per month</p>
         </div>
-        <span class="unit-tag">kg</span>
+        <span class="unit-tag">Orders</span>
       </div>
 
       <div class="chart-container">
@@ -80,7 +82,7 @@
           class="stock-chart"
           viewBox="0 0 460 190"
           role="img"
-          aria-label="Sample silk yarn stock trend chart"
+          aria-label="Monthly partner order trend chart"
         >
           <g class="chart-grid">
             <line
@@ -115,14 +117,14 @@
           <g *ngFor="let point of stockPoints; let i = index">
             <circle
               class="chart-point"
-              [attr.cx]="32 + (i / (stockPoints.length - 1)) * 416"
+              [attr.cx]="32 + (stockPoints.length > 1 ? (i / (stockPoints.length - 1)) * 416 : 208)"
               [attr.cy]="14 + (1 - point.quantity / chartMax) * 124"
               r="3.5"
             />
 
             <text
               class="point-value"
-              [attr.x]="32 + (i / (stockPoints.length - 1)) * 416"
+              [attr.x]="32 + (stockPoints.length > 1 ? (i / (stockPoints.length - 1)) * 416 : 208)"
               [attr.y]="8 + (1 - point.quantity / chartMax) * 124"
               text-anchor="middle"
             >
@@ -131,7 +133,7 @@
 
             <text
               class="point-date"
-              [attr.x]="32 + (i / (stockPoints.length - 1)) * 416"
+              [attr.x]="32 + (stockPoints.length > 1 ? (i / (stockPoints.length - 1)) * 416 : 208)"
               y="184"
               text-anchor="middle"
             >
@@ -143,60 +145,73 @@
 
       <div class="chart-legend">
         <span class="legend-dot"></span>
-        <span>Silk yarn on hand</span>
+        <span>Partner orders</span>
       </div>
     </article>
 
-    <!-- COCOON PROGRESS -->
+    <!-- COCOON COMMITMENT PROGRESS -->
     <article class="report-card progress-card">
       <div class="card-heading">
         <div>
           <h2>Cocoon Commitment Progress</h2>
-          <p>Current cycle · Received versus expected output</p>
+          <p>Current cycle · Confirmed versus awaiting confirmation</p>
         </div>
       </div>
 
+      <!-- RECEIVED -->
       <div class="progress-item">
         <div class="progress-label">
           <div>
             <strong>Received</strong>
-            <small>Already recorded in inventory</small>
+            <small>Actual quantity received by PTRI</small>
           </div>
-          <strong>80 kg</strong>
+          <strong>{{ receivedQuantity }} {{ productionUnit }}</strong>
         </div>
         <div class="progress-track">
-          <div class="progress-fill received-fill" style="width: 16%"></div>
+          <div
+            class="progress-fill received-fill"
+            [style.width.%]="receivedPercent"
+          ></div>
         </div>
       </div>
 
+      <!-- CONFIRMED EXPECTED -->
       <div class="progress-item">
         <div class="progress-label">
           <div>
             <strong>Confirmed expected</strong>
-            <small>Expected collection commitment</small>
+            <small>Production reviewed and confirmed by PTRI</small>
           </div>
-          <strong>320 kg</strong>
+          <strong>{{ confirmedExpectedQuantity | number:'1.0-2' }} {{ productionUnit }}</strong>
         </div>
         <div class="progress-track">
-          <div class="progress-fill expected-fill" style="width: 64%"></div>
+          <div
+            class="progress-fill expected-fill"
+            [style.width.%]="confirmedExpectedPercent"
+          ></div>
         </div>
       </div>
 
+      <!-- AWAITING CONFIRMATION -->
       <div class="progress-item">
         <div class="progress-label">
           <div>
             <strong>Awaiting confirmation</strong>
-            <small>Not yet received</small>
+            <small>Production still pending PTRI review</small>
           </div>
-          <strong>100 kg</strong>
+          <strong>{{ awaitingConfirmationQuantity | number:'1.0-2' }} {{ productionUnit }}</strong>
         </div>
         <div class="progress-track">
-          <div class="progress-fill awaiting-fill" style="width: 20%"></div>
+          <div
+            class="progress-fill awaiting-fill"
+            [style.width.%]="awaitingConfirmationPercent"
+          ></div>
         </div>
       </div>
 
       <p class="progress-note">
-        Sample commitments shown for layout demonstration.
+        {{ totalExpectedQuantity | number:'1.0-2' }} {{ productionUnit }} total submitted production.
+        Received quantities are not yet tracked in the current system.
       </p>
     </article>
 
