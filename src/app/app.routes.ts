@@ -47,6 +47,23 @@ export const routes: Routes = [
             (m) => m.FarmerManagement
           )
       },
+     // MULBERRY PRUNING CALENDAR
+{
+  path: 'mulberry-production-monitoring',
+  loadComponent: () =>
+    import('./staff-portal/mulberry-production-monitoring/mulberry-production-monitoring').then(
+      (m) => m.MulberryProductionMonitoring
+    )
+},
+
+// FARMERS WHO STARTED PRUNING ON A SELECTED DATE
+{
+  path: 'mulberry-production-monitoring/:date',
+  loadComponent: () =>
+    import('./staff-portal/mulberry-production-monitoring/pruning-date-details/pruning-date-details').then(
+      (m) => m.PruningDateDetails
+    )
+},
       {
         path: 'messages',
         loadComponent: () =>
@@ -54,6 +71,13 @@ export const routes: Routes = [
             (m) => m.Messages
           )
       },
+  {
+  path: 'silkworm-preparation',
+  loadComponent: () =>
+    import('./staff-portal/silkworm-preparation/silkworm-preparation').then(
+      (m) => m.SilkwormPreparation
+    )
+},
       {
         path: 'farmer-production',
         loadComponent: () =>
@@ -198,6 +222,23 @@ export const routes: Routes = [
             (m) => m.FarmerProduction
           )
       },
+      {
+  path: 'mulberry-production',
+  loadComponent: () =>
+    import('./farmer-portal/mulberry-production/mulberry-production').then(
+      (m) => m.MulberryProduction
+    )
+},
+
+
+{
+  path: 'silkworm-cocoon-production',
+  loadComponent: () =>
+    import('./farmer-portal/silkworm-cocoon-production/silkworm-cocoon-production').then(
+      (m) => m.SilkwormCocoonProduction
+    )
+},
+
       {
         path: 'orders',
         loadComponent: () =>

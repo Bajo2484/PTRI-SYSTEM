@@ -1,0 +1,356 @@
+
+<div class="mulberry-page">
+
+
+  <!-- SUMMARY CARDS -->
+  <section class="summary-grid">
+
+    <article class="summary-card">
+      <div class="summary-icon last-icon">
+        <span>✓</span>
+      </div>
+      <div class="summary-info">
+        <span class="summary-label">Start Pruning</span>
+        <h2>
+          {{ lastPruningDate ? (lastPruningDate | date:'MMM d, y') : 'Not yet' }}
+        </h2>
+        <span class="summary-status" [class.not-started]="!lastPruningDate">
+          {{ lastPruningDate ? 'Recorded' : 'No Record Yet' }}
+        </span>
+      </div>
+    </article>
+
+    <article class="summary-card">
+      <div class="summary-icon next-icon">
+        <span>◷</span>
+      </div>
+      <div class="summary-info">
+        <span class="summary-label">End Pruning</span>
+        <h2>
+          {{ nextPruningDate ? (nextPruningDate | date:'MMM d, y') : 'Not scheduled' }}
+        </h2>
+        <span class="next-date-label">
+          @if (daysRemaining !== null) {
+            @if (daysRemaining === 0) {
+              Pruning due today
+            } @else {
+              {{ daysRemaining }} days remaining
+            }
+          } @else {
+            Waiting for first cycle
+          }
+        </span>
+      </div>
+    </article>
+
+    <article class="summary-card cycle-summary-card">
+      <div class="cycle-ring" [style.background]="progressRingStyle">
+        <div class="cycle-ring-inner">
+          <strong>{{ daysRemaining === null ? 45 : daysRemaining }}</strong>
+          <span>Days</span>
+          <small>Remaining</small>
+        </div>
+      </div>
+
+      <div class="cycle-summary-info">
+        <h3>45-Day Cycle</h3>
+        <div class="mini-progress">
+          <span [style.width.%]="cycleProgress"></span>
+        </div>
+        <div class="cycle-reminder">
+          <span>🔔</span>
+          <p>
+            @if (!lastPruningDate) {
+              Start your first pruning cycle.
+            } @else if (daysRemaining === 0) {
+              Your pruning cycle is due today!
+            } @else if (daysRemaining !== null && daysRemaining <= 7) {
+              Prepare soon for the next silkworm batch!
+            } @else {
+              Keep monitoring your mulberry cycle.
+            }
+          </p>
+        </div>
+      </div>
+    </article>
+
+  </section>
+
+  <!-- PREPARATION REMINDER -->
+  @if (showPreparationReminder) {
+    <section class="preparation-alert">
+      <span class="alert-icon">🔔</span>
+      <div>
+        <strong>PTRI Preparation Reminder</strong>
+        <p>
+          Your 45-day pruning cycle is approaching its end.
+          PTRI should prepare the next silkworm batch.
+        </p>
+      </div>
+      <span class="alert-days">
+        {{ daysRemaining }} {{ daysRemaining === 1 ? 'day' : 'days' }} remaining
+      </span>
+    </section>
+  }
+
+  <!-- CALENDAR -->
+  <section class="calendar-card">
+
+    <div class="calendar-heading">
+      <div class="calendar-title">
+        <span class="calendar-title-icon">▦</span>
+        <div>
+          <h2>Pruning Calendar</h2>
+          <p>Monitor your automatic start and end pruning dates.</p>
+        </div>
+      </div>
+
+      <div class="calendar-navigation">
+        <button type="button" (click)="previousMonth()" aria-label="Previous month">
+          ‹
+        </button>
+        <h3>{{ calendarMonth | date:'MMMM yyyy' }}</h3>
+        <button type="button" (click)="nextMonth()" aria-label="Next month">
+          ›
+        </button>
+      </div>
+
+      <div class="calendar-legend">
+        <span><i class="legend-dot start-dot"></i> Start Pruning</span>
+        <span><i class="legend-dot end-dot"></i> End Pruning</span>
+        <span><i class="legend-dot next-dot"></i> Today</span>
+      </div>
+    </div>
+
+    <div class="calendar-grid">
+
+      @for (dayName of ['Sun','Mon','Tue','Wed','Thu','Fri','Sat']; track dayName) {
+        <div class="calendar-weekday">{{ dayName }}</div>
+      }
+
+      @for (day of calendarDays; track day.date) {
+        <div
+          class="calendar-day"
+          [class.other-month]="!day.currentMonth"
+          [class.today]="day.isToday"
+          [class.start-day]="day.isStart"
+          [class.end-day]="day.isEnd">
+
+          <span class="day-number">{{ day.day }}</span>
+
+          @if (day.isStart) {
+            <span class="calendar-marker start-marker">
+              Start<br>Pruning
+            </span>
+          } @else if (day.isEnd) {
+            <span class="calendar-marker end-marker">
+              End<br>Pruning
+            </span>
+          }
+
+        </div>
+      }
+
+    </div>
+  </section>
+
+  <!-- BOTTOM CONTENT -->
+  <section class="bottom-grid">
+
+    <!-- PRUNING ACTIVITY -->
+    <article class="activity-card">
+
+      <div class="activity-header">
+        <span class="activity-header-icon">▶</span>
+        <h2>Pruning Activity</h2>
+      </div>
+
+      <div class="activity-content">
+
+        <!-- START PRUNING -->
+        <div class="activity-panel start-panel">
+          <div class="activity-panel-heading">
+            <span class="activity-panel-icon">🌱</span>
+            <div>
+              <h3>1. Start Pruning</h3>
+              <p>
+                Click when you begin pruning all your mulberry plants.
+                The system will automatically record today's date.
+              </p>
+            </div>
+          </div>
+
+          <div class="automatic-date">
+            <span class="date-icon">▦</span>
+            <div>
+              <small>
+                {{ activePruning ? 'Pruning Start Date' : 'Today’s Date' }}
+              </small>
+              <strong>
+                @if (activePruning) {
+                  {{ activePruning.startDate | date:'MMMM d, y' }}
+                } @else {
+                  {{ getToday() | date:'MMMM d, y' }}
+                }
+              </strong>
+            </div>
+          </div>
+
+          @if (!activePruning) {
+            <button
+              type="button"
+              class="activity-button start-button"
+              (click)="startPruning()"
+              [disabled]="processing || loading">
+
+              <span>▶</span>
+              {{ processing ? 'Starting...' : 'Start Pruning' }}
+            </button>
+          } @else if (activePruning) {
+            <div class="activity-state active-state">
+              <span>✓</span>
+              Pruning cycle is currently active
+            </div>
+          } @else {
+            <div class="activity-state waiting-state">
+              <span>✓</span>
+              Your previous 45-day cycle has ended. You can start a new pruning cycle.
+            </div>
+          }
+        </div>
+
+        <!-- AUTOMATIC END PRUNING -->
+        <div class="activity-panel end-panel">
+          <div class="activity-panel-heading">
+            <span class="activity-panel-icon">✓</span>
+            <div>
+              <h3>2. End Pruning</h3>
+              <p>
+                The system automatically calculates your End Pruning date
+                45 days after your Start Pruning date.
+              </p>
+            </div>
+          </div>
+
+          <div class="automatic-date">
+            <span class="date-icon">▦</span>
+            <div>
+              <small>Automatically Calculated End Date</small>
+              <strong>
+                {{ nextPruningDate ? (nextPruningDate | date:'MMMM d, y') : 'Not scheduled yet' }}
+              </strong>
+            </div>
+          </div>
+
+          @if (activePruning) {
+            <div class="activity-state active-state">
+              <span>◷</span>
+              Automatic countdown in progress — {{ daysRemaining }} days remaining
+            </div>
+          } @else if (daysRemaining === 0) {
+            <div class="activity-state waiting-state">
+              <span>✓</span>
+              Your 45-day pruning cycle has reached its scheduled end date.
+            </div>
+          } @else {
+            <div class="activity-state waiting-state">
+              <span>ℹ</span>
+              Start a pruning cycle to calculate its End Pruning date.
+            </div>
+          }
+        </div>
+
+      </div>
+
+      <div class="automatic-cycle-note">
+        <span>🌿</span>
+        <p>
+          <strong>Automatic 45-Day Cycle:</strong>
+          You only need to click Start Pruning. The system records the date,
+          calculates the End Pruning date, and automatically counts the remaining days.
+        </p>
+      </div>
+
+    </article>
+
+    <!-- PRUNING HISTORY -->
+    <article class="history-card">
+
+      <div class="history-header">
+        <span class="history-header-icon">◷</span>
+        <div>
+          <h2>Pruning History</h2>
+          <p>Your previous pruning cycles</p>
+        </div>
+      </div>
+
+      @if (loading) {
+        <div class="history-loading">
+          <span class="small-loader"></span>
+          Loading records...
+        </div>
+      } @else if (pruningRecords.length > 0) {
+
+        <div class="history-list">
+          @for (record of pruningRecords; track record.id) {
+            <div class="history-item">
+
+              <div class="history-check">
+                @if (record.status === 'In Progress') {
+                  <span>◷</span>
+                } @else {
+                  <span>✓</span>
+                }
+              </div>
+
+              <div class="history-details">
+                <strong>
+                  {{ getRecordDisplayDate(record) | date:'MMM d, y' }}
+                </strong>
+
+                <span class="history-date-label">Start Pruning</span>
+
+                <span
+                  class="history-status"
+                  [class.ongoing]="record.status === 'In Progress'"
+                  [class.completed]="record.status !== 'In Progress'">
+
+                  {{ record.status === 'In Progress' ? 'Cycle In Progress' : 'Cycle Completed' }}
+                </span>
+              </div>
+
+              <div class="history-next">
+                <small>End Pruning:</small>
+                <strong>
+                  {{ getRecordNextDate(record) | date:'MMM d, y' }}
+                </strong>
+              </div>
+
+            </div>
+          }
+        </div>
+
+      } @else {
+        <div class="history-empty">
+          <span>🌱</span>
+          <strong>No Pruning History Yet</strong>
+          <p>Your recorded pruning activities will appear here.</p>
+        </div>
+      }
+
+    </article>
+
+  </section>
+
+  <!-- FOOTER REMINDER -->
+  <section class="footer-reminder">
+    <span class="footer-bulb">💡</span>
+    <p>
+      <strong>Reminder:</strong>
+      Keep your pruning records updated to help PTRI prepare
+      for the next silkworm batch.
+    </p>
+    <div class="footer-leaves"></div>
+  </section>
+
+</div>

@@ -1,0 +1,373 @@
+
+<div class="preparation-page">
+
+  <!-- PAGE HEADER -->
+  <section class="page-header">
+    <div>
+      <span class="eyebrow">STAFF PORTAL / PRODUCTION</span>
+      <h1>Silkworm Preparation</h1>
+      <p>Monitor and manage silkworm preparation batches based on each farmer's pruning cycle.</p>
+    </div>
+
+    <button class="primary-button" type="button" (click)="openAddModal()">
+      <span>＋</span> Add Preparation Batch
+    </button>
+  </section>
+
+  <!-- ERROR MESSAGE -->
+  <div class="error-banner" *ngIf="errorMessage && !showAddModal">
+    <span>⚠</span>
+    {{ errorMessage }}
+    <button type="button" (click)="loadData()">Retry</button>
+  </div>
+
+  <!-- SUMMARY CARDS -->
+  <section class="summary-grid">
+    <article class="summary-card">
+      <div class="summary-icon total-icon">▤</div>
+      <div>
+        <p>Total Batches</p>
+        <h2>{{ totalBatches }}</h2>
+        <span>All preparation records</span>
+      </div>
+    </article>
+
+    <article class="summary-card">
+      <div class="summary-icon ongoing-icon">◷</div>
+      <div>
+        <p>Ongoing</p>
+        <h2>{{ ongoingBatches }}</h2>
+        <span>Currently preparing</span>
+      </div>
+    </article>
+
+    <article class="summary-card">
+      <div class="summary-icon ready-icon">✓</div>
+      <div>
+        <p>Ready for Delivery</p>
+        <h2>{{ readyBatches }}</h2>
+        <span>Preparation completed</span>
+      </div>
+    </article>
+
+    <article class="summary-card">
+      <div class="summary-icon completed-icon">▣</div>
+      <div>
+        <p>Completed</p>
+        <h2>{{ completedBatches }}</h2>
+        <span>Ready status reached</span>
+      </div>
+    </article>
+  </section>
+
+  <!-- PREPARATION OVERVIEW -->
+  <section class="content-card">
+    <div class="section-heading">
+      <div>
+        <h2>Preparation Overview</h2>
+        <p>View and monitor all registered preparation batches.</p>
+      </div>
+      <span class="record-count">{{ filteredBatches.length }} records</span>
+    </div>
+
+    <!-- FILTERS -->
+    <div class="filter-bar">
+      <div class="search-field">
+        <span>⌕</span>
+        <input
+          type="text"
+          [(ngModel)]="searchTerm"
+          placeholder="Search batch or farmer..."
+          aria-label="Search preparation batches">
+      </div>
+
+      <select [(ngModel)]="selectedFarmerType" aria-label="Filter by farmer type">
+        <option value="All">All Farmer Types</option>
+        <option value="Individual">Individual Farmer</option>
+        <option value="Community">Community Farmer</option>
+      </select>
+
+      <select [(ngModel)]="selectedStatus" aria-label="Filter by preparation status">
+        <option value="All Status">All Status</option>
+        <option *ngFor="let status of statuses" [value]="status">
+          {{ status }}
+        </option>
+      </select>
+    </div>
+
+    <!-- TABLE -->
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Batch ID</th>
+            <th>Farmer / Group</th>
+            <th>Farmer Type</th>
+            <th>Pruning Cycle</th>
+            <th>Preparation Period</th>
+            <th>Quantity</th>
+            <th>Status</th>
+            <th>Update Status</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <tr *ngFor="let batch of filteredBatches; trackBy: trackByBatchId">
+            <td>
+              <strong class="batch-code">{{ batch.batchCode }}</strong>
+            </td>
+
+            <td>
+              <strong>{{ batch.farmerName }}</strong>
+              <small *ngIf="batch.communityName">{{ batch.communityName }}</small>
+            </td>
+
+            <td>
+              <span class="type-label">{{ batch.farmerType }}</span>
+            </td>
+
+            <td>
+              <strong>{{ batch.pruningStartDate || '—' }}</strong>
+              <small>End: {{ batch.pruningEndDate || 'Not recorded' }}</small>
+            </td>
+
+            <td>
+              <strong>{{ batch.preparationStartDate | date:'MMM d, y' }}</strong>
+              <small>Ready: {{ batch.expectedReadyDate | date:'MMM d, y' }}</small>
+            </td>
+
+            <td>
+              <strong>{{ batch.boxQuantity }}</strong>
+              <small>{{ batch.boxQuantity === 1 ? 'Box' : 'Boxes' }}</small>
+            </td>
+
+            <td>
+              <span class="status-badge"
+                [ngClass]="{
+                  'status-scheduled': batch.status === 'Scheduled',
+                  'status-preparing': batch.status === 'Preparing',
+                  'status-ready': batch.status === 'Ready for Delivery',
+                  'status-cancelled': batch.status === 'Cancelled'
+                }">
+                {{ batch.status }}
+              </span>
+            </td>
+
+            <td>
+              <select
+                class="status-select"
+                [ngModel]="batch.status"
+                (ngModelChange)="changeStatus(batch, $event)"
+                [attr.aria-label]="'Update status for ' + batch.batchCode">
+                <option *ngFor="let status of statuses" [value]="status">
+                  {{ status }}
+                </option>
+              </select>
+            </td>
+          </tr>
+
+          <tr *ngIf="filteredBatches.length === 0">
+            <td colspan="8" class="empty-state">
+              <span>🐛</span>
+              <strong>No preparation batches found</strong>
+              <p>Try changing your filters or add a new preparation batch.</p>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- RECENT HISTORY -->
+  <section class="content-card history-card">
+    <div class="section-heading">
+      <div>
+        <h2>Recent Preparation History</h2>
+        <p>Latest preparation batches recorded in the system.</p>
+      </div>
+    </div>
+
+    <div class="history-list" *ngIf="recentHistory.length > 0; else noHistory">
+      <div class="history-item" *ngFor="let batch of recentHistory">
+        <div class="history-icon">🐛</div>
+
+        <div class="history-info">
+          <strong>{{ batch.batchCode }} · {{ batch.farmerName }}</strong>
+          <p>
+            {{ batch.boxQuantity }}
+            {{ batch.boxQuantity === 1 ? 'box' : 'boxes' }}
+            · Started {{ batch.preparationStartDate | date:'MMM d, y' }}
+          </p>
+        </div>
+
+        <span class="status-badge"
+          [ngClass]="{
+            'status-scheduled': batch.status === 'Scheduled',
+            'status-preparing': batch.status === 'Preparing',
+            'status-ready': batch.status === 'Ready for Delivery',
+            'status-cancelled': batch.status === 'Cancelled'
+          }">
+          {{ batch.status }}
+        </span>
+      </div>
+    </div>
+
+    <ng-template #noHistory>
+      <div class="history-empty">
+        No preparation history available yet.
+      </div>
+    </ng-template>
+  </section>
+
+</div>
+
+<!-- ADD PREPARATION MODAL -->
+<div class="modal-backdrop" *ngIf="showAddModal" (click)="closeAddModal()">
+  <section
+    class="preparation-modal"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="modalTitle"
+    (click)="$event.stopPropagation()">
+
+    <div class="modal-header">
+      <div>
+        <span class="eyebrow">NEW RECORD</span>
+        <h2 id="modalTitle">Add Preparation Batch</h2>
+        <p>Register a new silkworm preparation schedule.</p>
+      </div>
+
+      <button
+        type="button"
+        class="modal-close"
+        (click)="closeAddModal()"
+        [disabled]="isSaving"
+        aria-label="Close modal">✕</button>
+    </div>
+
+    <div class="modal-body">
+
+      <div class="form-section-title">Farmer and Pruning Information</div>
+
+      <div class="form-group">
+        <label for="farmerSelect">Target Farmer <span>*</span></label>
+        <select
+          id="farmerSelect"
+          name="farmerSelect"
+          [(ngModel)]="selectedFarmerId"
+          (ngModelChange)="onFarmerChange()">
+          <option value="">Select Farmer</option>
+          <option *ngFor="let farmer of farmers" [value]="farmer.id">
+            {{ farmer.fullName }}
+            ({{ farmer.farmerType }})
+            {{ farmer.communityName ? ' - ' + farmer.communityName : '' }}
+          </option>
+        </select>
+      </div>
+
+      <div class="selected-farmer-info" *ngIf="selectedFarmer as farmer">
+        <div>
+          <small>Farmer Type</small>
+          <strong>{{ farmer.farmerType }}</strong>
+        </div>
+        <div>
+          <small>Mulberry Trees</small>
+          <strong>{{ farmer.mulberryTreeCount }}</strong>
+        </div>
+        <div>
+          <small>Locality</small>
+          <strong>{{ farmer.locality }}</strong>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="pruningSelect">Related Pruning Cycle <span>*</span></label>
+        <select
+          id="pruningSelect"
+          name="pruningSelect"
+          [(ngModel)]="selectedPruningRecordId"
+          [disabled]="!selectedFarmerId || pruningCycles.length === 0">
+          <option value="">Select Pruning Cycle</option>
+          <option *ngFor="let cycle of pruningCycles" [value]="cycle.id">
+            {{ getCycleStartDate(cycle) | date:'MMM d, y' }}
+            - {{ getCycleEndDate(cycle) ? (getCycleEndDate(cycle) | date:'MMM d, y') : 'End date unavailable' }}
+            ({{ cycle.status || 'Unknown Status' }})
+          </option>
+        </select>
+
+        <small class="field-hint" *ngIf="selectedFarmerId && pruningCycles.length === 0">
+          No pruning cycles were found for this farmer.
+        </small>
+      </div>
+
+      <div class="form-section-title">Preparation Schedule</div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="startDate">Preparation Start Date <span>*</span></label>
+          <input
+            id="startDate"
+            name="startDate"
+            type="date"
+            [(ngModel)]="preparationStartDate">
+        </div>
+
+        <div class="form-group">
+          <label for="readyDate">Expected Ready Date <span>*</span></label>
+          <input
+            id="readyDate"
+            name="readyDate"
+            type="date"
+            [(ngModel)]="expectedReadyDate"
+            [min]="preparationStartDate">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="boxQuantity">Number of Silkworm Boxes <span>*</span></label>
+        <input
+          id="boxQuantity"
+          name="boxQuantity"
+          type="number"
+          min="1"
+          step="1"
+          [(ngModel)]="boxQuantity"
+          placeholder="Enter number of boxes">
+      </div>
+
+      <div class="form-group">
+        <label for="remarks">Remarks <small>(Optional)</small></label>
+        <textarea
+          id="remarks"
+          name="remarks"
+          rows="3"
+          [(ngModel)]="remarks"
+          placeholder="Add preparation notes..."></textarea>
+      </div>
+
+      <div class="error-banner modal-error" *ngIf="errorMessage">
+        <span>⚠</span>
+        {{ errorMessage }}
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button
+        type="button"
+        class="secondary-button"
+        (click)="closeAddModal()"
+        [disabled]="isSaving">
+        Cancel
+      </button>
+
+      <button
+        type="button"
+        class="primary-button"
+        (click)="savePreparation()"
+        [disabled]="isSaving">
+        {{ isSaving ? 'Saving...' : 'Save Preparation Batch' }}
+      </button>
+    </div>
+
+  </section>
+</div>

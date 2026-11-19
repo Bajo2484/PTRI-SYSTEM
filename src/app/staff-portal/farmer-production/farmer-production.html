@@ -4,10 +4,9 @@
   <!-- PAGE HEADER -->
   <header class="page-header">
     <div>
-      <h1>Farmer production</h1>
-      <p>Coordinate expected cocoon output and record progress against farmer commitments.</p>
+      <h1>Farmer Production</h1>
+      <p>Monitor farmer activities, review production submissions, and track farm progress.</p>
     </div>
-
   </header>
 
   <!-- SUMMARY CARDS -->
@@ -15,66 +14,62 @@
 
     <article class="summary-card">
       <div class="summary-card-heading">
-        <span>Total committed output</span>
-        <span class="summary-icon">⚖</span>
+        <span>Total Activity Records</span>
+        <span class="summary-icon">📋</span>
       </div>
-      <h2>{{ totalCommitted | number }} kg</h2>
-      <p>{{ commitments.length }} production records · All harvest dates</p>
+      <h2>{{ commitments.length }}</h2>
+      <p>All submitted farmer activities</p>
     </article>
 
     <article class="summary-card">
       <div class="summary-card-heading">
-        <span>Expected, not yet received</span>
-        <span class="summary-icon">▦</span>
-      </div>
-      <h2>{{ totalRemaining | number }} kg</h2>
-      <p>
-        {{ confirmedTotal | number }} kg confirmed ·
-        {{ awaitingTotal | number }} kg awaiting
-      </p>
-    </article>
-
-    <article class="summary-card">
-      <div class="summary-card-heading">
-        <span>Received to date</span>
-        <span class="summary-icon">◉</span>
-      </div>
-      <h2>{{ totalReceived | number }} kg</h2>
-      <p>{{ receivedPercentage | number:'1.0-1' }}% of committed output</p>
-    </article>
-
-    <article class="summary-card">
-      <div class="summary-card-heading">
-        <span>Awaiting confirmation</span>
+        <span>Awaiting Review</span>
         <span class="summary-icon warning-icon">◷</span>
       </div>
       <h2>{{ awaitingConfirmationCount }}</h2>
-      <p class="warning-text">
-        {{ awaitingTotal | number }} kg · Follow-up needed
-      </p>
+      <p class="warning-text">Submissions requiring PTRI review</p>
+    </article>
+
+    <article class="summary-card">
+      <div class="summary-card-heading">
+        <span>Reviewed Records</span>
+        <span class="summary-icon">✓</span>
+      </div>
+      <h2>{{ commitments.length - awaitingConfirmationCount }}</h2>
+      <p>Activities already reviewed by PTRI</p>
+    </article>
+
+    <article class="summary-card">
+      <div class="summary-card-heading">
+        <span>Farmers for Follow-up</span>
+        <span class="summary-icon warning-icon">👤</span>
+      </div>
+      <h2>{{ awaitingFarmers.length }}</h2>
+      <p class="warning-text">Pending activity submissions</p>
     </article>
 
   </section>
 
-  <!-- INVENTORY NOTICE -->
+  <!-- INFORMATION NOTICE -->
   <div class="inventory-notice">
     <span class="notice-icon">ⓘ</span>
     <div>
-      <strong>Forecasts are not available inventory</strong>
+      <strong>Activity records are not actual inventory receipts</strong>
       <p>
-        Expected output enters inventory only after a collection is received,
-        weighed and recorded. Received progress below is cumulative against each commitment.
+        Farmer submissions contain activity reports and expected production
+        information. Cocoon quantities become actual PTRI receipts only after
+        the delivered cocoons are separately received, weighed, and recorded.
       </p>
     </div>
   </div>
 
-  <!-- PRODUCTION COMMITMENTS -->
+  <!-- FARMER ACTIVITIES -->
   <section class="commitments-panel">
 
     <div class="commitments-header">
       <div>
-        <h2>Production commitments</h2>
-        <p>Cocoon only · Expected harvest window: 26 Oct–08 Nov 2028</p>
+        <h2>Farmer Activity Records</h2>
+        <p>Review submitted mulberry, silkworm, and cocoon production activities.</p>
       </div>
     </div>
 
@@ -85,7 +80,7 @@
         <span>⌕</span>
         <input
           type="search"
-          placeholder="Search farmer or production reference"
+          placeholder="Search farmer, farm, activity, or reference"
           [(ngModel)]="searchTerm"
         />
       </label>
@@ -93,37 +88,45 @@
       <select
         class="production-filter"
         [(ngModel)]="selectedConfirmation"
-        aria-label="Filter by confirmation"
+        aria-label="Filter by review status"
       >
-        <option value="all">All confirmations</option>
-        <option value="confirmed">Confirmed</option>
-        <option value="awaiting">Awaiting response</option>
+        <option value="all">All submissions</option>
+        <option value="confirmed">Reviewed</option>
+        <option value="awaiting">Pending Review</option>
       </select>
 
-      <button class="production-filter" type="button" (click)="toggleHarvestSort()">
+      <button
+        class="production-filter"
+        type="button"
+        (click)="toggleHarvestSort()"
+      >
         <span>⌄</span>
-        Harvest date
+        Activity date
       </button>
 
-      <button class="production-filter" type="button" (click)="toggleFilters()">
+      <button
+        class="production-filter"
+        type="button"
+        (click)="toggleFilters()"
+      >
         <span>☷</span>
         Filters
       </button>
 
     </div>
 
-    <!-- COMMITMENTS TABLE -->
+    <!-- ACTIVITY TABLE -->
     <div class="production-table-wrapper">
       <table class="production-table">
+
         <thead>
           <tr>
-            <th>Farmer / reference</th>
-            <th>Expected harvest</th>
-            <th>Committed</th>
-            <th>Received</th>
-            <th>Remaining</th>
-            <th>Confirmation</th>
-            <th>Last update</th>
+            <th>Farmer / Reference</th>
+            <th>Activity</th>
+            <th>Activity Date</th>
+            <th>Reported Quantity</th>
+            <th>Review Status</th>
+            <th>Last Update</th>
             <th>Action</th>
           </tr>
         </thead>
@@ -132,8 +135,8 @@
 
           <!-- LOADING -->
           <tr *ngIf="isLoading">
-            <td colspan="8" class="no-production-records">
-              Loading farmer production records...
+            <td colspan="7" class="no-production-records">
+              Loading farmer activity records...
             </td>
           </tr>
 
@@ -144,46 +147,69 @@
             </td>
           </tr>
 
-          <!-- PRODUCTION RECORDS -->
+          <!-- RECORDS -->
           <ng-container *ngIf="!isLoading && !loadError">
 
             <tr *ngFor="let commitment of filteredCommitments">
+
               <td>
                 <div class="farmer-name">{{ commitment.farmer }}</div>
-                <div class="production-reference">{{ commitment.reference }}</div>
+                <div class="production-reference">
+                  {{ commitment.reference }}
+                </div>
+                <div class="production-reference">
+                  {{ commitment.farmName }}
+                </div>
               </td>
 
-              <td>{{ commitment.harvestDate }}</td>
-              <td>{{ commitment.committed }} kg</td>
-              <td>{{ commitment.received }} kg</td>
-              <td>{{ commitment.remaining }} kg</td>
+              <td>
+                <strong>{{ getActivityLabel(commitment.activityType) }}</strong>
+              </td>
+
+              <td>
+                {{ commitment.harvestDate || 'Not provided' }}
+              </td>
+
+              <td>
+                <ng-container *ngIf="commitment.quantity > 0; else noQuantity">
+                  {{ commitment.quantity | number }}
+                  {{ commitment.unit }}
+                </ng-container>
+
+                <ng-template #noQuantity>
+                  <span>Not applicable</span>
+                </ng-template>
+              </td>
 
               <td>
                 <span
                   class="confirmation-status"
                   [class.confirmed-status]="commitment.confirmation === 'Reviewed'"
-[class.awaiting-status]="commitment.confirmation === 'Pending Review'"
+                  [class.awaiting-status]="commitment.confirmation === 'Pending Review'"
                 >
                   <span class="confirmation-dot"></span>
                   {{ commitment.confirmation }}
                 </span>
               </td>
 
-              <td>{{ commitment.lastUpdate }}</td>
-                <td>
-                  <button
-                    type="button"
-                    class="review-production-btn"
-                    (click)="openReviewModal(commitment)"
-                  >
-                    Review
-                  </button>
-                </td>
-                            </tr>
+              <td>{{ commitment.lastUpdate || 'Not available' }}</td>
 
+              <td>
+                <button
+                  type="button"
+                  class="review-production-btn"
+                  (click)="openReviewModal(commitment)"
+                >
+                  Review
+                </button>
+              </td>
+
+            </tr>
+
+            <!-- EMPTY STATE -->
             <tr *ngIf="filteredCommitments.length === 0">
               <td colspan="7" class="no-production-records">
-                No production commitments found.
+                No farmer activity records found.
               </td>
             </tr>
 
@@ -196,14 +222,9 @@
     <!-- TABLE FOOTER -->
     <footer class="table-footer">
       <span>
-        Showing {{ filteredCommitments.length }} of {{ commitments.length }} commitments
+        Showing {{ filteredCommitments.length }} of
+        {{ commitments.length }} activity records
       </span>
-
-      <div class="pagination">
-        <button type="button" aria-label="Previous page">‹</button>
-        <button type="button" class="active-page">1</button>
-        <button type="button" aria-label="Next page">›</button>
-      </div>
     </footer>
 
   </section>
@@ -211,44 +232,43 @@
   <!-- BOTTOM INFORMATION CARDS -->
   <section class="production-bottom-grid">
 
-    <!-- COMMITMENT PROGRESS -->
+    <!-- ACTIVITY OVERVIEW -->
     <article class="progress-panel">
-      <h2>Commitment progress</h2>
+      <h2>Activity Review Overview</h2>
       <p>
-        {{ totalCommitted | number }} kg total ·
-        {{ totalReceived | number }} kg received and
-        {{ totalRemaining | number }} kg expected
+        {{ commitments.length }} total submissions ·
+        {{ commitments.length - awaitingConfirmationCount }} reviewed ·
+        {{ awaitingConfirmationCount }} awaiting review
       </p>
 
       <div class="progress-bar">
         <div
           class="progress-received"
-          [style.width.%]="receivedPercentage"
+          [style.width.%]="commitments.length > 0
+            ? ((commitments.length - awaitingConfirmationCount) / commitments.length) * 100
+            : 0"
         ></div>
       </div>
 
       <div class="progress-legend">
         <span>
           <i class="legend-dot received-dot"></i>
-          Received {{ totalReceived | number }} kg
-        </span>
-
-        <span>
-          <i class="legend-dot confirmed-dot"></i>
-          Confirmed {{ confirmedTotal | number }} kg
+          Reviewed {{ commitments.length - awaitingConfirmationCount }}
         </span>
 
         <span>
           <i class="legend-dot awaiting-dot"></i>
-          Awaiting {{ awaitingTotal | number }} kg
+          Pending {{ awaitingConfirmationCount }}
         </span>
       </div>
     </article>
 
-    <!-- NEXT FOLLOW-UP -->
+    <!-- PENDING REVIEWS -->
     <article class="follow-up-panel">
+
       <div class="follow-up-heading">
-        <h2>Next follow-up</h2>
+        <h2>Pending Farmer Submissions</h2>
+
         <button
           type="button"
           class="communication-btn"
@@ -260,43 +280,54 @@
       </div>
 
       <ng-container *ngIf="awaitingFarmers.length > 0; else noFollowUps">
+
         <p>
-          The following farmers have production submissions awaiting review:
+          The following farmer activities are waiting for PTRI review:
         </p>
 
         <ul>
           <li *ngFor="let farmer of awaitingFarmers">
-            <strong>{{ farmer.farmer }}</strong> —
-            {{ farmer.committed | number }} kg
+            <strong>{{ farmer.farmer }}</strong>
+            — {{ getActivityLabel(farmer.activityType) }}
           </li>
         </ul>
+
       </ng-container>
 
       <ng-template #noFollowUps>
         <p>
-          No production submissions are currently awaiting confirmation.
+          No farmer activity submissions are currently awaiting review.
         </p>
       </ng-template>
+
     </article>
 
   </section>
 
   <!-- PAGE FOOTNOTE -->
   <footer class="production-page-footer">
-    <span>Sample records for design preview · Quantities in kilograms (kg)</span>
+    <span>Farmer activity monitoring · Activity-specific quantities and units</span>
     <span>Philippine Standard Time · UTC+8</span>
   </footer>
 
-  
   <!-- PRODUCTION REVIEW MODAL -->
-  <div class="review-modal-overlay" *ngIf="showReviewModal && selectedProduction">
+  <div
+    class="review-modal-overlay"
+    *ngIf="showReviewModal && selectedProduction"
+  >
+
     <section class="review-modal">
 
+      <!-- MODAL HEADER -->
       <header class="review-modal-header">
         <div>
-          <span class="review-modal-eyebrow">PTRI · PRODUCTION MANAGEMENT</span>
-          <h2>Production submission review</h2>
-          <p>Review the farmer's submitted production information.</p>
+          <span class="review-modal-eyebrow">
+            PTRI · FARMER PRODUCTION MANAGEMENT
+          </span>
+
+          <h2>Activity Submission Review</h2>
+
+          <p>Review the farmer's submitted activity information.</p>
         </div>
 
         <button
@@ -310,73 +341,364 @@
         </button>
       </header>
 
+      <!-- MODAL BODY -->
       <div class="review-modal-body">
 
+        <!-- REFERENCE -->
         <div class="review-modal-reference">
           <div>
-            <span>PRODUCTION REFERENCE</span>
+            <span>ACTIVITY REFERENCE</span>
             <strong>{{ selectedProduction.reference }}</strong>
           </div>
 
-          <span class="review-modal-status">
+          <span
+            class="review-modal-status"
+            [class.confirmed-status]="selectedProduction.confirmation === 'Reviewed'"
+            [class.awaiting-status]="selectedProduction.confirmation === 'Pending Review'"
+          >
             {{ selectedProduction.confirmation }}
           </span>
         </div>
 
+        <!-- FARMER INFORMATION -->
         <div class="review-section">
-          <h3>Farmer information</h3>
+          <h3>Farmer Information</h3>
 
           <div class="review-detail-grid">
+
             <div class="review-detail">
-              <span>Farmer name</span>
+              <span>Farmer Name</span>
               <strong>{{ selectedProduction.farmer }}</strong>
             </div>
 
             <div class="review-detail">
-              <span>Farm name</span>
-              <strong>{{ selectedProduction.farmName || 'Not provided' }}</strong>
+              <span>Farm Name</span>
+              <strong>
+                {{ selectedProduction.farmName || 'Not provided' }}
+              </strong>
             </div>
+
           </div>
         </div>
 
+        <!-- GENERAL ACTIVITY INFORMATION -->
         <div class="review-section">
-          <h3>Production details</h3>
+          <h3>Activity Details</h3>
 
           <div class="review-detail-grid">
-            <div class="review-detail">
-              <span>Production type</span>
-              <strong>{{ selectedProduction.productionType || 'Not provided' }}</strong>
-            </div>
 
             <div class="review-detail">
-              <span>Expected quantity</span>
+              <span>Activity Type</span>
               <strong>
-                {{ selectedProduction.quantity | number }} {{ selectedProduction.unit }}
+                {{ getActivityLabel(selectedProduction.activityType) }}
               </strong>
             </div>
 
             <div class="review-detail">
-              <span>Expected availability</span>
-              <strong>{{ selectedProduction.harvestDate || 'Not provided' }}</strong>
+              <span>Activity Date</span>
+              <strong>
+                {{ selectedProduction.harvestDate || 'Not provided' }}
+              </strong>
             </div>
 
             <div class="review-detail">
-              <span>Submission status</span>
-              <strong>{{ selectedProduction.confirmation }}</strong>
+              <span>Reported Quantity</span>
+              <strong>
+                <ng-container *ngIf="selectedProduction.quantity > 0; else noReportedQuantity">
+                  {{ selectedProduction.quantity | number }}
+                  {{ selectedProduction.unit }}
+                </ng-container>
+
+                <ng-template #noReportedQuantity>
+                  Not applicable
+                </ng-template>
+              </strong>
             </div>
+
+            <div class="review-detail">
+              <span>Last Update</span>
+              <strong>
+                {{ selectedProduction.lastUpdate || 'Not available' }}
+              </strong>
+            </div>
+
           </div>
         </div>
 
+        <!-- MULBERRY LEAF AVAILABILITY -->
+        <div
+          class="review-section"
+          *ngIf="selectedProduction.activityType === 'leaf-availability'"
+        >
+          <h3>Mulberry Leaf Availability Details</h3>
+
+          <div class="review-detail-grid">
+
+            <div class="review-detail">
+              <span>Estimated Available Leaves</span>
+              <strong>
+                {{ selectedProduction.availableLeafCount ?? 0 | number }}
+                leaves
+              </strong>
+            </div>
+
+            <div class="review-detail">
+              <span>Leaf Report Date</span>
+              <strong>
+                {{ selectedProduction.leafReportDate || 'Not provided' }}
+              </strong>
+            </div>
+
+          </div>
+
+          <p class="review-help-text">
+            This is the farmer's reported estimate of available mulberry leaves.
+            It is not a weighed inventory quantity.
+          </p>
+        </div>
+
+        <!-- MULBERRY PRUNING -->
+        <div
+          class="review-section"
+          *ngIf="selectedProduction.activityType === 'mulberry-pruning'"
+        >
+          <h3>Mulberry Pruning Details</h3>
+
+          <div class="review-detail-grid">
+
+            <div class="review-detail">
+              <span>Pruning Date</span>
+              <strong>
+                {{ selectedProduction.pruningDate || 'Not provided' }}
+              </strong>
+            </div>
+
+            <div class="review-detail">
+              <span>Pruning Cycle</span>
+              <strong>
+                {{ selectedProduction.pruningCycleDays || 45 }} days
+              </strong>
+            </div>
+
+            <div class="review-detail">
+              <span>Days Remaining</span>
+              <strong *ngIf="selectedProduction.pruningDaysRemaining !== undefined; else unavailablePruningDays">
+                {{ selectedProduction.pruningDaysRemaining }} days
+              </strong>
+
+              <ng-template #unavailablePruningDays>
+                <strong>Not available</strong>
+              </ng-template>
+            </div>
+
+          </div>
+
+          <div
+            class="pruning-reminder"
+            *ngIf="isPruningPreparationDue(selectedProduction)"
+          >
+            <strong>PTRI Preparation Reminder</strong>
+            <p>
+              This farmer's pruning cycle is approaching completion.
+              PTRI should begin assessing leaf readiness and preparing the
+              next silkworm batch when appropriate.
+            </p>
+          </div>
+
+          <div
+            class="pruning-complete-notice"
+            *ngIf="isPruningCycleComplete(selectedProduction)"
+          >
+            <strong>Pruning Cycle Completed</strong>
+            <p>
+              The 45-day pruning cycle has reached Day 0.
+              PTRI may now check the farmer's leaf readiness before planning
+              the next silkworm batch.
+            </p>
+          </div>
+
+          <p
+            class="review-help-text"
+            *ngIf="selectedProduction.pruningDaysRemaining !== undefined &&
+              selectedProduction.pruningDaysRemaining > 7"
+          >
+            The pruning cycle is ongoing. PTRI can continue monitoring the
+            farmer's mulberry growth and leaf availability.
+          </p>
+        </div>
+
+        <!-- SILKWORM REARING -->
+        <div
+          class="review-section"
+          *ngIf="selectedProduction.activityType === 'silkworm-rearing'"
+        >
+          <h3>Silkworm Rearing and Batch Details</h3>
+
+          <div class="review-detail-grid">
+
+            <div class="review-detail">
+              <span>Batch Reference</span>
+              <strong>
+                {{ selectedProduction.batchReference || 'Not provided' }}
+              </strong>
+            </div>
+
+            <div class="review-detail">
+              <span>Hatch Date</span>
+              <strong>
+                {{ selectedProduction.hatchDate || 'Not provided' }}
+              </strong>
+            </div>
+
+            <div class="review-detail">
+              <span>Number of Silkworms</span>
+              <strong>
+                {{ selectedProduction.silkwormCount ?? 0 | number }}
+              </strong>
+            </div>
+
+            <div class="review-detail">
+              <span>Number of Boxes</span>
+              <strong>
+                {{ selectedProduction.boxCount ?? 0 | number }}
+              </strong>
+            </div>
+
+            <div class="review-detail">
+              <span>Instar / Age</span>
+              <strong>
+                {{ selectedProduction.instar || 'Not provided' }}
+              </strong>
+            </div>
+
+            <div class="review-detail">
+              <span>Expected Mounting Date</span>
+              <strong>
+                {{ selectedProduction.expectedMountingDate || 'Not provided' }}
+              </strong>
+            </div>
+
+            <div class="review-detail">
+              <span>Expected Cocoon Return to PTRI</span>
+              <strong>
+                {{ selectedProduction.expectedCocoonReturnDate || 'Not provided' }}
+              </strong>
+            </div>
+
+          </div>
+
+          <p class="review-help-text">
+            The expected mounting date and expected cocoon return date are
+            separate production milestones. The return date is an estimate,
+            not confirmation that PTRI has received the cocoons.
+          </p>
+        </div>
+
+        <!-- COCOON HARVEST -->
+        <div
+          class="review-section"
+          *ngIf="selectedProduction.activityType === 'cocoon-harvest'"
+        >
+          <h3>Cocoon Harvest Details</h3>
+
+          <div class="review-detail-grid">
+
+            <div class="review-detail">
+              <span>Harvest Date</span>
+              <strong>
+                {{ selectedProduction.harvestDate || 'Not provided' }}
+              </strong>
+            </div>
+
+            <div class="review-detail">
+              <span>Harvested Cocoon Quantity</span>
+              <strong>
+                {{ selectedProduction.cocoonQuantity ?? selectedProduction.quantity | number }}
+                {{ selectedProduction.cocoonUnit || selectedProduction.unit || 'unit not specified' }}
+              </strong>
+            </div>
+
+            <div class="review-detail">
+              <span>Expected Delivery to PTRI</span>
+              <strong>
+                {{ selectedProduction.expectedDeliveryDate || 'Not provided' }}
+              </strong>
+            </div>
+
+          </div>
+
+          <p class="review-help-text">
+            The reported cocoon quantity and expected delivery date are farmer
+            submissions. Actual receiving must be recorded separately by PTRI.
+          </p>
+        </div>
+
+        <!-- LEGACY RECORDS -->
+        <div
+          class="review-section"
+          *ngIf="selectedProduction.activityType === 'legacy'"
+        >
+          <h3>Previous Production Record</h3>
+
+          <div class="review-detail-grid">
+
+            <div class="review-detail">
+              <span>Production Type</span>
+              <strong>
+                {{ selectedProduction.productionType || 'Not provided' }}
+              </strong>
+            </div>
+
+            <div class="review-detail">
+              <span>Recorded Quantity</span>
+              <strong>
+                {{ selectedProduction.quantity | number }}
+                {{ selectedProduction.unit || 'unit not specified' }}
+              </strong>
+            </div>
+
+            <div class="review-detail">
+              <span>Recorded Date</span>
+              <strong>
+                {{ selectedProduction.harvestDate || 'Not provided' }}
+              </strong>
+            </div>
+
+          </div>
+
+          <p class="review-help-text">
+            This is an older production record saved before the activity-specific
+            submission format was introduced.
+          </p>
+        </div>
+
+        <!-- ADDITIONAL NOTES -->
         <div class="review-section">
-          <h3>Additional notes</h3>
+          <h3>Additional Notes</h3>
+
           <div class="review-notes">
             {{ selectedProduction.notes || 'The farmer did not provide additional notes.' }}
           </div>
         </div>
 
+        <!-- RECEIVING NOTICE -->
+        <div class="inventory-notice">
+          <span class="notice-icon">ⓘ</span>
+          <div>
+            <strong>Review confirmation only</strong>
+            <p>
+              Confirming this submission does not mean that PTRI has
+              physically received the reported production or cocoons.
+              Actual cocoon receiving must be recorded separately.
+            </p>
+          </div>
+        </div>
+
       </div>
 
+      <!-- MODAL FOOTER -->
       <footer class="review-modal-footer">
+
         <button
           type="button"
           class="review-modal-cancel"
@@ -395,10 +717,10 @@
         >
           {{ isReviewing ? 'Processing...' : 'Confirm as Reviewed' }}
         </button>
+
       </footer>
 
     </section>
   </div>
-
 
 </div>

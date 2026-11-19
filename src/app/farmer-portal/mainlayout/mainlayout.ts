@@ -15,6 +15,7 @@ import {
   X,
   House,
   Sprout,
+  Leaf,
   Package,
   Truck,
   MessageCircle,
@@ -23,6 +24,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Bell,
+  Bug,
    Settings as SettingsIcon,
 } from 'lucide-angular';
 import { signOut, onAuthStateChanged } from 'firebase/auth';
@@ -58,20 +60,22 @@ export class Mainlayout implements OnInit, OnDestroy {
   private routerSubscription!: Subscription;
 
   readonly icons = {
-    Menu,
-    X,
-    House,
-    Sprout,
-    Package,
-    Truck,
-    MessageCircle,
-    UserRound,
-    LogOut,
-    ChevronLeft,
-    ChevronRight,
-    Bell,
-    Settings: SettingsIcon,
-  };
+  Menu,
+  X,
+  House,
+  Sprout,
+  Leaf,
+  Bug,
+  Package,
+  Truck,
+  MessageCircle,
+  UserRound,
+  LogOut,
+  ChevronLeft,
+  ChevronRight,
+  Bell,
+  Settings: SettingsIcon,
+};
 
   constructor(
     private router: Router,

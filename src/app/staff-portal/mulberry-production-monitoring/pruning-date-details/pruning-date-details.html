@@ -1,0 +1,222 @@
+
+<div class="details-page">
+  <header class="details-header">
+    <div class="header-left">
+      <button class="back-button" type="button" (click)="goBack()">
+        <lucide-icon name="arrow-left"></lucide-icon>
+        <span>Back to Calendar</span>
+      </button>
+
+      <div class="header-title">
+        <div class="title-icon">
+          <lucide-icon name="sprout"></lucide-icon>
+        </div>
+        <div>
+          <span class="eyebrow">PTRI STAFF PORTAL</span>
+          <h1>Pruning Date Details</h1>
+          <p>Farmer pruning records for the selected calendar date</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="header-date">
+      <lucide-icon name="calendar-days"></lucide-icon>
+      <span>{{ formattedSelectedDate }}</span>
+    </div>
+  </header>
+
+  @if (errorMessage) {
+    <section class="error-panel">
+      <div class="error-icon">
+        <lucide-icon name="info"></lucide-icon>
+      </div>
+      <div class="error-content">
+        <strong>Unable to display pruning details</strong>
+        <p>{{ errorMessage }}</p>
+        <button type="button" class="retry-button" (click)="retryLoading()">
+          <lucide-icon name="refresh-cw"></lucide-icon>
+          Try Again
+        </button>
+      </div>
+    </section>
+  } @else {
+    <section class="summary-grid">
+      <article class="summary-card total-card">
+        <div class="summary-icon">
+          <lucide-icon name="users"></lucide-icon>
+        </div>
+        <div class="summary-info">
+          <span>Total Farmers</span>
+          <strong>{{ totalFarmers }}</strong>
+          <small>Registered for this date</small>
+        </div>
+      </article>
+
+      <article class="summary-card active-card">
+        <div class="summary-icon">
+          <lucide-icon name="clock"></lucide-icon>
+        </div>
+        <div class="summary-info">
+          <span>Active Pruning</span>
+          <strong>{{ activeFarmers }}</strong>
+          <small>Ongoing pruning cycles</small>
+        </div>
+      </article>
+
+      <article class="summary-card completed-card">
+        <div class="summary-icon">
+          <lucide-icon name="check-circle-2"></lucide-icon>
+        </div>
+        <div class="summary-info">
+          <span>Completed Cycles</span>
+          <strong>{{ completedFarmers }}</strong>
+          <small>Finished pruning cycles</small>
+        </div>
+      </article>
+    </section>
+
+    <section class="records-section">
+      <div class="records-heading">
+        <div>
+          <span class="section-eyebrow">PRUNING RECORDS</span>
+          <h2>Farmers' Pruning Activities</h2>
+          <p>View the farmers who started pruning on {{ formattedSelectedDate }}.</p>
+        </div>
+
+        <div class="record-count">
+          <lucide-icon name="users"></lucide-icon>
+          <strong>{{ filteredEntries.length }}</strong>
+          <span>{{ filteredEntries.length === 1 ? 'Record' : 'Records' }}</span>
+        </div>
+      </div>
+
+      <div class="toolbar">
+        <div class="search-box">
+          <lucide-icon name="search"></lucide-icon>
+          <input
+            type="text"
+            [(ngModel)]="searchTerm"
+            placeholder="Search farmer, farm, or location..."
+            aria-label="Search pruning records"
+          />
+        </div>
+
+        <div class="filter-box">
+          <lucide-icon name="filter"></lucide-icon>
+          <select
+            [(ngModel)]="selectedStatus"
+            aria-label="Filter by pruning status"
+          >
+            <option value="All">All Status</option>
+            <option value="In Progress">In Progress</option>
+            <option value="Completed">Completed</option>
+          </select>
+        </div>
+      </div>
+
+      @if (entries.length > 0 && filteredEntries.length > 0) {
+        <div class="table-wrapper">
+          <table class="farmer-table">
+            <thead>
+              <tr>
+                <th>Farmer / Farm</th>
+                <th>Location</th>
+                <th>Pruning Period</th>
+                <th>Remaining Days</th>
+                <th>Status</th>
+                <th class="action-heading">Action</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              @for (entry of filteredEntries; track entry.record.id || entry.farmer.authUid) {
+                <tr>
+                  <td>
+                    <div class="farmer-cell">
+                      <div class="farmer-avatar">
+                        {{ (entry.farmer.fullName || 'F').charAt(0).toUpperCase() }}
+                      </div>
+                      <div class="farmer-info">
+                        <strong>{{ entry.farmer.fullName }}</strong>
+                        <span>{{ entry.farmer.farmName || 'Farm name not provided' }}</span>
+                      </div>
+                    </div>
+                  </td>
+
+                  <td>
+                    <div class="location-cell">
+                      <lucide-icon name="map-pin"></lucide-icon>
+                      <span>{{ entry.farmer.locality || 'Not provided' }}</span>
+                    </div>
+                  </td>
+
+                  <td>
+                    <div class="period-cell">
+                      <strong>{{ getRecordStartDate(entry.record) | date:'MMM d, y' }}</strong>
+                      <span>
+                        Until {{ getRecordEndDate(entry.record) | date:'MMM d, y' }}
+                      </span>
+                    </div>
+                  </td>
+
+                  <td>
+                    <span
+                      class="remaining-label"
+                      [class.completed-text]="entry.record.status === 'Completed'"
+                      [class.ending-text]="getRemainingDays(entry.record) !== null && getRemainingDays(entry.record)! >= 0 && getRemainingDays(entry.record)! <= 5"
+                    >
+                      {{ getRemainingLabel(entry.record) }}
+                    </span>
+                  </td>
+
+                  <td>
+                    <span class="status-pill" [ngClass]="getStatusClass(entry.record)">
+                      <span class="status-dot"></span>
+                      {{ entry.record.status || 'In Progress' }}
+                    </span>
+                  </td>
+
+                  <td class="action-cell">
+                    <button
+                      type="button"
+                      class="view-button"
+                      (click)="viewFarmerDetails(entry)"
+                    >
+                      <lucide-icon name="eye"></lucide-icon>
+                      <span>View</span>
+                    </button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      } @else {
+        <div class="empty-state">
+          <div class="empty-icon">
+            <lucide-icon name="sprout"></lucide-icon>
+          </div>
+
+          @if (entries.length === 0) {
+            <h3>No Pruning Records Found</h3>
+            <p>No farmers have a pruning record starting on this date.</p>
+          } @else {
+            <h3>No Matching Farmers</h3>
+            <p>Try changing your search term or selected status filter.</p>
+          }
+        </div>
+      }
+    </section>
+
+    <div class="bottom-note">
+      <div class="note-icon">
+        <lucide-icon name="info"></lucide-icon>
+      </div>
+      <p>
+        <strong>45-Day Pruning Cycle:</strong>
+        Each pruning schedule follows a 45-day cycle. The expected end date is
+        based on the saved pruning record.
+      </p>
+    </div>
+  }
+</div>

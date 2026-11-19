@@ -17,7 +17,11 @@ type Farmer = FarmerAccount;
   styleUrl: './farmer-management.css',
 })
 export class FarmerManagement implements OnInit {
- constructor(private farmerAccountService: FarmerAccountService, private cdr: ChangeDetectorRef, private router: Router) {}
+  constructor(
+    private farmerAccountService: FarmerAccountService,
+    private cdr: ChangeDetectorRef,
+    private router: Router
+  ) {}
 
   searchTerm = '';
   selectedStatus = 'All Status';
@@ -72,6 +76,7 @@ export class FarmerManagement implements OnInit {
 
   get filteredFarmers(): Farmer[] {
     const search = this.searchTerm.toLowerCase().trim();
+
     return this.farmers.filter((farmer) => {
       const matchesSearch = !search ||
         farmer.fullName.toLowerCase().includes(search) ||
@@ -79,7 +84,11 @@ export class FarmerManagement implements OnInit {
         farmer.phone.toLowerCase().includes(search) ||
         farmer.email.toLowerCase().includes(search) ||
         farmer.farmName.toLowerCase().includes(search);
-      const matchesStatus = this.selectedStatus === 'All Status' || farmer.status === this.selectedStatus;
+
+      const matchesStatus =
+        this.selectedStatus === 'All Status' ||
+        farmer.status === this.selectedStatus;
+
       return matchesSearch && matchesStatus;
     });
   }
@@ -93,13 +102,20 @@ export class FarmerManagement implements OnInit {
     return Math.max(1, Math.ceil(this.filteredFarmers.length / this.pageSize));
   }
 
-  get totalCommittedSupply(): number {
-    return this.farmers.reduce((total, farmer) => total + farmer.supplyCommitment, 0);
+  get totalFarmers(): number {
+    return this.farmers.length;
   }
 
-  get activeCommitments(): number {
-    return this.farmers.filter((farmer) => farmer.status === 'Active')
-      .reduce((total, farmer) => total + farmer.supplyCommitment, 0);
+  get activeFarmers(): number {
+    return this.farmers.filter(farmer => farmer.status === 'Active').length;
+  }
+
+  get individualFarmers(): number {
+    return this.farmers.filter(farmer => farmer.farmerType === 'Individual').length;
+  }
+
+  get communityFarmers(): number {
+    return this.farmers.filter(farmer => farmer.farmerType === 'Community').length;
   }
 
   onSearchChange(): void {
@@ -152,19 +168,37 @@ export class FarmerManagement implements OnInit {
         this.errorMessage = 'Please enter a username.';
         return;
       }
+
       if (this.farmerPassword.length < 6) {
         this.errorMessage = 'Password must be at least 6 characters.';
         return;
       }
     }
 
-    if (!this.farmerForm.fullName.trim() || !this.farmerForm.locality.trim() || !this.farmerForm.phone.trim()) {
+    if (
+      !this.farmerForm.fullName.trim() ||
+      !this.farmerForm.locality.trim() ||
+      !this.farmerForm.phone.trim()
+    ) {
       this.errorMessage = 'Please complete the farmer name, phone number, and locality.';
       return;
     }
 
-    if (!Number.isFinite(Number(this.farmerForm.supplyCommitment)) || Number(this.farmerForm.supplyCommitment) < 0) {
-      this.errorMessage = 'Supply commitment must be zero or greater.';
+    if (
+      !Number.isFinite(Number(this.farmerForm.mulberryTreeCount)) ||
+      Number(this.farmerForm.mulberryTreeCount) < 0
+    ) {
+      this.errorMessage = 'Mulberry tree count must be zero or greater.';
+      return;
+    }
+
+    if (
+      this.farmerForm.farmerType === 'Community' &&
+      (!this.farmerForm.communityName?.trim() ||
+        !Number.isFinite(Number(this.farmerForm.memberCount)) ||
+        Number(this.farmerForm.memberCount) < 1)
+    ) {
+      this.errorMessage = 'Please provide the community name and a valid member count.';
       return;
     }
 
@@ -176,7 +210,10 @@ export class FarmerManagement implements OnInit {
       email: this.farmerForm.email.trim(),
       farmName: this.farmerForm.farmName.trim(),
       farmArea: this.farmerForm.farmArea.trim(),
-      supplyCommitment: Number(this.farmerForm.supplyCommitment),
+      farmerType: this.farmerForm.farmerType || 'Individual',
+      mulberryTreeCount: Number(this.farmerForm.mulberryTreeCount || 0),
+      communityName: this.farmerForm.communityName?.trim() || '',
+      memberCount: Number(this.farmerForm.memberCount || 0)
     };
 
     this.isSaving = true;
@@ -184,7 +221,9 @@ export class FarmerManagement implements OnInit {
 
     Swal.fire({
       title: isAdding ? 'Creating Farmer Account' : 'Updating Farmer Record',
-      text: isAdding ? 'Please wait while we save the farmer account...' : 'Please wait while we update the farmer record...',
+      text: isAdding
+        ? 'Please wait while we save the farmer account...'
+        : 'Please wait while we update the farmer record...',
       allowOutsideClick: false,
       allowEscapeKey: false,
       showConfirmButton: false,
@@ -200,7 +239,6 @@ export class FarmerManagement implements OnInit {
         await this.farmerAccountService.updateFarmer(this.selectedFarmer.id, data);
       }
 
-      // Refresh records silently without opening another loading popup.
       const refreshed = await this.loadFarmers(false);
 
       this.closeModal();
@@ -238,6 +276,7 @@ export class FarmerManagement implements OnInit {
       console.error('Error saving farmer:', error);
       Swal.close();
       this.errorMessage = 'Unable to save the farmer. Please check your Firebase permissions and try again.';
+
       await Swal.fire({
         icon: 'error',
         title: 'Unable to Save Farmer',
@@ -254,18 +293,30 @@ export class FarmerManagement implements OnInit {
   }
 
   messageFarmer(farmer: Farmer): void {
-  if (!farmer.authUid) {
-    Swal.fire({ icon: 'warning', title: 'Unable to Open Conversation', text: 'This farmer does not have a valid account ID.', confirmButtonColor: '#245638', background: '#fffdf8', color: '#493a2c' });
-    return;
+    if (!farmer.authUid) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Unable to Open Conversation',
+        text: 'This farmer does not have a valid account ID.',
+        confirmButtonColor: '#245638',
+        background: '#fffdf8',
+        color: '#493a2c'
+      });
+      return;
+    }
+
+    void this.router.navigate(['/staff/messages'], {
+      queryParams: {
+        recipientUid: farmer.authUid,
+        recipientRole: 'farmer'
+      }
+    });
   }
 
-  void this.router.navigate(['/staff/messages'], {
-    queryParams: { recipientUid: farmer.authUid, recipientRole: 'farmer' }
-  });
-}
-
   goToPage(page: number): void {
-    if (page >= 1 && page <= this.totalPages) this.currentPage = page;
+    if (page >= 1 && page <= this.totalPages) {
+      this.currentPage = page;
+    }
   }
 
   private emptyFarmer(): Omit<Farmer, 'id'> {
@@ -275,15 +326,25 @@ export class FarmerManagement implements OnInit {
       phone: '',
       email: '',
       username: '',
+      farmerType: 'Individual',
       farmName: '',
+      communityName: '',
+      memberCount: 0,
       farmArea: '',
-      supplyCommitment: 0,
-      status: 'Pending',
+      mulberryTreeCount: 0,
+      status: 'Pending'
     };
   }
 
   private toForm(farmer: Farmer): Omit<Farmer, 'id'> {
     const { id, ...data } = farmer;
-    return { ...data };
+
+    return {
+      ...data,
+      farmerType: farmer.farmerType || 'Individual',
+      communityName: farmer.communityName || '',
+      memberCount: farmer.memberCount || 0,
+      mulberryTreeCount: farmer.mulberryTreeCount || 0
+    };
   }
 }

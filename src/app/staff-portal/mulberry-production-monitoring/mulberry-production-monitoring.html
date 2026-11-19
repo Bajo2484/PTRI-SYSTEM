@@ -1,0 +1,314 @@
+
+<div class="mulberry-page">
+
+  <!-- HEADER -->
+  <header class="page-header">
+    <div class="header-content">
+      <div class="header-brand">
+        <span class="eyebrow">PTRI STAFF PORTAL</span>
+        <h2>Mulberry Production Monitoring</h2>
+        <p>Monitor farmer pruning cycles and upcoming end dates.</p>
+      </div>
+    </div>
+
+    <div class="header-decoration">
+      <img src="images/mulberry-leaves.png" alt="Mulberry leaves">
+    </div>
+
+    <button type="button" class="refresh-btn" (click)="retryLoading()" [disabled]="isLoading">
+      <span class="refresh-symbol">↻</span>
+      Refresh Records
+    </button>
+  </header>
+
+  <!-- PRUNING ENDING SOON ALERT -->
+  <section class="pruning-alert-section">
+    <div class="alert-illustration">
+      <div class="alert-icon-circle">
+        <lucide-icon name="bell-ring" [size]="32"></lucide-icon>
+      </div>
+      <span class="alert-leaf-decoration">
+        <lucide-icon name="sprout" [size]="25"></lucide-icon>
+      </span>
+    </div>
+
+    <div class="alert-content">
+      <div class="alert-heading">
+        <div>
+          <span class="alert-eyebrow">IMPORTANT REMINDER</span>
+          <h3>Pruning Ending Soon!</h3>
+          <p>Farmers with 5 days or less remaining in their pruning cycle.</p>
+        </div>
+        <span class="alert-count">{{ pruningAlerts.length }} Farmers</span>
+      </div>
+
+      @if (pruningAlerts.length > 0) {
+        <div class="alert-farmer-list">
+          @for (alert of pruningAlerts; track alert.farmer.authUid) {
+            <div class="alert-farmer-card">
+              <div class="alert-farmer-info">
+                <div class="farmer-avatar">
+                  <lucide-icon name="user-round" [size]="19"></lucide-icon>
+                </div>
+
+                <div class="farmer-details">
+                  <strong>{{ alert.farmer.fullName }}</strong>
+                  <span>{{ alert.farmer.farmName }} · {{ alert.farmer.locality }}</span>
+                </div>
+              </div>
+
+              <div class="alert-progress-area">
+                <div class="alert-progress-label">
+                  <span>{{ getAlertText(alert.remainingDays) }}</span>
+                  <strong [class.urgent-text]="alert.remainingDays <= 2">
+                    {{ alert.remainingDays }} {{ alert.remainingDays === 1 ? 'day' : 'days' }} left
+                  </strong>
+                </div>
+
+                <div class="alert-progress-track">
+                  <div
+                    class="alert-progress-fill"
+                    [class.urgent-fill]="alert.remainingDays <= 2"
+                    [style.width.%]="((45 - alert.remainingDays) / 45) * 100">
+                  </div>
+                </div>
+              </div>
+
+              <span
+                class="alert-status"
+                [class.urgent]="getAlertPriority(alert.remainingDays) === 'urgent'">
+                {{ alert.remainingDays === 0 ? 'Ends Today' : alert.remainingDays <= 2 ? 'Urgent' : 'Ending Soon' }}
+              </span>
+            </div>
+          }
+        </div>
+      } @else {
+        <div class="no-pruning-alert">
+          <lucide-icon name="check-circle-2" [size]="23"></lucide-icon>
+          <div>
+            <strong>No Upcoming Pruning End Dates</strong>
+            <p>No active pruning cycles are ending within the next five days.</p>
+          </div>
+        </div>
+      }
+    </div>
+  </section>
+
+  <!-- SUMMARY CARDS -->
+  <section class="summary-grid">
+
+    <div class="summary-card farmers-card">
+      <div class="summary-icon farmers-icon">
+        <lucide-icon name="users" [size]="23"></lucide-icon>
+      </div>
+      <div class="summary-info">
+        <span>Total Farmers</span>
+        <h3>{{ totalPruningFarmers }}</h3>
+        <small>Registered farmer accounts</small>
+      </div>
+    </div>
+
+    <div class="summary-card active-card">
+      <div class="summary-icon active-icon">
+        <lucide-icon name="sprout" [size]="23"></lucide-icon>
+      </div>
+      <div class="summary-info">
+        <span>Active Pruning</span>
+        <h3>{{ activePruningFarmers }}</h3>
+        <small>Ongoing pruning cycles</small>
+      </div>
+    </div>
+
+    <div class="summary-card near-card">
+      <div class="summary-icon near-icon">
+        <lucide-icon name="clock" [size]="23"></lucide-icon>
+      </div>
+      <div class="summary-info">
+        <span>Near Completion</span>
+        <h3>{{ nearCompletionFarmers }}</h3>
+        <small>7 days or less remaining</small>
+      </div>
+    </div>
+
+    <div class="summary-card completed-card">
+      <div class="summary-icon completed-icon">
+        <lucide-icon name="calendar-check" [size]="23"></lucide-icon>
+      </div>
+      <div class="summary-info">
+        <span>Completed Cycles</span>
+        <h3>{{ completedPruningCycles }}</h3>
+        <small>Finished pruning records</small>
+      </div>
+    </div>
+
+  </section>
+  <!-- CALENDAR -->
+  <section class="calendar-section">
+
+    <div class="calendar-heading">
+      <div>
+        <span class="section-eyebrow">PRUNING SCHEDULE OVERVIEW</span>
+        <h3>Farmer Pruning Calendar</h3>
+        <p>Track pruning start dates, expected completion dates, and farmer activities.</p>
+      </div>
+
+      <div class="calendar-decoration">
+        <lucide-icon name="calendar-days" [size]="30"></lucide-icon>
+      </div>
+    </div>
+
+    <div class="calendar-toolbar">
+      <div class="month-display">
+        <h2>{{ monthYearLabel }}</h2>
+        <span>Monthly Pruning Schedule</span>
+      </div>
+
+      <div class="calendar-controls">
+        <button type="button" class="today-btn" (click)="goToToday()">
+          <lucide-icon name="calendar-check" [size]="15"></lucide-icon>
+          Today
+        </button>
+
+        <button type="button" class="month-nav-btn" (click)="previousMonth()" aria-label="Previous month">
+          <lucide-icon name="chevron-left" [size]="19"></lucide-icon>
+        </button>
+
+        <button type="button" class="month-nav-btn" (click)="nextMonth()" aria-label="Next month">
+          <lucide-icon name="chevron-right" [size]="19"></lucide-icon>
+        </button>
+      </div>
+    </div>
+
+    @if (errorMessage) {
+      <div class="error-message">
+        <lucide-icon name="alert-circle" [size]="19"></lucide-icon>
+        <span>{{ errorMessage }}</span>
+        <button type="button" (click)="retryLoading()">Try Again</button>
+      </div>
+    } @else {
+      <div class="calendar-container">
+
+        <div class="calendar-weekdays">
+          @for (day of weekDays; track day) {
+            <div class="weekday">{{ day }}</div>
+          }
+        </div>
+
+        <div class="calendar-grid">
+          @for (day of calendarDays; track day.date) {
+            <button
+              type="button"
+              class="calendar-day"
+              [class.other-month]="!day.isCurrentMonth"
+              [class.today]="day.isToday"
+              [class.has-farmers]="day.farmerCount > 0"
+              [class.pruning-start-date]="day.isPruningStart"
+              [class.pruning-end-date]="day.isPruningEnd"
+              [class.ending-soon-date]="day.isEndingSoon"
+              [disabled]="day.farmerCount === 0"
+              [attr.aria-label]="day.farmerCount + ' farmers started pruning on ' + day.date"
+              (click)="openDateDetails(day)">
+
+              <span class="day-number">{{ day.dayNumber }}</span>
+
+              @if (day.isPruningStart) {
+                <span class="calendar-date-type start-type">
+                  <lucide-icon name="sprout" [size]="12"></lucide-icon>
+                  START
+                </span>
+              }
+
+              @if (day.isPruningEnd) {
+                <span class="calendar-date-type end-type">
+                  <lucide-icon name="flag" [size]="12"></lucide-icon>
+                  END
+                </span>
+              }
+
+              @if (day.farmerCount > 0) {
+                <span class="farmer-event">
+                  <lucide-icon name="users" [size]="14"></lucide-icon>
+                  <strong>{{ day.farmerCount }}</strong>
+                  <span>{{ day.farmerCount === 1 ? 'Farmer' : 'Farmers' }}</span>
+                </span>
+                <span class="view-date-hint">View farmers</span>
+              }
+
+              @if (day.isEndingSoon) {
+                <span class="ending-soon-indicator">
+                  <lucide-icon name="bell-ring" [size]="12"></lucide-icon>
+                  Ending Soon
+                </span>
+              }
+
+              @if (day.isToday) {
+                <span class="today-indicator">
+                  <span class="today-pulse"></span>
+                  TODAY
+                </span>
+              }
+
+            </button>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- CALENDAR LEGEND -->
+    <div class="calendar-footer">
+      <div class="calendar-legend">
+        <span class="legend-item">
+          <span class="legend-dot pruning-dot"></span>
+          Pruning Started
+        </span>
+
+        <span class="legend-item">
+          <span class="legend-dot end-dot"></span>
+          Pruning Ends
+        </span>
+
+        <span class="legend-item">
+          <span class="legend-dot ending-dot"></span>
+          Ending Soon
+        </span>
+
+        <span class="legend-item">
+          <span class="legend-dot today-dot"></span>
+          Today
+        </span>
+      </div>
+
+      <span class="footer-cycle">
+        <lucide-icon name="repeat" [size]="15"></lucide-icon>
+        45-Day Pruning Cycle
+      </span>
+    </div>
+
+  </section>
+
+  <!-- BOTTOM INFORMATION BANNER -->
+  <section class="info-banner">
+    <div class="info-icon">
+      <lucide-icon name="info" [size]="19"></lucide-icon>
+    </div>
+
+    <div class="info-content">
+      <strong>PTRI Monitoring Reminder</strong>
+      <p>
+        Mulberry pruning follows a 45-day cycle. Select a calendar date with
+        pruning records to view the farmers who started pruning on that day,
+        including their farm information and individual pruning schedules.
+      </p>
+    </div>
+
+    <div class="info-decoration">
+      <lucide-icon name="sprout" [size]="30"></lucide-icon>
+    </div>
+  </section>
+
+  <!-- BOTTOM BOTANICAL DECORATION -->
+  <div class="bottom-botanical-decoration">
+    <img src="images/mulberry-fruits.png" alt="Mulberry fruits and leaves">
+  </div>
+
+</div>

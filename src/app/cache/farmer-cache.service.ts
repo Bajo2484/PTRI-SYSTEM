@@ -1,3 +1,4 @@
+
 import { Injectable } from '@angular/core';
 
 export interface FarmerRecord {
@@ -6,13 +7,18 @@ export interface FarmerRecord {
   username: string;
   locality: string;
   phone: string;
+  email: string;
+  authUid?: string;
+
+  farmerType?: 'Individual' | 'Community';
   farmName: string;
+  communityName?: string;
+  memberCount?: number;
   farmArea: string;
-  supplyCommitment: number;
+  mulberryTreeCount?: number;
+
   status: 'Active' | 'Pending' | 'Inactive';
   accountStatus?: 'Created' | 'Pending' | 'Failed';
-  email?: string;
-  authUid?: string;
 }
 
 @Injectable({

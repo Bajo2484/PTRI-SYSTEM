@@ -94,7 +94,7 @@
 .progress-panel h2, .follow-up-panel h2 { margin:0; color:#245638; font-size:18px; font-weight:800; }
 .progress-panel > p, .follow-up-panel > p { margin:9px 0 15px; color:#82776a; font-size:13px; line-height:1.7; }
 
-/* COMMITMENT PROGRESS BAR */
+/* ACTIVITY REVIEW PROGRESS */
 .progress-bar { display:flex; width:100%; height:13px; overflow:hidden; margin:20px 0 17px; border-radius:20px; background:#eee9df; }
 .progress-received { width:16%; background:#795033; }
 .progress-confirmed { width:64%; background:#245638; }
@@ -106,7 +106,7 @@
 .confirmed-dot { background:#245638; }
 .awaiting-dot { background:#d6a52d; }
 
-/* NEXT FOLLOW-UP PANEL */
+/* PENDING FOLLOW-UP PANEL */
 .follow-up-heading { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:14px; }
 .communication-btn { display:inline-flex; align-items:center; justify-content:center; gap:8px; flex-shrink:0; min-height:38px; padding:0 12px; border:1px solid #d6c69e; border-radius:8px; background:#fffaf0; color:#795033; font-family:inherit; font-size:12px; font-weight:700; cursor:pointer; transition:.2s ease; }
 .communication-btn:hover { border-color:#d6a52d; background:#f9edce; }
@@ -123,29 +123,55 @@
 .update-production-btn:focus-visible, .production-filter:focus-visible, .pagination button:focus-visible, .communication-btn:focus-visible { outline:3px solid rgba(214,165,45,.55); outline-offset:2px; }
 button:disabled { cursor:not-allowed; opacity:.55; }
 
-/* PRODUCTION REVIEW MODAL */
+/* =========================================================
+   PRODUCTION REVIEW MODAL
+========================================================= */
 .review-modal-overlay { position:fixed; inset:0; z-index:1000; display:flex; align-items:center; justify-content:center; padding:24px; background:rgba(25,38,27,.72); backdrop-filter:blur(5px); }
-.review-modal { width:100%; max-width:700px; max-height:88vh; overflow-y:auto; background:#fffefa; border:1px solid rgba(214,165,45,.35); border-radius:16px; box-shadow:0 24px 70px rgba(0,0,0,.28); animation:reviewModalEnter .22s ease-out; }
-.review-modal-header { display:flex; justify-content:space-between; align-items:flex-start; gap:20px; padding:27px 30px; color:#fff; background:#245638; border-bottom:5px solid #d6a52d; }
+.review-modal { width:100%; max-width:780px; max-height:90vh; overflow-y:auto; background:#fffefa; border:1px solid rgba(214,165,45,.35); border-radius:16px; box-shadow:0 24px 70px rgba(0,0,0,.28); animation:reviewModalEnter .22s ease-out; }
+.review-modal-header { position:sticky; top:0; z-index:2; display:flex; justify-content:space-between; align-items:flex-start; gap:20px; padding:25px 30px; color:#fff; background:#245638; border-bottom:5px solid #d6a52d; }
 .review-modal-eyebrow { display:block; margin-bottom:10px; color:#f0d27e; font-size:11px; font-weight:800; letter-spacing:1.3px; }
-.review-modal-header h2 { margin:0; font-size:23px; font-weight:800; }
+.review-modal-header h2 { margin:0; font-size:23px; font-weight:800; line-height:1.3; }
 .review-modal-header p { margin:8px 0 0; color:#e0eadf; font-size:14px; line-height:1.6; }
-.review-modal-close { display:flex; align-items:center; justify-content:center; width:38px; height:38px; flex-shrink:0; border:1px solid rgba(255,255,255,.35); border-radius:9px; background:transparent; color:#fff; font-size:25px; cursor:pointer; }
+.review-modal-close { display:flex; align-items:center; justify-content:center; width:38px; height:38px; flex-shrink:0; border:1px solid rgba(255,255,255,.35); border-radius:9px; background:transparent; color:#fff; font-size:25px; cursor:pointer; transition:.2s ease; }
 .review-modal-close:hover { background:rgba(255,255,255,.13); }
-.review-modal-body { padding:27px 30px; }
+.review-modal-body { padding:26px 30px 30px; }
+
+/* MODAL REFERENCE */
 .review-modal-reference { display:flex; align-items:center; justify-content:space-between; gap:15px; padding:17px 18px; background:#f5f1e7; border:1px solid #e9dfc9; border-radius:10px; }
-.review-modal-reference div { display:flex; flex-direction:column; gap:6px; }
+.review-modal-reference div { display:flex; flex-direction:column; gap:6px; min-width:0; }
 .review-modal-reference div span { color:#82745e; font-size:11px; font-weight:800; letter-spacing:.8px; }
 .review-modal-reference strong { color:#245638; font-size:15px; overflow-wrap:anywhere; }
-.review-modal-status { padding:7px 12px; border-radius:20px; background:#fff0cc; color:#896017; font-size:12px; font-weight:800; }
-.review-section { margin-top:25px; }
-.review-section h3 { margin:0 0 14px; color:#245638; font-size:16px; font-weight:800; }
-.review-detail-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:13px; }
-.review-detail { min-width:0; padding:16px; border:1px solid #e8e0d2; border-radius:10px; background:#fff; }
-.review-detail span { display:block; margin-bottom:8px; color:#887d6e; font-size:12px; }
-.review-detail strong { display:block; overflow-wrap:anywhere; color:#493a2c; font-size:14px; font-weight:700; line-height:1.5; }
-.review-notes { min-height:85px; padding:16px; border:1px solid #e8e0d2; border-radius:10px; background:#faf8f2; color:#655b4d; font-size:14px; line-height:1.75; white-space:pre-wrap; overflow-wrap:anywhere; }
-.review-modal-footer { display:flex; justify-content:flex-end; gap:11px; padding:19px 30px 26px; border-top:1px solid #eee7da; }
+.review-modal-status { flex-shrink:0; padding:7px 12px; border-radius:20px; background:#fff0cc; color:#896017; font-size:12px; font-weight:800; }
+
+/* MODAL DETAIL SECTIONS */
+.review-section { margin-top:25px; padding-bottom:22px; border-bottom:1px solid #eee7da; }
+.review-section:last-of-type { border-bottom:0; }
+.review-section h3 { display:flex; align-items:center; gap:9px; margin:0 0 15px; color:#245638; font-size:16px; font-weight:800; line-height:1.4; }
+.review-section h3::before { width:4px; height:19px; flex-shrink:0; border-radius:5px; background:#d6a52d; content:""; }
+.review-detail-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
+.review-detail { min-width:0; padding:15px 16px; border:1px solid #e8e0d2; border-radius:10px; background:#fff; transition:border-color .2s ease,background .2s ease; }
+.review-detail:hover { border-color:#d8c99f; background:#fffdf7; }
+.review-detail span { display:block; margin-bottom:8px; color:#887d6e; font-size:12px; line-height:1.5; }
+.review-detail strong { display:block; overflow-wrap:anywhere; color:#493a2c; font-size:14px; font-weight:700; line-height:1.55; }
+
+/* ACTIVITY DETAIL HELP TEXT */
+.review-help-text { margin:13px 0 0; padding:12px 14px; border-left:3px solid #c6a044; border-radius:0 8px 8px 0; background:#faf5e9; color:#75664f; font-size:12px; line-height:1.7; }
+
+/* PRUNING PREPARATION REMINDER */
+.pruning-reminder { margin-top:15px; padding:15px 17px; border:1px solid #e9d29a; border-left:4px solid #d6a52d; border-radius:9px; background:#fff8e8; }
+.pruning-reminder strong { display:block; margin-bottom:6px; color:#936815; font-size:13px; font-weight:800; }
+.pruning-reminder p { margin:0; color:#79623b; font-size:12px; line-height:1.7; }
+
+/* COMPLETED PRUNING CYCLE */
+.pruning-complete-notice { margin-top:15px; padding:15px 17px; border:1px solid #cfe0cc; border-left:4px solid #39834d; border-radius:9px; background:#edf5e9; }
+.pruning-complete-notice strong { display:block; margin-bottom:6px; color:#245638; font-size:13px; font-weight:800; }
+.pruning-complete-notice p { margin:0; color:#526b51; font-size:12px; line-height:1.7; }
+
+/* ADDITIONAL NOTES */
+.review-notes { min-height:75px; padding:16px; border:1px solid #e8e0d2; border-radius:10px; background:#faf8f2; color:#655b4d; font-size:13px; line-height:1.75; white-space:pre-wrap; overflow-wrap:anywhere; }
+
+/* MODAL FOOTER */
+.review-modal-footer { position:sticky; bottom:0; z-index:2; display:flex; justify-content:flex-end; gap:11px; padding:18px 30px 22px; border-top:1px solid #eee7da; background:#fffefa; }
 .review-modal-cancel, .review-modal-confirm { min-height:43px; padding:0 19px; border-radius:8px; font-size:13px; font-weight:800; cursor:pointer; transition:.2s ease; }
 .review-modal-cancel { border:1px solid #ded5c5; background:#fff; color:#655b4d; }
 .review-modal-cancel:hover { background:#f5f1e8; }
@@ -174,12 +200,12 @@ button:disabled { cursor:not-allowed; opacity:.55; }
   .page-header { align-items:flex-start; flex-direction:column; gap:15px; margin-bottom:20px; }
   .page-header h1 { font-size:25px; }
   .page-header p { font-size:13px; }
-  .update-production-btn { width:100%; min-height:46px; }
-  .summary-grid { grid-template-columns:1fr; gap:12px; }
-  .summary-card { padding:19px; }
-  .summary-card-heading { font-size:13px; }
-  .summary-card h2 { margin:12px 0 7px; font-size:27px; }
-  .summary-card > p { font-size:12px; }
+  .summary-grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:11px; }
+  .summary-card { padding:15px 13px; border-radius:11px; }
+  .summary-card-heading { align-items:flex-start; font-size:11px; }
+  .summary-icon { width:32px; height:32px; font-size:17px; }
+  .summary-card h2 { margin:12px 0 7px; font-size:25px; }
+  .summary-card > p { font-size:11px; }
   .inventory-notice { gap:10px; padding:14px; }
   .inventory-notice strong { font-size:13px; }
   .inventory-notice p { font-size:12px; }
@@ -201,14 +227,41 @@ button:disabled { cursor:not-allowed; opacity:.55; }
   .follow-up-heading { align-items:flex-start; flex-direction:column; }
   .communication-btn { width:100%; min-height:42px; }
   .production-page-footer { align-items:flex-start; flex-direction:column; font-size:10px; }
-  .review-modal-overlay { padding:12px; }
-  .review-modal { max-height:92vh; border-radius:12px; }
-  .review-modal-header, .review-modal-body { padding:19px; }
+
+  /* MOBILE REVIEW MODAL */
+  .review-modal-overlay { align-items:center; padding:10px; }
+  .review-modal { max-height:94vh; border-radius:12px; }
+  .review-modal-header { padding:18px; gap:12px; }
+  .review-modal-body { padding:18px; }
   .review-modal-header h2 { font-size:19px; }
   .review-modal-header p { font-size:12px; }
-  .review-modal-eyebrow { font-size:9px; }
-  .review-modal-reference { align-items:flex-start; flex-direction:column; }
-  .review-detail-grid { grid-template-columns:1fr; }
-  .review-modal-footer { padding:16px 19px 20px; flex-direction:column-reverse; }
+  .review-modal-eyebrow { font-size:9px; letter-spacing:1px; }
+  .review-modal-close { width:34px; height:34px; font-size:22px; }
+  .review-modal-reference { align-items:flex-start; flex-direction:column; gap:10px; padding:14px; }
+  .review-modal-reference strong { font-size:13px; }
+  .review-modal-status { font-size:11px; }
+  .review-section { margin-top:21px; padding-bottom:18px; }
+  .review-section h3 { font-size:15px; }
+  .review-detail-grid { grid-template-columns:1fr; gap:9px; }
+  .review-detail { padding:13px 14px; }
+  .review-detail span { margin-bottom:5px; font-size:11px; }
+  .review-detail strong { font-size:13px; }
+  .review-help-text, .pruning-reminder p, .pruning-complete-notice p { font-size:11px; }
+  .pruning-reminder, .pruning-complete-notice { padding:13px; }
+  .review-notes { min-height:65px; padding:13px; font-size:12px; }
+  .review-modal-footer { padding:14px 18px 18px; flex-direction:column-reverse; }
   .review-modal-footer button { width:100%; min-height:44px; }
+}
+
+/* SMALL MOBILE */
+@media (max-width:380px) {
+  .production-page { padding:11px; }
+  .summary-grid { gap:8px; }
+  .summary-card { padding:13px 10px; }
+  .summary-card-heading { font-size:10px; }
+  .summary-card h2 { font-size:23px; }
+  .summary-card > p { font-size:10px; }
+  .review-modal-overlay { padding:7px; }
+  .review-modal-header, .review-modal-body { padding:14px; }
+  .review-modal-footer { padding:12px 14px 15px; }
 }

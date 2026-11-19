@@ -1,3 +1,4 @@
+
 import { FarmerCacheService } from '../cache/farmer-cache.service';
 import { Injectable } from '@angular/core';
 import {
@@ -27,9 +28,15 @@ export interface FarmerAccount {
   email: string;
   username: string;
   authUid?: string;
+
+  farmerType: 'Individual' | 'Community';
   farmName: string;
+  communityName?: string;
+  memberCount?: number;
+
   farmArea: string;
-  supplyCommitment: number;
+  mulberryTreeCount: number;
+
   status: 'Active' | 'Pending' | 'Inactive';
 }
 
@@ -44,37 +51,37 @@ export class FarmerAccountService {
   ) {}
 
   async getFarmers(): Promise<FarmerAccount[]> {
-  if (this.farmerCache.isLoaded) {
-    return this.farmerCache.farmers as FarmerAccount[];
+    if (this.farmerCache.isLoaded) {
+      return this.farmerCache.farmers as FarmerAccount[];
+    }
+
+    const snapshot = await getDocs(this.farmersCollection);
+
+    const farmers = snapshot.docs.map((farmerDoc) => ({
+      id: farmerDoc.id,
+      ...farmerDoc.data(),
+    })) as FarmerAccount[];
+
+    this.farmerCache.farmers = farmers;
+    this.farmerCache.isLoaded = true;
+
+    return farmers;
   }
 
-  const snapshot = await getDocs(this.farmersCollection);
-
-  const farmers = snapshot.docs.map((farmerDoc) => ({
-    id: farmerDoc.id,
-    ...farmerDoc.data(),
-  })) as FarmerAccount[];
-
-  this.farmerCache.farmers = farmers;
-  this.farmerCache.isLoaded = true;
-
-  return farmers;
-}
-
   async addFarmer(
-  farmer: Omit<FarmerAccount, 'id'>,
-): Promise<string> {
-  const result = await addDoc(this.farmersCollection, farmer);
+    farmer: Omit<FarmerAccount, 'id'>,
+  ): Promise<string> {
+    const result = await addDoc(this.farmersCollection, farmer);
 
-  this.farmerCache.farmers.push({
-    ...farmer,
-    id: result.id
-  });
+    this.farmerCache.farmers.push({
+      ...farmer,
+      id: result.id
+    });
 
-  this.farmerCache.isLoaded = true;
+    this.farmerCache.isLoaded = true;
 
-  return result.id;
-}
+    return result.id;
+  }
 
   async createFarmerLogin(
     farmer: Omit<FarmerAccount, 'id'>,
@@ -82,9 +89,8 @@ export class FarmerAccountService {
   ): Promise<string> {
     const normalizedUsername = farmer.username.trim().toLowerCase();
 
-    // Firebase Authentication uses an internal email for the username.
-   const internalEmail =
-  `${normalizedUsername}@farmers.ptrisilksystem.com`;
+    const internalEmail =
+      `${normalizedUsername}@farmers.ptrisilksystem.com`;
 
     const credential = await createUserWithEmailAndPassword(
       farmerCreationAuth,
@@ -106,23 +112,23 @@ export class FarmerAccountService {
       });
 
       const farmerRecord = await addDoc(this.farmersCollection, {
-  ...farmer,
-  username: normalizedUsername,
-  email: internalEmail,
-  authUid: credential.user.uid
-});
+        ...farmer,
+        username: normalizedUsername,
+        email: internalEmail,
+        authUid: credential.user.uid
+      });
 
-const newFarmer: FarmerAccount = {
-  ...farmer,
-  id: farmerRecord.id,
-  username: normalizedUsername,
-  email: internalEmail,
-  authUid: credential.user.uid
-};
+      const newFarmer: FarmerAccount = {
+        ...farmer,
+        id: farmerRecord.id,
+        username: normalizedUsername,
+        email: internalEmail,
+        authUid: credential.user.uid
+      };
 
-if (this.farmerCache.isLoaded) {
-  this.farmerCache.farmers.push(newFarmer);
-}
+      if (this.farmerCache.isLoaded) {
+        this.farmerCache.farmers.push(newFarmer);
+      }
 
       return farmerRecord.id;
     } catch (error) {
@@ -132,29 +138,29 @@ if (this.farmerCache.isLoaded) {
   }
 
   async updateFarmer(
-  id: string,
-  farmer: Partial<Omit<FarmerAccount, 'id'>>,
-): Promise<void> {
-  await updateDoc(doc(db, 'farmers', id), farmer);
+    id: string,
+    farmer: Partial<Omit<FarmerAccount, 'id'>>,
+  ): Promise<void> {
+    await updateDoc(doc(db, 'farmers', id), farmer);
 
-  const index = this.farmerCache.farmers.findIndex(
-    (item) => item.id === id
-  );
+    const index = this.farmerCache.farmers.findIndex(
+      (item) => item.id === id
+    );
 
-  if (index !== -1) {
-    this.farmerCache.farmers[index] = {
-      ...this.farmerCache.farmers[index],
-      ...farmer
-    };
+    if (index !== -1) {
+      this.farmerCache.farmers[index] = {
+        ...this.farmerCache.farmers[index],
+        ...farmer
+      };
+    }
   }
-}
 
   async deleteFarmer(id: string): Promise<void> {
-  await deleteDoc(doc(db, 'farmers', id));
+    await deleteDoc(doc(db, 'farmers', id));
 
-  this.farmerCache.farmers =
-    this.farmerCache.farmers.filter(
-      (farmer) => farmer.id !== id
-    );
-}
+    this.farmerCache.farmers =
+      this.farmerCache.farmers.filter(
+        (farmer) => farmer.id !== id
+      );
+  }
 }
