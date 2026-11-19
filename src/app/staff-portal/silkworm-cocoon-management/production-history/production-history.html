@@ -1,0 +1,263 @@
+
+<div class="history-page">
+
+  <!-- PAGE HEADER -->
+  <div class="page-header">
+    <div class="page-heading">
+      <span class="heading-icon">📜</span>
+      <div>
+        <h1>Production History</h1>
+        <p>View the complete production records of silkworm batches, from farmer distribution to actual cocoon collection and returned weight.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- OVERVIEW CARDS -->
+  <div class="overview-grid">
+
+    <div class="overview-card">
+      <div class="card-icon">📦</div>
+      <div>
+        <span class="card-label">Total Silkworm Batches</span>
+        <h2>{{ totalBatches }}</h2>
+        <p>Recorded batches given to farmers</p>
+      </div>
+    </div>
+
+    <div class="overview-card">
+      <div class="card-icon">🧺</div>
+      <div>
+        <span class="card-label">Total Cocoons Collected</span>
+        <h2>{{ totalWeightCollected | number:'1.1-2' }} <small>kg</small></h2>
+        <p>Combined actual returned weight</p>
+      </div>
+    </div>
+
+    <div class="overview-card">
+      <div class="card-icon">🌿</div>
+      <div>
+        <span class="card-label">Batches with Collections</span>
+        <h2>{{ completedBatches }}</h2>
+        <p>Batches with recorded cocoon returns</p>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- PRODUCTION HISTORY TABLE -->
+  <div class="history-panel">
+
+    <div class="panel-heading">
+      <div>
+        <h2>Production Records</h2>
+        <p>Consolidated silkworm and cocoon collection history</p>
+      </div>
+      <span class="record-count">
+        {{ filteredRecords.length }} Records
+      </span>
+    </div>
+
+    <!-- SEARCH -->
+    <div class="filter-toolbar">
+      <div class="search-box">
+        <span>⌕</span>
+        <input
+          type="text"
+          placeholder="Search farmer or batch ID..."
+          [(ngModel)]="searchTerm"
+        />
+      </div>
+    </div>
+
+    <!-- TABLE -->
+    <div class="table-wrapper">
+      <table class="history-table">
+        <thead>
+          <tr>
+            <th>Farmer / Farm Community</th>
+            <th>Silkworm Batch ID</th>
+            <th>Date Given</th>
+            <th>Trays Given</th>
+            <th>Total Cocoons Collected (kg)</th>
+            <th>Last Collection Date</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <tr *ngFor="let record of filteredRecords">
+
+            <td>
+              <div class="farmer-cell">
+                <span class="farmer-avatar">
+                  {{ record.farmerName.charAt(0) }}
+                </span>
+                <strong>{{ record.farmerName }}</strong>
+              </div>
+            </td>
+
+            <td>
+              <span class="batch-id">{{ record.batchId }}</span>
+            </td>
+
+            <td>{{ record.dateGiven | date:'MMM d, y' }}</td>
+
+            <td>{{ record.traysGiven }} Trays</td>
+
+            <td>
+              <strong class="weight-value">
+                {{ record.totalWeightCollected | number:'1.1-2' }} kg
+              </strong>
+            </td>
+
+            <td>
+              <span *ngIf="record.lastCollectionDate">
+                {{ record.lastCollectionDate | date:'MMM d, y' }}
+              </span>
+              <span *ngIf="!record.lastCollectionDate" class="no-date">
+                No collection yet
+              </span>
+            </td>
+
+            <td>
+              <button
+                class="view-btn"
+                (click)="viewHistory(record)"
+              >
+                View History
+              </button>
+            </td>
+
+          </tr>
+
+          <tr *ngIf="filteredRecords.length === 0">
+            <td colspan="7">
+              <div class="empty-state">
+                <span>📋</span>
+                <h3>No Production Records Found</h3>
+                <p>Try searching for another farmer or batch ID.</p>
+              </div>
+            </td>
+          </tr>
+
+        </tbody>
+      </table>
+    </div>
+
+    <div class="list-footer">
+      Showing {{ filteredRecords.length }} of {{ totalBatches }} production records
+    </div>
+
+  </div>
+
+  <!-- VIEW HISTORY MODAL -->
+  <div
+    class="modal-overlay"
+    *ngIf="showHistoryModal && selectedRecord"
+    (click)="closeHistoryModal()"
+  >
+
+    <div
+      class="history-modal"
+      (click)="$event.stopPropagation()"
+    >
+
+      <div class="modal-header">
+        <div>
+          <span class="modal-eyebrow">PRODUCTION DETAILS</span>
+          <h2>Batch Production History</h2>
+          <p>Complete record of silkworm distribution and cocoon returns.</p>
+        </div>
+
+        <button
+          class="modal-close"
+          (click)="closeHistoryModal()"
+        >
+          &times;
+        </button>
+      </div>
+
+      <div class="modal-body">
+
+        <!-- BATCH INFORMATION -->
+        <div class="batch-information">
+          <div>
+            <span>Farmer / Farm Community</span>
+            <strong>{{ selectedRecord.farmerName }}</strong>
+          </div>
+
+          <div>
+            <span>Silkworm Batch ID</span>
+            <strong>{{ selectedRecord.batchId }}</strong>
+          </div>
+
+          <div>
+            <span>Date Given</span>
+            <strong>{{ selectedRecord.dateGiven | date:'MMM d, y' }}</strong>
+          </div>
+
+          <div>
+            <span>Trays Given</span>
+            <strong>{{ selectedRecord.traysGiven }} Trays</strong>
+          </div>
+        </div>
+
+        <!-- COLLECTION SUMMARY -->
+        <div class="collection-summary">
+          <div>
+            <span>Total Weight Collected</span>
+            <h2>
+              {{ selectedRecord.totalWeightCollected | number:'1.1-2' }} kg
+            </h2>
+          </div>
+
+          <div>
+            <span>Collection Records</span>
+            <h2>{{ selectedRecord.collections.length }}</h2>
+          </div>
+        </div>
+
+        <!-- COLLECTION HISTORY -->
+        <div class="collection-history">
+          <h3>Cocoon Collection Records</h3>
+          <p>All cocoon returns associated with this silkworm batch.</p>
+
+          <div
+            class="collection-entry"
+            *ngFor="let collection of selectedRecord.collections"
+          >
+            <div>
+              <strong>{{ collection.collectionId }}</strong>
+              <span>{{ collection.dateReceived | date:'MMM d, y' }}</span>
+            </div>
+
+            <strong class="entry-weight">
+              {{ collection.weightReceived | number:'1.1-2' }} kg
+            </strong>
+          </div>
+
+          <div
+            class="empty-collection"
+            *ngIf="selectedRecord.collections.length === 0"
+          >
+            <span>🧺</span>
+            <strong>No Cocoons Collected Yet</strong>
+            <p>No cocoon return has been recorded for this batch.</p>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="modal-footer">
+        <button
+          class="close-btn"
+          (click)="closeHistoryModal()"
+        >
+          Close
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+</div>

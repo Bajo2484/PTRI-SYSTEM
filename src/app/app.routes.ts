@@ -47,23 +47,61 @@ export const routes: Routes = [
             (m) => m.FarmerManagement
           )
       },
-     // MULBERRY PRUNING CALENDAR
-{
-  path: 'mulberry-production-monitoring',
-  loadComponent: () =>
-    import('./staff-portal/mulberry-production-monitoring/mulberry-production-monitoring').then(
-      (m) => m.MulberryProductionMonitoring
-    )
-},
 
-// FARMERS WHO STARTED PRUNING ON A SELECTED DATE
-{
-  path: 'mulberry-production-monitoring/:date',
-  loadComponent: () =>
-    import('./staff-portal/mulberry-production-monitoring/pruning-date-details/pruning-date-details').then(
-      (m) => m.PruningDateDetails
-    )
-},
+      // MULBERRY PRUNING CALENDAR
+      {
+        path: 'mulberry-production-monitoring',
+        loadComponent: () =>
+          import('./staff-portal/mulberry-production-monitoring/mulberry-production-monitoring').then(
+            (m) => m.MulberryProductionMonitoring
+          )
+      },
+
+      // FARMERS WHO STARTED PRUNING ON A SELECTED DATE
+      {
+        path: 'mulberry-production-monitoring/:date',
+        loadComponent: () =>
+          import('./staff-portal/mulberry-production-monitoring/pruning-date-details/pruning-date-details').then(
+            (m) => m.PruningDateDetails
+          )
+      },
+
+      // SILKWORM & COCOON MANAGEMENT OVERVIEW
+      {
+        path: 'silkworm-cocoon-management',
+        loadComponent: () =>
+          import('./staff-portal/silkworm-cocoon-management/silkworm-cocoon-management').then(
+            (m) => m.SilkwormCocoonManagement
+          )
+      },
+
+      // SILKWORM BATCHES
+      {
+        path: 'silkworm-cocoon-management/silkworm-batches',
+        loadComponent: () =>
+          import('./staff-portal/silkworm-cocoon-management/silkworm-batches/silkworm-batches').then(
+            (m) => m.SilkwormBatches
+          )
+      },
+
+      // COCOON COLLECTION
+      {
+        path: 'silkworm-cocoon-management/cocoon-collection',
+        loadComponent: () =>
+          import('./staff-portal/silkworm-cocoon-management/cocoon-collection/cocoon-collection').then(
+            (m) => m.CocoonCollection
+          )
+      },
+
+      // PRODUCTION HISTORY
+      {
+        path: 'silkworm-cocoon-management/production-history',
+        loadComponent: () =>
+          import('./staff-portal/silkworm-cocoon-management/production-history/production-history').then(
+            (m) => m.ProductionHistory
+          )
+      },
+
       {
         path: 'messages',
         loadComponent: () =>
@@ -71,13 +109,6 @@ export const routes: Routes = [
             (m) => m.Messages
           )
       },
-  {
-  path: 'silkworm-preparation',
-  loadComponent: () =>
-    import('./staff-portal/silkworm-preparation/silkworm-preparation').then(
-      (m) => m.SilkwormPreparation
-    )
-},
       {
         path: 'farmer-production',
         loadComponent: () =>
@@ -97,14 +128,13 @@ export const routes: Routes = [
             (m) => m.SilkOrders
           )
       },
-
       {
-  path: 'silk-orders/:id',
-  loadComponent: () =>
-    import('./staff-portal/order-details/order-details').then(
-      (m) => m.OrderDetails
-    )
-},
+        path: 'silk-orders/:id',
+        loadComponent: () =>
+          import('./staff-portal/order-details/order-details').then(
+            (m) => m.OrderDetails
+          )
+      },
       {
         path: 'deliveries',
         redirectTo: 'supply-delivery',
@@ -124,7 +154,8 @@ export const routes: Routes = [
             (m) => m.Reports
           )
       },
-            // STAFF PROFILE
+
+      // STAFF PROFILE
       {
         path: 'profile',
         loadComponent: () =>
@@ -216,34 +247,17 @@ export const routes: Routes = [
           )
       },
       {
-        path: 'production',
+        path: 'mulberry-production',
         loadComponent: () =>
-          import('./farmer-portal/farmer-production/farmer-production').then(
-            (m) => m.FarmerProduction
+          import('./farmer-portal/mulberry-production/mulberry-production').then(
+            (m) => m.MulberryProduction
           )
       },
       {
-  path: 'mulberry-production',
-  loadComponent: () =>
-    import('./farmer-portal/mulberry-production/mulberry-production').then(
-      (m) => m.MulberryProduction
-    )
-},
-
-
-{
-  path: 'silkworm-cocoon-production',
-  loadComponent: () =>
-    import('./farmer-portal/silkworm-cocoon-production/silkworm-cocoon-production').then(
-      (m) => m.SilkwormCocoonProduction
-    )
-},
-
-      {
-        path: 'orders',
+        path: 'silkworm-cocoon-production',
         loadComponent: () =>
-          import('./farmer-portal/farmer-orders/farmer-orders').then(
-            (m) => m.FarmerOrders
+          import('./farmer-portal/silkworm-cocoon-production/silkworm-cocoon-production').then(
+            (m) => m.SilkwormCocoonProduction
           )
       },
       {
@@ -260,7 +274,13 @@ export const routes: Routes = [
             (m) => m.FarmerProfile
           )
       },
-      { path: 'settings', loadComponent: () => import('./farmer-portal/farmer-settings/farmer-settings').then((m) => m.FarmerSettings) },
+      {
+        path: 'settings',
+        loadComponent: () =>
+          import('./farmer-portal/farmer-settings/farmer-settings').then(
+            (m) => m.FarmerSettings
+          )
+      },
       {
         path: '',
         redirectTo: 'dashboard',

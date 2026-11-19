@@ -1,17 +1,17 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { FarmerProduction } from './farmer-production';
+import { SilkwormBatches } from './silkworm-batches';
 
-describe('FarmerProduction', () => {
-  let component: FarmerProduction;
-  let fixture: ComponentFixture<FarmerProduction>;
+describe('SilkwormBatches', () => {
+  let component: SilkwormBatches;
+  let fixture: ComponentFixture<SilkwormBatches>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [FarmerProduction],
+      imports: [SilkwormBatches],
     }).compileComponents();
 
-    fixture = TestBed.createComponent(FarmerProduction);
+    fixture = TestBed.createComponent(SilkwormBatches);
     component = fixture.componentInstance;
     await fixture.whenStable();
   });

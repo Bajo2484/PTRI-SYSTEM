@@ -1,0 +1,198 @@
+
+<div class="management-page">
+
+  <!-- HERO SECTION -->
+  <section class="page-hero">
+
+    <div class="hero-content">
+
+      <div class="hero-label">
+        <span class="hero-label-icon">✦</span>
+        {{ heroLabel }}
+      </div>
+
+      <div class="hero-main">
+
+        <div class="hero-text">
+
+          <h1>{{ pageTitle }}</h1>
+
+          <p>{{ pageSubtitle }}</p>
+
+        
+        </div>
+
+        <div class="hero-image-wrapper">
+          <img
+            [src]="heroImage"
+            alt="Silkworms, mulberry leaves, and silk cocoons"
+            class="hero-image"
+          />
+        </div>
+
+      </div>
+
+    </div>
+
+  </section>
+
+
+  <!-- PRODUCTION OVERVIEW -->
+  <section class="summary-section">
+
+    <div class="section-heading">
+
+      <div>
+        <span class="section-eyebrow">AT A GLANCE</span>
+
+        <h2>{{ summaryTitle }}</h2>
+
+        <p>
+          A quick look at your silkworm and cocoon operations.
+        </p>
+      </div>
+
+    </div>
+
+
+    <div class="summary-grid">
+
+      <div
+        class="summary-card"
+        *ngFor="let card of summaryCards"
+        [ngClass]="card.color"
+      >
+
+        <div class="summary-icon">
+
+          <span *ngIf="card.id === 'active-batches'">🐛</span>
+
+          <span *ngIf="card.id === 'upcoming-deliveries'">🚚</span>
+
+          <span *ngIf="card.id === 'cocoon-returns'">🧺</span>
+
+        </div>
+
+        <div class="summary-info">
+
+          <span class="summary-title">
+            {{ card.title }}
+          </span>
+
+          <h3>{{ card.value }}</h3>
+
+          <p>{{ card.description }}</p>
+
+        </div>
+
+        <span class="summary-indicator"></span>
+
+      </div>
+
+    </div>
+
+  </section>
+
+
+  <!-- MANAGEMENT CENTER -->
+  <section class="modules-section">
+
+    <div class="section-heading modules-heading">
+
+      <div>
+        <span class="section-eyebrow">MANAGEMENT CENTER</span>
+
+        <h2>{{ managementTitle }}</h2>
+
+        <p>{{ managementDescription }}</p>
+      </div>
+
+      <div class="module-count">
+        <span class="module-count-icon">▦</span>
+        <span>{{ managementModules.length | number:'2.0' }} MODULES</span>
+      </div>
+
+    </div>
+
+
+    <!-- MANAGEMENT CARDS -->
+    <div class="modules-grid">
+
+      <a
+        class="module-card"
+        *ngFor="let module of managementModules"
+        [routerLink]="module.route"
+        [ngClass]="module.color"
+      >
+
+        <!-- MODULE IMAGE -->
+        <div class="module-image-wrapper">
+
+          <img
+            [src]="module.image"
+            [alt]="module.imageAlt"
+            class="module-image"
+            loading="lazy"
+          />
+
+          <div class="module-image-overlay"></div>
+
+        </div>
+
+
+        <!-- MODULE ICON -->
+        <div class="module-icon-badge">
+
+          <span *ngIf="module.id === 'silkworm-batches'">🐛</span>
+
+          <span *ngIf="module.id === 'cocoon-collection'">🧺</span>
+
+          <span *ngIf="module.id === 'production-history'">📋</span>
+
+        </div>
+
+
+        <!-- MODULE DETAILS -->
+        <div class="module-content">
+
+          <h3>{{ module.title }}</h3>
+
+          <span class="module-subtitle">
+            {{ module.subtitle }}
+          </span>
+
+          <p>{{ module.description }}</p>
+
+        </div>
+
+
+        <!-- COLORED ACTION FOOTER -->
+        <div class="module-action">
+
+          <span>{{ module.action }}</span>
+
+          <span class="action-arrow">→</span>
+
+        </div>
+
+      </a>
+
+    </div>
+
+  </section>
+
+
+  <!-- BOTTOM INFORMATION NOTE -->
+  <section class="management-note">
+
+    <div class="note-icon">
+      {{ informationNote.icon === 'info' ? 'ⓘ' : informationNote.icon }}
+    </div>
+
+    <div class="note-content">
+      <p>{{ informationNote.message }}</p>
+    </div>
+
+  </section>
+
+</div>

@@ -1,0 +1,291 @@
+
+<div class="cocoon-page">
+
+  <!-- PAGE HEADER -->
+  <div class="page-header">
+    <div class="page-heading">
+      <span class="heading-icon">🥥</span>
+      <div>
+        <h1>Cocoon Collection</h1>
+        <p>Record and monitor cocoons received from farmers, including collection dates and actual harvested weight.</p>
+      </div>
+    </div>
+
+    <button class="create-btn" (click)="createCollection()">
+      <span>＋</span> New Collection
+    </button>
+  </div>
+
+  <!-- OVERVIEW CARDS -->
+  <div class="overview-grid">
+    <div class="overview-card">
+      <div class="card-icon green">📦</div>
+      <div>
+        <span class="card-label">Collection Records</span>
+        <h2>{{ totalCollections }}</h2>
+        <p>Total recorded collections</p>
+      </div>
+    </div>
+
+    <div class="overview-card">
+      <div class="card-icon gold">⚖️</div>
+      <div>
+        <span class="card-label">Total Weight Collected</span>
+        <h2>{{ totalWeightCollected | number:'1.1-2' }} <small>kg</small></h2>
+        <p>Combined cocoon weight received</p>
+      </div>
+    </div>
+
+    <div class="overview-card">
+      <div class="card-icon sage">👨‍🌾</div>
+      <div>
+        <span class="card-label">Farmers Served</span>
+        <h2>{{ totalFarmers }}</h2>
+        <p>Farmers with recorded collections</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- COLLECTION TABLE -->
+  <div class="collection-panel">
+
+    <div class="panel-heading">
+      <div>
+        <h2>Cocoon Collection Records</h2>
+        <p>List of cocoons received from silkworm batches distributed to farmers.</p>
+      </div>
+      <span class="record-count">{{ filteredCollections.length }} Records</span>
+    </div>
+
+    <!-- SEARCH -->
+    <div class="filter-toolbar">
+      <div class="search-box">
+        <span>⌕</span>
+        <input
+          type="text"
+          placeholder="Search farmer name or batch ID..."
+          [(ngModel)]="searchTerm"
+        />
+      </div>
+    </div>
+
+    <!-- TABLE -->
+    <div class="table-wrapper">
+      <table class="collection-table">
+        <thead>
+          <tr>
+            <th>Farmer / Farm Community</th>
+            <th>Silkworm Batch ID</th>
+            <th>Weight Received (kg)</th>
+            <th>Date Received</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <tr *ngFor="let collection of filteredCollections">
+            <td>
+              <div class="farmer-cell">
+                <div class="farmer-avatar">
+                  {{ collection.farmerName.charAt(0) }}
+                </div>
+                <span>{{ collection.farmerName }}</span>
+              </div>
+            </td>
+
+            <td>
+              <span class="batch-id">{{ collection.batchId }}</span>
+            </td>
+
+            <td>
+              <span class="weight-badge">
+                {{ collection.weightReceived | number:'1.1-2' }} kg
+              </span>
+            </td>
+
+            <td>{{ collection.dateReceived | date:'MMM d, y' }}</td>
+
+            <td>
+              <button
+                class="view-btn"
+                (click)="viewCollection(collection)"
+              >
+                View Details
+              </button>
+            </td>
+          </tr>
+
+          <tr *ngIf="filteredCollections.length === 0">
+            <td colspan="5">
+              <div class="empty-state">
+                <span>📦</span>
+                <h3>No collection records found</h3>
+                <p>Try another search or create a new collection record.</p>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="list-footer">
+      Showing {{ filteredCollections.length }} of {{ collections.length }} collection records
+    </div>
+  </div>
+</div>
+
+
+<!-- CREATE COLLECTION MODAL -->
+<div class="modal-overlay" *ngIf="showCreateModal" (click)="closeCreateModal()">
+  <div class="collection-modal" (click)="$event.stopPropagation()">
+
+    <div class="modal-header">
+      <div>
+        <span class="modal-eyebrow">COCOON MANAGEMENT</span>
+        <h2>New Cocoon Collection</h2>
+        <p>Record the cocoons returned by a farmer.</p>
+      </div>
+      <button class="modal-close" (click)="closeCreateModal()">×</button>
+    </div>
+
+    <div class="modal-body">
+      <div class="form-section">
+        <div class="form-section-heading">
+          <span>01</span>
+          <div>
+            <h3>Silkworm Batch Reference</h3>
+            <p>Select the original batch associated with the returned cocoons.</p>
+          </div>
+        </div>
+
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Silkworm Batch ID <span>*</span></label>
+            <select
+              [(ngModel)]="selectedBatchId"
+              (ngModelChange)="onBatchChange()"
+            >
+              <option value="" disabled>Select Silkworm Batch</option>
+              <option *ngFor="let batch of batchOptions" [value]="batch.batchId">
+                {{ batch.batchId }}
+              </option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Farmer Name</label>
+            <input
+              type="text"
+              [value]="selectedFarmerName"
+              placeholder="Automatically displayed"
+              readonly
+            />
+            <small>Automatically filled based on the selected batch.</small>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-section">
+        <div class="form-section-heading">
+          <span>02</span>
+          <div>
+            <h3>Collection Information</h3>
+            <p>Enter the actual date and weight of cocoons received.</p>
+          </div>
+        </div>
+
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Date Received <span>*</span></label>
+            <input
+              type="date"
+              [(ngModel)]="dateReceived"
+            />
+          </div>
+
+          <div class="form-group">
+            <label>Weight Received (kg) <span>*</span></label>
+            <input
+              type="number"
+              min="0.01"
+              step="0.01"
+              [(ngModel)]="weightReceived"
+              placeholder="Enter weight in kilograms"
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="secondary-btn" (click)="closeCreateModal()">Cancel</button>
+      <button
+        class="save-btn"
+        [disabled]="!selectedBatchId || !dateReceived || weightReceived === null || weightReceived <= 0"
+        (click)="saveCollection()"
+      >
+        Save Collection
+      </button>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- VIEW COLLECTION MODAL -->
+<div class="modal-overlay" *ngIf="showViewModal && selectedCollection" (click)="closeViewModal()">
+  <div class="collection-modal view-modal" (click)="$event.stopPropagation()">
+
+    <div class="modal-header">
+      <div>
+        <span class="modal-eyebrow">COLLECTION RECORD DETAILS</span>
+        <h2>Cocoon Collection Information</h2>
+        <p>Details of the cocoons received by PTRI.</p>
+      </div>
+      <button class="modal-close" (click)="closeViewModal()">×</button>
+    </div>
+
+    <div class="modal-body">
+
+      <div class="collection-identity">
+        <div class="identity-icon">📦</div>
+        <div>
+          <span>Silkworm Batch Reference</span>
+          <h3>{{ selectedCollection.batchId }}</h3>
+        </div>
+      </div>
+
+      <div class="details-card">
+        <h3>Collection Information</h3>
+
+        <div class="details-grid">
+          <div class="detail-item">
+            <span>Farmer / Farm Community</span>
+            <strong>{{ selectedCollection.farmerName }}</strong>
+          </div>
+
+          <div class="detail-item">
+            <span>Silkworm Batch ID</span>
+            <strong>{{ selectedCollection.batchId }}</strong>
+          </div>
+
+          <div class="detail-item">
+            <span>Date Received</span>
+            <strong>{{ selectedCollection.dateReceived | date:'MMMM d, y' }}</strong>
+          </div>
+
+          <div class="detail-item">
+            <span>Weight Received</span>
+            <strong class="detail-weight">{{ selectedCollection.weightReceived | number:'1.1-2' }} kg</strong>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="modal-footer">
+      <button class="secondary-btn" (click)="closeViewModal()">Close</button>
+    </div>
+
+  </div>
+</div>

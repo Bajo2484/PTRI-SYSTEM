@@ -1,17 +1,17 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { FarmerOrders } from './farmer-orders';
+import { CocoonCollection } from './cocoon-collection';
 
-describe('FarmerOrders', () => {
-  let component: FarmerOrders;
-  let fixture: ComponentFixture<FarmerOrders>;
+describe('CocoonCollection', () => {
+  let component: CocoonCollection;
+  let fixture: ComponentFixture<CocoonCollection>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [FarmerOrders],
+      imports: [CocoonCollection],
     }).compileComponents();
 
-    fixture = TestBed.createComponent(FarmerOrders);
+    fixture = TestBed.createComponent(CocoonCollection);
     component = fixture.componentInstance;
     await fixture.whenStable();
   });
