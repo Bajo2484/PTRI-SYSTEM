@@ -13,14 +13,14 @@ import {
   Filter,
   CalendarDays,
   Users,
-  Clock,
-  CheckCircle2,
   MapPin,
-  Phone,
   Eye,
   RefreshCw,
   Sprout,
-  Info
+  Info,
+  Leaf,
+  Scissors,
+  BadgeCheck
 } from 'lucide-angular';
 
 import {
@@ -56,14 +56,14 @@ interface PruningDateEntry {
         Filter,
         CalendarDays,
         Users,
-        Clock,
-        CheckCircle2,
         MapPin,
-        Phone,
         Eye,
         RefreshCw,
         Sprout,
-        Info
+        Info,
+        Leaf,
+        Scissors,
+        BadgeCheck
       })
     }
   ],
@@ -72,6 +72,7 @@ interface PruningDateEntry {
 })
 export class PruningDateDetails implements OnInit {
   selectedDate = '';
+
   farmers: FarmerAccount[] = [];
   pruningRecords: MulberryPruningRecord[] = [];
   entries: PruningDateEntry[] = [];
@@ -81,6 +82,10 @@ export class PruningDateDetails implements OnInit {
 
   isLoading = false;
   errorMessage = '';
+
+  // Farmer details modal state
+  selectedEntry: PruningDateEntry | null = null;
+  showDetailsModal = false;
 
   constructor(
     private route: ActivatedRoute,
@@ -128,6 +133,7 @@ export class PruningDateDetails implements OnInit {
       this.buildDateEntries();
     } catch (error) {
       console.error('Error loading pruning date details:', error);
+
       this.errorMessage =
         'Unable to load farmer pruning details. Please check your connection and Firebase permissions.';
     } finally {
@@ -290,193 +296,74 @@ export class PruningDateDetails implements OnInit {
       : 'in-progress';
   }
 
-  // Displays the enhanced farmer pruning details modal.
+  // Opens the farmer details modal in the HTML template.
   viewFarmerDetails(entry: PruningDateEntry): void {
-    const farmer = entry.farmer;
-    const record = entry.record;
-
-    const startDate = this.getRecordStartDate(record);
-    const endDate = this.getRecordEndDate(record);
-    const remaining = this.getRemainingDays(record);
-    const status = record.status || 'In Progress';
-    const isCompleted = status === 'Completed';
-
-    const formatDisplayDate = (value: string): string => {
-      const date = this.parseDateOnly(value);
-
-      return date
-        ? date.toLocaleDateString('en-US', {
-            month: 'long',
-            day: 'numeric',
-            year: 'numeric'
-          })
-        : 'Not available';
-    };
-
-    const remainingText = isCompleted
-      ? 'Cycle completed'
-      : remaining === null
-        ? 'Not available'
-        : remaining < 0
-          ? 'Past end date'
-          : remaining === 0
-            ? 'Ends today'
-            : `${remaining} ${remaining === 1 ? 'day' : 'days'} remaining`;
-
-    const initials = (farmer.fullName || 'Farmer')
-      .split(' ')
-      .filter(Boolean)
-      .slice(0, 2)
-      .map(part => part.charAt(0).toUpperCase())
-      .join('');
-
-    Swal.fire({
-      html: `
-        <div class="pruning-modal-content">
-
-          <div class="pruning-modal-banner">
-            <div class="modal-banner-decoration decoration-one"></div>
-            <div class="modal-banner-decoration decoration-two"></div>
-
-            <div class="modal-banner-top">
-              <span class="modal-kicker">PTRI • FARMER RECORD</span>
-              <span class="modal-cycle-tag">
-                <span></span> 45-DAY CYCLE
-              </span>
-            </div>
-
-            <div class="modal-profile">
-              <div class="modal-avatar">${this.escapeHtml(initials)}</div>
-              <div class="modal-profile-text">
-                <h2>${this.escapeHtml(farmer.fullName || 'Farmer')}</h2>
-                <p>${this.escapeHtml(farmer.farmName || 'Farm name not provided')}</p>
-              </div>
-            </div>
-
-            <div class="modal-status ${isCompleted ? 'is-completed' : 'is-active'}">
-              <span class="modal-status-dot"></span>
-              ${this.escapeHtml(status)}
-            </div>
-          </div>
-
-          <div class="modal-body-content">
-
-            <div class="modal-section-heading">
-              <span class="modal-section-icon">✦</span>
-              <div>
-                <h3>Farmer Information</h3>
-                <p>Contact and farm details</p>
-              </div>
-            </div>
-
-            <div class="modal-info-grid">
-              <div class="modal-info-card">
-                <span class="modal-info-label">LOCATION</span>
-                <strong>${this.escapeHtml(farmer.locality || 'Not provided')}</strong>
-              </div>
-              <div class="modal-info-card">
-                <span class="modal-info-label">CONTACT NUMBER</span>
-                <strong>${this.escapeHtml(farmer.phone || 'Not provided')}</strong>
-              </div>
-            </div>
-
-            <div class="modal-section-heading timeline-heading">
-              <span class="modal-section-icon">✦</span>
-              <div>
-                <h3>Pruning Cycle Timeline</h3>
-                <p>Schedule and progress information</p>
-              </div>
-            </div>
-
-            <div class="modal-timeline">
-              <div class="timeline-item">
-                <div class="timeline-marker start-marker">
-                  <span></span>
-                </div>
-                <div class="timeline-copy">
-                  <span class="timeline-label">PRUNING STARTED</span>
-                  <strong>${this.escapeHtml(formatDisplayDate(startDate))}</strong>
-                  <small>Pruning cycle officially began</small>
-                </div>
-              </div>
-
-              <div class="timeline-connector"></div>
-
-              <div class="timeline-item">
-                <div class="timeline-marker end-marker">
-                  <span></span>
-                </div>
-                <div class="timeline-copy">
-                  <span class="timeline-label">EXPECTED END DATE</span>
-                  <strong>${this.escapeHtml(formatDisplayDate(endDate))}</strong>
-                  <small>Based on the ${record.cycleDays || 45}-day pruning cycle</small>
-                </div>
-              </div>
-            </div>
-
-            <div class="modal-progress-card ${isCompleted ? 'progress-completed' : ''}">
-              <div class="progress-card-top">
-                <div>
-                  <span class="modal-info-label">CURRENT CYCLE STATUS</span>
-                  <strong>${this.escapeHtml(remainingText)}</strong>
-                </div>
-                <div class="progress-cycle-icon">45</div>
-              </div>
-
-              <div class="modal-progress-track">
-                <div class="modal-progress-fill ${isCompleted ? 'fill-completed' : ''}"></div>
-              </div>
-
-              <div class="progress-card-bottom">
-                <span>${isCompleted ? 'Completed cycle' : '45-day pruning schedule'}</span>
-                <span>${record.cycleDays || 45} days</span>
-              </div>
-            </div>
-
-            <div class="modal-footer-note">
-              <span>ⓘ</span>
-              <p>These details are retrieved from the farmer's saved pruning record.</p>
-            </div>
-
-          </div>
-        </div>
-      `,
-      width: '590px',
-      padding: '0',
-      background: '#fffdf8',
-      color: '#493a2c',
-      showConfirmButton: true,
-      confirmButtonText: 'Close Details',
-      confirmButtonColor: '#426b3c',
-      buttonsStyling: false,
-      customClass: {
-        popup: 'pruning-details-popup',
-        htmlContainer: 'pruning-details-html',
-        confirmButton: 'pruning-details-confirm'
-      },
-      showClass: {
-        popup: 'pruning-modal-show'
-      },
-      hideClass: {
-        popup: 'pruning-modal-hide'
-      },
-      backdrop: 'rgba(35, 48, 29, 0.58)',
-      allowOutsideClick: true
-    });
+    this.selectedEntry = entry;
+    this.showDetailsModal = true;
   }
 
-  private escapeHtml(value: string): string {
-    return value.replace(/[&<>"']/g, character => {
-      const entities: Record<string, string> = {
-        '&': '&amp;',
-        '<': '&lt;',
-        '>': '&gt;',
-        '"': '&quot;',
-        "'": '&#039;'
-      };
+  // Closes the farmer details modal.
+  closeDetailsModal(): void {
+    this.showDetailsModal = false;
+    this.selectedEntry = null;
+  }
 
-      return entities[character];
-    });
+  // Modal helper: returns the pruning cycle duration.
+  getCycleDays(entry: PruningDateEntry): number {
+    return entry.record.cycleDays || 45;
+  }
+
+  // Modal helper: formats a date for display.
+  formatDisplayDate(value: string): string {
+    const date = this.parseDateOnly(value);
+
+    return date
+      ? date.toLocaleDateString('en-US', {
+          month: 'long',
+          day: 'numeric',
+          year: 'numeric'
+        })
+      : 'Not available';
+  }
+
+  // Modal helper: returns the current cycle status text.
+  getCycleRemainingText(entry: PruningDateEntry): string {
+    const record = entry.record;
+
+    if (record.status === 'Completed') {
+      return 'Cycle completed';
+    }
+
+    const remaining = this.getRemainingDays(record);
+
+    if (remaining === null) return 'Not available';
+    if (remaining < 0) return 'Past end date';
+    if (remaining === 0) return 'Ends today';
+
+    return `${remaining} ${remaining === 1 ? 'day' : 'days'} remaining`;
+  }
+
+  // Modal helper: calculates the estimated cycle progress.
+  getCycleProgress(entry: PruningDateEntry): number {
+    const record = entry.record;
+
+    if (record.status === 'Completed') return 100;
+
+    const cycleDays = this.getCycleDays(entry);
+    const remaining = this.getRemainingDays(record);
+
+    if (remaining === null) return 0;
+
+    const progress = ((cycleDays - remaining) / cycleDays) * 100;
+
+    return Math.round(
+      Math.min(100, Math.max(0, progress))
+    );
+  }
+
+  // Modal helper: checks whether the pruning cycle is completed.
+  isCycleCompleted(entry: PruningDateEntry): boolean {
+    return entry.record.status === 'Completed';
   }
 
   goBack(): void {
@@ -498,7 +385,10 @@ export class PruningDateDetails implements OnInit {
 
     const parts = value.substring(0, 10).split('-').map(Number);
 
-    if (parts.length !== 3 || parts.some(part => !Number.isFinite(part))) {
+    if (
+      parts.length !== 3 ||
+      parts.some(part => !Number.isFinite(part))
+    ) {
       return null;
     }
 

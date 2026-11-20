@@ -1,28 +1,25 @@
 
 <div class="details-page">
-  <header class="details-header">
-    <div class="header-left">
+
+  <!-- BOTANICAL HERO HEADER -->
+  <header class="hero-banner">
+    <div class="hero-leaf-decoration"></div>
+    <div class="hero-content">
       <button class="back-button" type="button" (click)="goBack()">
         <lucide-icon name="arrow-left"></lucide-icon>
         <span>Back to Calendar</span>
       </button>
 
-      <div class="header-title">
-        <div class="title-icon">
-          <lucide-icon name="sprout"></lucide-icon>
-        </div>
-        <div>
-          <span class="eyebrow">PTRI STAFF PORTAL</span>
-          <h1>Pruning Date Details</h1>
-          <p>Farmer pruning records for the selected calendar date</p>
-        </div>
+      <div class="hero-title">
+        <span class="portal-label">
+          <lucide-icon name="leaf"></lucide-icon>
+          PTRI STAFF PORTAL
+        </span>
+        <h1>Pruning Date Details</h1>
+        <p>A closer look at farmer pruning activities for the selected calendar date.</p>
       </div>
     </div>
-
-    <div class="header-date">
-      <lucide-icon name="calendar-days"></lucide-icon>
-      <span>{{ formattedSelectedDate }}</span>
-    </div>
+    <div class="hero-photo"></div>
   </header>
 
   @if (errorMessage) {
@@ -40,47 +37,68 @@
       </div>
     </section>
   } @else {
-    <section class="summary-grid">
-      <article class="summary-card total-card">
-        <div class="summary-icon">
-          <lucide-icon name="users"></lucide-icon>
-        </div>
-        <div class="summary-info">
-          <span>Total Farmers</span>
-          <strong>{{ totalFarmers }}</strong>
-          <small>Registered for this date</small>
-        </div>
-      </article>
 
-      <article class="summary-card active-card">
-        <div class="summary-icon">
-          <lucide-icon name="clock"></lucide-icon>
-        </div>
-        <div class="summary-info">
-          <span>Active Pruning</span>
-          <strong>{{ activeFarmers }}</strong>
-          <small>Ongoing pruning cycles</small>
-        </div>
-      </article>
+    <!-- SUMMARY AND SELECTED DATE -->
+    <section class="summary-row">
+      <div class="summary-grid">
 
-      <article class="summary-card completed-card">
-        <div class="summary-icon">
-          <lucide-icon name="check-circle-2"></lucide-icon>
-        </div>
-        <div class="summary-info">
-          <span>Completed Cycles</span>
-          <strong>{{ completedFarmers }}</strong>
-          <small>Finished pruning cycles</small>
-        </div>
-      </article>
+        <article class="summary-card total-card">
+          <div class="summary-icon">
+            <lucide-icon name="users"></lucide-icon>
+          </div>
+          <div class="summary-info">
+            <span>Total Farmers</span>
+            <strong>{{ totalFarmers }}</strong>
+            <small>Registered for this date</small>
+          </div>
+          <div class="card-leaf"></div>
+        </article>
+
+        <article class="summary-card active-card">
+          <div class="summary-icon">
+            <lucide-icon name="scissors"></lucide-icon>
+          </div>
+          <div class="summary-info">
+            <span>Active Pruning</span>
+            <strong>{{ activeFarmers }}</strong>
+            <small>Ongoing pruning cycles</small>
+          </div>
+          <div class="card-leaf"></div>
+        </article>
+
+        <article class="summary-card completed-card">
+          <div class="summary-icon">
+            <lucide-icon name="badge-check"></lucide-icon>
+          </div>
+          <div class="summary-info">
+            <span>Completed Cycles</span>
+            <strong>{{ completedFarmers }}</strong>
+            <small>Finished pruning cycles</small>
+          </div>
+          <div class="card-leaf"></div>
+        </article>
+
+      </div>
+
+      <div class="header-date">
+        <lucide-icon name="calendar-days"></lucide-icon>
+        <span>{{ formattedSelectedDate }}</span>
+      </div>
     </section>
 
+    <!-- PRUNING RECORDS -->
     <section class="records-section">
+
       <div class="records-heading">
-        <div>
-          <span class="section-eyebrow">PRUNING RECORDS</span>
-          <h2>Farmers' Pruning Activities</h2>
-          <p>View the farmers who started pruning on {{ formattedSelectedDate }}.</p>
+        <div class="heading-main">
+          <div class="heading-leaf">
+            <lucide-icon name="sprout"></lucide-icon>
+          </div>
+          <div>
+            <span class="section-eyebrow">PRUNING RECORDS</span>
+            <h2>Farmers' Pruning Activities</h2>
+            <p>View the farmers who started pruning on {{ formattedSelectedDate }}.</p>
+          </div>
         </div>
 
         <div class="record-count">
@@ -90,6 +108,7 @@
         </div>
       </div>
 
+      <!-- SEARCH AND FILTER -->
       <div class="toolbar">
         <div class="search-box">
           <lucide-icon name="search"></lucide-icon>
@@ -114,6 +133,7 @@
         </div>
       </div>
 
+      <!-- FARMER TABLE -->
       @if (entries.length > 0 && filteredEntries.length > 0) {
         <div class="table-wrapper">
           <table class="farmer-table">
@@ -206,17 +226,271 @@
           }
         </div>
       }
-    </section>
 
-    <div class="bottom-note">
-      <div class="note-icon">
-        <lucide-icon name="info"></lucide-icon>
+      <!-- CYCLE NOTE -->
+      <div class="bottom-note">
+        <div class="note-icon">
+          <lucide-icon name="info"></lucide-icon>
+        </div>
+        <p>
+          <strong>45-Day Pruning Cycle:</strong>
+          Each pruning schedule follows a 45-day cycle. The expected end date is
+          based on the saved pruning record.
+        </p>
+        <div class="note-leaf"></div>
       </div>
-      <p>
-        <strong>45-Day Pruning Cycle:</strong>
-        Each pruning schedule follows a 45-day cycle. The expected end date is
-        based on the saved pruning record.
-      </p>
+
+    </section>
+  }
+
+  <!-- FARMER DETAILS MODAL -->
+  @if (showDetailsModal && selectedEntry; as entry) {
+    <div
+      class="pruning-modal-overlay"
+      (click)="closeDetailsModal()"
+    >
+      <section
+        class="pruning-modal-content"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="pruningModalTitle"
+        (click)="$event.stopPropagation()"
+      >
+
+        <!-- MODAL HEADER -->
+        <div class="pruning-modal-banner">
+          <div class="modal-banner-top">
+            <span class="modal-kicker">PTRI • FARMER RECORD</span>
+            <span class="modal-cycle-tag">
+              {{ getCycleDays(entry) }}-DAY CYCLE
+            </span>
+          </div>
+
+          <div class="modal-profile">
+            <div class="modal-avatar">
+<div class="modal-avatar">
+  {{ (entry.farmer.fullName || 'F').charAt(0).toUpperCase() }}
+</div>
+            </div>
+
+            <div class="modal-profile-text">
+              <h2 id="pruningModalTitle">
+                {{ entry.farmer.fullName || 'Farmer' }}
+              </h2>
+              <p>{{ entry.farmer.farmName || 'Farm name not provided' }}</p>
+            </div>
+
+            <div
+              class="modal-status"
+              [class.is-completed]="isCycleCompleted(entry)"
+              [class.is-active]="!isCycleCompleted(entry)"
+            >
+              <span class="modal-status-dot"></span>
+              {{ entry.record.status || 'In Progress' }}
+            </div>
+          </div>
+
+          <button
+            type="button"
+            class="modal-close-button"
+            aria-label="Close farmer details"
+            (click)="closeDetailsModal()"
+          >
+            <lucide-icon name="x"></lucide-icon>
+          </button>
+        </div>
+
+        <!-- MODAL BODY -->
+        <div class="modal-body-content">
+
+          <!-- FARMER INFORMATION AND CAPACITY -->
+          <div class="modal-main-grid">
+
+            <!-- FARMER INFORMATION -->
+            <section class="modal-panel">
+              <div class="modal-section-heading">
+                <span class="modal-section-icon">♧</span>
+                <div>
+                  <h3>Farmer Information</h3>
+                  <p>Personal and farm details</p>
+                </div>
+              </div>
+
+              <div class="modal-detail-list">
+
+                <div class="modal-detail-item">
+                  <span class="modal-info-label">LOCATION</span>
+                  <strong>{{ entry.farmer.locality || 'Not provided' }}</strong>
+                </div>
+
+                <div class="modal-detail-item">
+                  <span class="modal-info-label">CONTACT NUMBER</span>
+                  <strong>{{ entry.farmer.phone || 'Not provided' }}</strong>
+                </div>
+
+                <div class="modal-detail-item">
+                  <span class="modal-info-label">FARMER TYPE</span>
+                  <strong>{{ entry.farmer.farmerType || 'Not provided' }}</strong>
+                </div>
+
+                @if (entry.farmer.communityName) {
+                  <div class="modal-detail-item">
+                    <span class="modal-info-label">COMMUNITY NAME</span>
+                    <strong>{{ entry.farmer.communityName }}</strong>
+                  </div>
+                }
+
+                @if (entry.farmer.memberCount != null) {
+  <div class="modal-detail-item">
+    <span class="modal-info-label">COMMUNITY MEMBERS</span>
+    <strong>{{ entry.farmer.memberCount }}</strong>
+  </div>
+}
+
+                <div class="modal-detail-item">
+                  <span class="modal-info-label">EMAIL ADDRESS</span>
+                  <strong>{{ entry.farmer.email || 'Not provided' }}</strong>
+                </div>
+
+              </div>
+            </section>
+
+            <!-- FARM CAPACITY -->
+            <section class="modal-panel capacity-panel">
+              <div class="modal-section-heading">
+                <span class="modal-section-icon">♧</span>
+                <div>
+                  <h3>Farm Capacity</h3>
+                  <p>Available mulberry resources</p>
+                </div>
+              </div>
+
+              <div class="capacity-grid">
+
+                <div class="capacity-card">
+                  <span class="capacity-icon">⌂</span>
+                  <span class="modal-info-label">FARM AREA</span>
+                  <strong>{{ entry.farmer.farmArea || 'Not provided' }}</strong>
+                  <small>Hectares</small>
+                </div>
+
+                <div class="capacity-card">
+                  <span class="capacity-icon">♧</span>
+                  <span class="modal-info-label">MULBERRY HILLS</span>
+                  <strong>{{ entry.farmer.mulberryTreeCount || 'Not provided' }}</strong>
+                  <small>Total trees / hills</small>
+                </div>
+
+              </div>
+
+              <div class="capacity-note">
+                <span>ⓘ</span>
+                <p>
+                  Farm capacity details help PTRI assess the farmer's available
+                  mulberry resources.
+                </p>
+              </div>
+            </section>
+
+          </div>
+
+          <!-- PRUNING TIMELINE -->
+          <section class="modal-timeline-panel">
+
+            <div class="modal-section-heading">
+              <span class="modal-section-icon">✦</span>
+              <div>
+                <h3>Pruning Cycle Timeline</h3>
+                <p>Schedule and progress information</p>
+              </div>
+            </div>
+
+            <div class="timeline-grid">
+
+              <div class="timeline-date-card start-date-card">
+                <span class="timeline-date-icon">↗</span>
+                <div class="timeline-copy">
+                  <span class="timeline-label">PRUNING STARTED</span>
+                  <strong>
+                    {{ formatDisplayDate(getRecordStartDate(entry.record)) }}
+                  </strong>
+                  <small>Pruning cycle officially began</small>
+                </div>
+              </div>
+
+              <div class="timeline-date-card end-date-card">
+                <span class="timeline-date-icon">✓</span>
+                <div class="timeline-copy">
+                  <span class="timeline-label">EXPECTED END DATE</span>
+                  <strong>
+                    {{ formatDisplayDate(getRecordEndDate(entry.record)) }}
+                  </strong>
+                  <small>
+                    Based on the {{ getCycleDays(entry) }}-day pruning cycle
+                  </small>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- CYCLE PROGRESS -->
+            <div
+              class="modal-progress-card"
+              [class.progress-completed]="isCycleCompleted(entry)"
+            >
+
+              <div class="progress-card-top">
+                <div>
+                  <span class="modal-info-label">CURRENT CYCLE STATUS</span>
+                  <strong>{{ getCycleRemainingText(entry) }}</strong>
+                </div>
+
+                <span class="progress-percentage">
+                  {{ getCycleProgress(entry) }}%
+                </span>
+              </div>
+
+              <div class="modal-progress-track">
+                <div
+                  class="modal-progress-fill"
+                  [class.fill-completed]="isCycleCompleted(entry)"
+                  [style.width.%]="getCycleProgress(entry)"
+                ></div>
+              </div>
+
+              <div class="progress-card-bottom">
+                <span>
+                  {{ isCycleCompleted(entry) ? 'Completed cycle' : '45-day pruning schedule' }}
+                </span>
+                <span>{{ getCycleDays(entry) }} days</span>
+              </div>
+
+            </div>
+          </section>
+
+          <!-- MODAL FOOTER NOTE -->
+          <div class="modal-footer-note">
+            <span>ⓘ</span>
+            <p>
+              These details are retrieved from the farmer's saved account
+              and pruning record.
+            </p>
+          </div>
+
+          <!-- MODAL ACTION -->
+          <div class="modal-footer-actions">
+            <button
+              type="button"
+              class="modal-footer-close"
+              (click)="closeDetailsModal()"
+            >
+              Close Details
+            </button>
+          </div>
+
+        </div>
+      </section>
     </div>
   }
+
 </div>
