@@ -11,658 +11,700 @@
       </div>
     </div>
 
-    <button class="create-btn" type="button" (click)="createBatch()">
-      <span>＋</span> Create Batch
+    <button class="reset-btn" type="button" (click)="loadData()" [disabled]="isLoading">
+      ↻ Refresh
     </button>
   </div>
 
-  <!-- OVERVIEW CARDS -->
+  <!-- OVERVIEW -->
   <div class="overview-grid">
-
     <div class="overview-card total">
-      <div class="card-icon">🥚</div>
+      <div class="card-icon">📋</div>
       <div>
-        <span>Total Batches</span>
-        <h2>{{ totalBatches }}</h2>
+        <span>Total Farmer Requests</span>
+        <h2>{{ requests.length }}</h2>
       </div>
     </div>
 
     <div class="overview-card farmers">
-      <div class="card-icon">♙</div>
+      <div class="card-icon">⏳</div>
       <div>
-        <span>Farmers Served</span>
-        <h2>{{ farmersServed }}</h2>
+        <span>Pending Requests</span>
+        <h2>{{ pendingRequests }}</h2>
       </div>
     </div>
 
     <div class="overview-card trays">
-      <div class="card-icon">▤</div>
+      <div class="card-icon">📦</div>
       <div>
-        <span>Total Trays Given</span>
-        <h2>{{ totalTraysGiven }}</h2>
+        <span>Assigned Batches</span>
+        <h2>{{ totalBatches }}</h2>
       </div>
     </div>
-
   </div>
 
-  <!-- BATCH RECORDS TABLE -->
-  <section class="batch-table-panel">
-
+  <!-- FARMER REQUESTS -->
+  <section class="batch-table-panel request-panel">
     <div class="panel-heading">
       <div>
-        <h2>Batch Records</h2>
-        <p>Overview of farmers, mulberry resources, and silkworm batches distributed by PTRI.</p>
+        <h2>Farmer Silkworm Requests</h2>
+        <p>Review farmer resources and assign silkworm batches.</p>
       </div>
+      <span class="request-count">{{ filteredRequests.length }} Requests</span>
     </div>
 
     <!-- SEARCH AND FILTER -->
     <div class="filter-toolbar">
-
       <div class="search-box">
         <span>⌕</span>
-        <input
-          type="text"
-          placeholder="Search farmer or community..."
-          [(ngModel)]="searchTerm"
-        />
+        <input type="text" placeholder="Search farmer, farm, or request number..." [(ngModel)]="searchTerm" />
       </div>
 
-      <select [(ngModel)]="selectedFarmer">
-        <option *ngFor="let farmer of farmers" [value]="farmer">
-          {{ farmer }}
-        </option>
+      <select [(ngModel)]="selectedStatus">
+        <option value="All Requests">All Requests</option>
+        <option value="Pending">Pending</option>
+        <option value="Worms Assigned">Worms Assigned</option>
+        <option value="Under Review">Under Review (Legacy)</option>
+        <option value="Approved">Approved (Legacy)</option>
+        <option value="Partially Approved">Partially Approved (Legacy)</option>
+        <option value="Rejected">Rejected (Legacy)</option>
       </select>
 
-      <button
-        class="reset-btn"
-        type="button"
-        (click)="resetFilters()"
-      >
-        Reset
-      </button>
-
+      <button class="reset-btn" type="button" (click)="resetFilters()">Reset</button>
     </div>
 
-    <!-- TABLE -->
-    <div class="table-wrapper">
-
-      <table class="batch-table">
-
-        <thead>
-          <tr>
-            <th>Farmer / Farm Community</th>
-            <th>Total Mulberry Hills</th>
-            <th>Available Mulberry Leaves</th>
-            <th>Trays Given</th>
-            <th>Date Given</th>
-            <th>Action</th>
-          </tr>
-        </thead>
-
-        <tbody>
-
-          <tr *ngFor="let batch of filteredBatches">
-
-            <!-- FARMER -->
-            <td>
-              <div class="farmer-cell">
-                <span class="farmer-avatar">♙</span>
-                <strong>{{ batch.farmer }}</strong>
-              </div>
-            </td>
-
-            <!-- MULBERRY HILLS -->
-            <td>
-              <span class="resource-value">
-                {{ batch.totalMulberryHills | number }}
-              </span>
-              <small class="resource-unit">Hills</small>
-            </td>
-
-            <!-- AVAILABLE MULBERRY LEAVES -->
-            <td>
-              <span class="resource-value">
-                {{ batch.availableMulberryLeavesKg | number }}
-              </span>
-              <small class="resource-unit">kg</small>
-            </td>
-
-            <!-- TRAYS GIVEN -->
-            <td>
-              <span class="quantity-badge">
-                {{ batch.quantityGiven }} Trays
-              </span>
-            </td>
-
-            <!-- DATE GIVEN -->
-            <td>{{ batch.dateGiven }}</td>
-
-            <!-- ACTION -->
-            <td>
-              <button
-                class="view-btn"
-                type="button"
-                (click)="openBatchDetails(batch)"
-              >
-                View Details
-              </button>
-            </td>
-
-          </tr>
-
-          <!-- EMPTY STATE -->
-          <tr *ngIf="filteredBatches.length === 0">
-            <td colspan="6">
-              <div class="empty-state">
-                <span>📦</span>
-                <h3>No batches found</h3>
-                <p>Try changing your search or farmer filter.</p>
-
-                <button
-                  type="button"
-                  (click)="resetFilters()"
-                >
-                  Clear Filters
-                </button>
-              </div>
-            </td>
-          </tr>
-
-        </tbody>
-
-      </table>
-
+    <div *ngIf="errorMessage" class="form-error">
+      {{ errorMessage }}
     </div>
 
-    <!-- TABLE FOOTER -->
+    <!-- FARMER CARD GALLERY -->
+    <div class="farmer-card-grid">
+      <article class="farmer-card" *ngFor="let request of filteredRequests">
+
+        <!-- FARMER PHOTO AND STATUS -->
+        <div class="farmer-photo">
+          <img
+            src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=500&h=300&fit=crop"
+            alt="Sample farmer profile"
+            loading="lazy"
+          />
+
+          <span
+            class="farmer-card-status"
+            [ngClass]="{
+              'pending': request.status === 'Pending',
+              'assigned': isAssigned(request)
+            }"
+          >
+            {{ request.status }}
+          </span>
+        </div>
+
+        <!-- FARMER INFORMATION -->
+        <div class="farmer-card-body">
+          <span class="farmer-request-number">{{ request.requestNumber }}</span>
+
+          <h3>{{ request.farmerName }}</h3>
+
+          <span class="farmer-farm-name">
+            🌿 {{ getFarmDisplayName(request) }}
+          </span>
+
+          <div class="farmer-resource-list">
+            <div class="farmer-resource-item">
+              <span>Living Mulberry Hills</span>
+              <strong>{{ request.livingMulberryHills | number }}</strong>
+            </div>
+
+            <div class="farmer-resource-item">
+              <span>Available Leaves</span>
+              <strong>{{ request.availableLeafWeightKg | number:'1.0-2' }} kg</strong>
+            </div>
+          </div>
+
+          <div class="farmer-request-date">
+            <span>Request Date</span>
+            <strong>{{ request.requestDate | date:'MMM d, y' }}</strong>
+          </div>
+
+          <!-- ASSIGNED BATCH PREVIEW -->
+          <div class="assigned-batch-preview" *ngIf="getRequestBatch(request) as batch">
+            <div class="assigned-batch-heading">
+              <span>✓</span>
+              <strong>Batch Assigned</strong>
+            </div>
+            <p>{{ batch.batchNumber }}</p>
+            <small>{{ batch.trays }} tray(s) · {{ batch.silkwormType }}</small>
+          </div>
+
+          <!-- MISSING FARMER RECORD -->
+          <div class="farmer-record-warning" *ngIf="!request.farmerRecordFound">
+            ⚠ Farmer Record not linked
+          </div>
+
+          <!-- CARD ACTIONS -->
+          <div class="farmer-card-actions">
+            <button class="view-btn" type="button" (click)="openViewModal(request)">
+              View Request
+            </button>
+
+            <button
+              class="save-btn"
+              type="button"
+              *ngIf="!isAssigned(request)"
+              (click)="openAssignModal(request)"
+              [disabled]="!canAssign(request) || isAssigning"
+            >
+              Assign Worms
+            </button>
+
+            <button
+              class="view-btn"
+              type="button"
+              *ngIf="isAssigned(request)"
+              (click)="openViewModal(request)"
+            >
+              View Batch
+            </button>
+          </div>
+        </div>
+      </article>
+
+      <!-- EMPTY STATE -->
+      <div class="empty-state" *ngIf="!isLoading && filteredRequests.length === 0">
+        <span>📋</span>
+        <h3>No Farmer Requests Found</h3>
+        <p>Farmer silkworm requests will appear here when submitted.</p>
+        <button type="button" (click)="resetFilters()">Clear Filters</button>
+      </div>
+
+      <!-- LOADING STATE -->
+      <div class="empty-state" *ngIf="isLoading && requests.length === 0">
+        <h3>Loading Farmer Requests...</h3>
+        <p>Please wait while the records are retrieved.</p>
+      </div>
+    </div>
+
     <div class="list-footer">
-      Showing {{ filteredBatches.length }} of
-      {{ totalBatches }} batch records
+      Showing {{ filteredRequests.length }} of {{ requests.length }} farmer requests
     </div>
-
   </section>
-
 </div>
 
 
-<!-- =====================================
-     VIEW BATCH DETAILS MODAL
-===================================== -->
-
+<!-- =========================================
+     VIEW REQUEST / BATCH DETAILS MODAL
+========================================= -->
 <div
   class="modal-overlay"
-  *ngIf="showViewModal && selectedBatch as batch"
+  *ngIf="showViewModal && selectedRequest as request"
   (click)="closeViewModal()"
 >
-
-  <section
-    class="batch-modal view-modal"
-    (click)="$event.stopPropagation()"
-  >
+  <section class="batch-modal view-batch-modal" (click)="$event.stopPropagation()">
 
     <!-- MODAL HEADER -->
     <div class="modal-header">
-
       <div>
-        <span class="modal-eyebrow">BATCH RECORD DETAILS</span>
-        <h2>Silkworm Batch Information</h2>
-        <p>Farmer resources and silkworm distribution record.</p>
+        <span class="modal-eyebrow">PTRI FARMER RECORDS</span>
+        <h2>View Request & Batch Details</h2>
+        <p>Review registered farm information and assigned silkworm batch.</p>
+      </div>
+
+      <button type="button" class="modal-close" (click)="closeViewModal()">×</button>
+    </div>
+
+    <div class="modal-body">
+
+      <!-- REQUEST SUMMARY -->
+      <div class="batch-identity">
+        <div>
+          <span>Farmer</span>
+          <strong>{{ request.farmerName }}</strong>
+        </div>
+        <div>
+          <span>Request Number</span>
+          <strong>{{ request.requestNumber }}</strong>
+        </div>
+        <div>
+          <span>Request Date</span>
+          <strong>{{ request.requestDate | date:'MMM d, y' }}</strong>
+        </div>
+        <div>
+          <span>Request Status</span>
+          <strong>{{ request.status }}</strong>
+        </div>
+      </div>
+
+      <!-- TWO COLUMN CONTENT -->
+      <div class="batch-details-columns">
+
+        <!-- LEFT COLUMN -->
+        <div class="batch-details-left">
+
+          <!-- REGISTERED FARM INFORMATION -->
+          <div class="information-card">
+            <div class="section-heading">
+              <span class="section-number">01</span>
+              <div>
+                <h3>Registered Farm Information</h3>
+                <p>Verified details from PTRI Farmer Records.</p>
+              </div>
+            </div>
+
+            <div class="details-grid">
+              <div class="info-row">
+                <span>Farm / Community Name</span>
+                <strong>{{ getFarmDisplayName(request) }}</strong>
+              </div>
+
+              <div class="info-row">
+                <span>Farm Area</span>
+                <strong>{{ request.farmArea ? request.farmArea + ' ha' : 'Not recorded' }}</strong>
+              </div>
+
+              <div class="info-row">
+                <span>Registered Mulberry Trees</span>
+                <strong>
+                  {{ request.registeredMulberryTreeCount !== null
+                    ? (request.registeredMulberryTreeCount | number)
+                    : 'Not available' }}
+                </strong>
+              </div>
+            </div>
+
+            <div class="resource-note" *ngIf="!request.farmerRecordFound">
+              <span>ⓘ</span>
+              <p>
+                No matching Farmer Record was found for this account.
+                Verify the farmer account before assigning worms.
+              </p>
+            </div>
+          </div>
+
+          <!-- CURRENT FARMER-REPORTED RESOURCES -->
+          <div class="information-card">
+            <div class="section-heading">
+              <span class="section-number">02</span>
+              <div>
+                <h3>Current Available Mulberry Resources</h3>
+                <p>Values submitted by the farmer with this request.</p>
+              </div>
+            </div>
+
+            <div class="resource-grid">
+              <div class="resource-card">
+                <span class="resource-icon">🌳</span>
+                <div>
+                  <span>Living Mulberry Hills</span>
+                  <strong>{{ request.livingMulberryHills | number }}</strong>
+                  <small>Hills</small>
+                </div>
+              </div>
+
+              <div class="resource-card">
+                <span class="resource-icon">🌿</span>
+                <div>
+                  <span>Available Mulberry Leaves</span>
+                  <strong>{{ request.availableLeafWeightKg | number:'1.0-2' }} kg</strong>
+                  <small>Farmer-reported weight</small>
+                </div>
+              </div>
+            </div>
+
+            <div class="remarks-section">
+              <span>Farmer Remarks</span>
+              <p>{{ request.farmerRemarks || 'No remarks provided.' }}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- RIGHT COLUMN -->
+        <div class="batch-details-right">
+
+          <!-- ASSIGNED SILKWORM BATCH -->
+          <div class="information-card assigned-batch-card" *ngIf="selectedBatch as batch">
+
+            <!-- QR CODE -->
+            <div class="batch-qr-section">
+              <div class="section-heading">
+                <span class="section-number">QR</span>
+                <div>
+                  <h3>Batch QR Code</h3>
+                  <p>Scan to identify this silkworm batch.</p>
+                </div>
+              </div>
+
+              <div class="qr-code-display">
+                <div class="qr-loading" *ngIf="isGeneratingQr">
+                  <span>◌</span>
+                  <p>Generating QR Code...</p>
+                </div>
+
+                <img
+                  *ngIf="qrCodeDataUrl && !isGeneratingQr"
+                  [src]="qrCodeDataUrl"
+                  [alt]="'QR Code for batch ' + batch.batchNumber"
+                />
+
+                <div class="qr-unavailable" *ngIf="!qrCodeDataUrl && !isGeneratingQr">
+                  <span>▦</span>
+                  <p>QR Code is unavailable.</p>
+                </div>
+              </div>
+
+              <strong class="qr-batch-number">{{ batch.batchNumber }}</strong>
+
+              <p class="qr-instruction">
+                Keep this QR code as the batch identification reference.
+              </p>
+
+              <button
+                type="button"
+                class="download-qr-btn"
+                (click)="downloadQrCode()"
+                [disabled]="!qrCodeDataUrl || isGeneratingQr"
+              >
+                ↓ Download QR Code
+              </button>
+            </div>
+
+            <!-- BATCH DETAILS -->
+            <div class="batch-info-section">
+              <div class="section-heading">
+                <span class="section-number">03</span>
+                <div>
+                  <h3>Assigned Silkworm Batch</h3>
+                  <p>Actual batch information saved by PTRI.</p>
+                </div>
+              </div>
+
+              <div class="details-grid">
+                <div class="info-row">
+                  <span>Batch Number</span>
+                  <strong>{{ batch.batchNumber }}</strong>
+                </div>
+
+                <div class="info-row">
+                  <span>Batch Status</span>
+                  <strong>{{ batch.status }}</strong>
+                </div>
+
+                <div class="info-row">
+                  <span>Silkworm Type</span>
+                  <strong>{{ batch.silkwormType }}</strong>
+                </div>
+
+                <div class="info-row">
+                  <span>Breed</span>
+                  <strong>{{ batch.breed }}</strong>
+                </div>
+
+                <div class="info-row">
+                  <span>Number of Trays</span>
+                  <strong>{{ batch.trays | number }}</strong>
+                </div>
+
+                <div class="info-row">
+                  <span>Silkworm Quantity</span>
+                  <strong>{{ batch.quantity | number }}</strong>
+                </div>
+
+                <div class="info-row">
+                  <span>Preparation Date</span>
+                  <strong>{{ batch.preparationDate | date:'MMM d, y' }}</strong>
+                </div>
+
+                <div class="info-row">
+                  <span>Delivery Date</span>
+                  <strong>{{ batch.deliveryDate | date:'MMM d, y' }}</strong>
+                </div>
+
+                <div class="info-row">
+                  <span>Assigned Date</span>
+                  <strong>{{ batch.assignedDate | date:'MMM d, y' }}</strong>
+                </div>
+              </div>
+
+              <div class="remarks-section">
+                <span>PTRI Remarks</span>
+                <p>{{ batch.ptriRemarks || 'No remarks provided.' }}</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- NOT YET ASSIGNED -->
+          <div class="information-card no-batch-card" *ngIf="!selectedBatch">
+            <div class="section-heading">
+              <span class="section-number">03</span>
+              <div>
+                <h3>Assigned Silkworm Batch</h3>
+                <p>Batch information will appear here after assignment.</p>
+              </div>
+            </div>
+
+            <div class="no-batch-message">
+              <span>📦</span>
+              <h3>No Batch Assigned Yet</h3>
+              <p>
+                PTRI has not created a silkworm batch for this request.
+                Use the Assign Worms action to create the batch.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL FOOTER -->
+    <div class="modal-footer">
+      <button type="button" class="secondary-btn" (click)="closeViewModal()">Close</button>
+
+      <button
+        type="button"
+        class="save-btn"
+        *ngIf="!isAssigned(request)"
+        [disabled]="!canAssign(request)"
+        (click)="closeViewModal(); openAssignModal(request)"
+      >
+        Assign Worms
+      </button>
+    </div>
+  </section>
+</div>
+
+
+<!-- =========================================
+     ASSIGN WORMS MODAL
+========================================= -->
+<div
+  class="modal-overlay"
+  *ngIf="showAssignModal && selectedRequest as request"
+  (click)="closeAssignModal()"
+>
+  <section class="batch-modal assign-modal" (click)="$event.stopPropagation()">
+
+    <!-- MODAL HEADER -->
+    <div class="modal-header">
+      <div>
+        <span class="modal-eyebrow">PTRI BATCH ASSIGNMENT</span>
+        <h2>Assign Silkworms</h2>
+        <p>Enter the silkworm details and delivery schedule.</p>
       </div>
 
       <button
         type="button"
         class="modal-close"
-        (click)="closeViewModal()"
+        (click)="closeAssignModal()"
+        [disabled]="isAssigning"
       >
         ×
       </button>
-
-    </div>
-
-    <!-- BATCH IDENTIFICATION -->
-    <div class="batch-identity">
-
-      <div>
-        <span>Farmer</span>
-        <strong>{{ batch.farmer }}</strong>
-      </div>
-
-      <div>
-        <span>Batch ID</span>
-        <strong>{{ batch.id }}</strong>
-      </div>
-
-      <div class="batch-quantity">
-        <span>Quantity Given</span>
-        <strong>{{ batch.quantityGiven }} Trays</strong>
-      </div>
-
     </div>
 
     <div class="modal-body">
 
-      <!-- FARMER INFORMATION -->
-      <div class="information-card">
+      <!-- FARMER SUMMARY -->
+      <div class="batch-identity">
+        <div>
+          <span>Farmer</span>
+          <strong>{{ request.farmerName }}</strong>
+        </div>
+        <div>
+          <span>Request Number</span>
+          <strong>{{ request.requestNumber }}</strong>
+        </div>
+      </div>
 
+      <!-- FARM CAPACITY REFERENCE -->
+      <div class="information-card">
         <div class="section-heading">
           <span class="section-number">01</span>
           <div>
-            <h3>Farmer Information</h3>
-            <p>Available mulberry resources reported by the farmer.</p>
+            <h3>Farmer's Available Resources</h3>
+            <p>Reference information for PTRI's manual allocation decision.</p>
           </div>
         </div>
 
         <div class="resource-grid">
-
           <div class="resource-card">
             <span class="resource-icon">🌳</span>
             <div>
-              <span>Total Mulberry Hills</span>
-              <strong>{{ batch.totalMulberryHills | number }}</strong>
-              <small>Hills</small>
+              <span>Living Mulberry Hills</span>
+              <strong>{{ request.livingMulberryHills | number }}</strong>
+              <small>Current request</small>
             </div>
           </div>
 
           <div class="resource-card">
             <span class="resource-icon">🌿</span>
             <div>
-              <span>Available Mulberry Leaves</span>
-              <strong>{{ batch.availableMulberryLeavesKg | number }} kg</strong>
-              <small>Estimated available quantity</small>
+              <span>Available Leaves</span>
+              <strong>{{ request.availableLeafWeightKg | number:'1.0-2' }} kg</strong>
+              <small>Current request</small>
             </div>
           </div>
-
         </div>
 
+        <div class="details-grid">
+          <div class="info-row">
+            <span>Farm Area</span>
+            <strong>{{ request.farmArea ? request.farmArea + ' ha' : 'Not recorded' }}</strong>
+          </div>
+
+          <div class="info-row">
+            <span>Registered Mulberry Trees</span>
+            <strong>
+              {{ request.registeredMulberryTreeCount !== null
+                ? (request.registeredMulberryTreeCount | number)
+                : 'Not available' }}
+            </strong>
+          </div>
+        </div>
       </div>
 
-      <!-- SILKWORM BATCH DETAILS -->
+      <!-- SILKWORM ASSIGNMENT FORM -->
       <div class="information-card">
-
         <div class="section-heading">
           <span class="section-number">02</span>
           <div>
-            <h3>Silkworm Batch Details</h3>
-            <p>Information about the batch prepared by PTRI.</p>
+            <h3>Silkworm Assignment Details</h3>
+            <p>Specify the type, breed, trays, and quantity to be prepared.</p>
           </div>
         </div>
 
-        <div class="details-grid">
+        <div class="form-grid">
 
-          <div class="info-row">
-            <span>Silkworm Type</span>
-            <strong>{{ batch.silkwormType }}</strong>
+          <div class="form-group">
+            <label>Silkworm Type <span>*</span></label>
+            <input
+              type="text"
+              name="silkwormType"
+              [(ngModel)]="assignForm.silkwormType"
+              placeholder="Enter silkworm type"
+              [disabled]="isAssigning"
+            />
           </div>
 
-          <div class="info-row">
-            <span>Breed / Hybrid</span>
-            <strong>{{ batch.breed }}</strong>
+          <div class="form-group">
+            <label for="breed">Silkworm Breed <span>*</span></label>
+            <select
+              id="breed"
+              name="breed"
+              [(ngModel)]="assignForm.breed"
+              required
+              [disabled]="isAssigning"
+            >
+              <option value="" disabled>Select silkworm breed</option>
+
+              <optgroup label="Multivoltine">
+                <option value="DMMMSU 1000">DMMMSU 1000</option>
+                <option value="DMMMSU 1007">DMMMSU 1007</option>
+                <option value="DMMMSU 1014">DMMMSU 1014</option>
+              </optgroup>
+
+              <optgroup label="Bivoltine">
+                <option value="DMMMSU 108">DMMMSU 108</option>
+                <option value="DMMMSU 109">DMMMSU 109</option>
+                <option value="DMMMSU 110">DMMMSU 110</option>
+                <option value="DMMMSU 111">DMMMSU 111</option>
+                <option value="DMMMSU 113">DMMMSU 113</option>
+                <option value="DMMMSU 119">DMMMSU 119</option>
+              </optgroup>
+            </select>
+            <small class="resource-unit">Select the actual breed assigned by PTRI.</small>
           </div>
 
-          <div class="info-row">
-            <span>Quantity Prepared</span>
-            <strong>{{ batch.quantityPrepared }} Trays</strong>
+          <div class="form-group">
+            <label>Number of Trays <span>*</span></label>
+            <input
+              type="number"
+              name="trays"
+              [(ngModel)]="assignForm.trays"
+              min="1"
+              step="1"
+              placeholder="Enter tray quantity"
+              [disabled]="isAssigning"
+            />
           </div>
 
-          <div class="info-row">
-            <span>Quantity Given</span>
-            <strong class="quantity-highlight">
-              {{ batch.quantityGiven }} Trays
-            </strong>
+          <div class="form-group">
+            <label>Silkworm Quantity <span>*</span></label>
+            <input
+              type="number"
+              name="quantity"
+              [(ngModel)]="assignForm.quantity"
+              min="1"
+              step="1"
+              placeholder="Enter number of silkworms"
+              [disabled]="isAssigning"
+            />
           </div>
 
+          <div class="form-group">
+            <label>Preparation Date <span>*</span></label>
+            <input
+              type="date"
+              name="preparationDate"
+              [(ngModel)]="assignForm.preparationDate"
+              [disabled]="isAssigning"
+            />
+          </div>
+
+          <div class="form-group">
+            <label>Delivery Date <span>*</span></label>
+            <input
+              type="date"
+              name="deliveryDate"
+              [(ngModel)]="assignForm.deliveryDate"
+              [min]="assignForm.preparationDate"
+              [disabled]="isAssigning"
+            />
+          </div>
+
+          <div class="form-group full-width">
+            <label>PTRI Remarks</label>
+            <textarea
+              name="ptriRemarks"
+              [(ngModel)]="assignForm.ptriRemarks"
+              rows="3"
+              placeholder="Enter additional batch or delivery instructions..."
+              [disabled]="isAssigning"
+            ></textarea>
+          </div>
         </div>
-
-        <div class="remarks-section">
-          <span>Additional Remarks</span>
-          <p>{{ batch.remarks || 'No additional remarks.' }}</p>
-        </div>
-
       </div>
 
-      <!-- DISTRIBUTION DETAILS -->
-      <div class="information-card">
-
-        <div class="section-heading">
-          <span class="section-number">03</span>
-          <div>
-            <h3>Distribution Details</h3>
-            <p>Record of the actual batch handover to the farmer.</p>
-          </div>
-        </div>
-
-        <div class="details-grid">
-
-          <div class="info-row">
-            <span>Date Given to Farmer</span>
-            <strong>{{ batch.dateGiven }}</strong>
-          </div>
-
-          <div class="info-row">
-            <span>Received By</span>
-            <strong>{{ batch.receivedBy }}</strong>
-          </div>
-
-          <div class="info-row">
-            <span>Prepared By</span>
-            <strong>{{ batch.preparedBy }}</strong>
-          </div>
-
-        </div>
-
-      </div>
-
-      <!-- QR CODE REFERENCE -->
-      <div class="information-card qr-card">
-
-        <div>
-          <h3>▦ Silkworm Batch QR Code</h3>
-          <p>Unique reference assigned to this silkworm batch.</p>
-        </div>
-
-        <div class="qr-placeholder">
-          <span>QR</span>
-          <small>{{ batch.qrValue }}</small>
-        </div>
-
-      </div>
-
-      <!-- INFORMATION NOTE -->
+      <!-- ASSIGNMENT INFORMATION -->
       <div class="information-note">
         <span>ⓘ</span>
         <p>
-          Official batch records are maintained by PTRI
-          or authorized personnel. The Batch ID serves as
-          the reference for related cocoon collection records.
+          Saving this assignment creates an actual Silkworm Batch with a unique
+          Batch ID and QR code. The request status will become
+          <strong>Worms Assigned</strong>. This does not mean the farmer has
+          already received the silkworms. Receipt confirmation is recorded separately.
         </p>
       </div>
-
     </div>
 
     <!-- MODAL FOOTER -->
     <div class="modal-footer">
-
       <button
         type="button"
         class="secondary-btn"
-        (click)="closeViewModal()"
+        (click)="closeAssignModal()"
+        [disabled]="isAssigning"
       >
-        Close
+        Cancel
       </button>
-
-    </div>
-
-  </section>
-
-</div>
-
-
-<!-- =====================================
-     CREATE BATCH MODAL
-===================================== -->
-
-<div
-  class="modal-overlay"
-  *ngIf="showCreateModal"
-  (click)="closeCreateModal()"
->
-
-  <section
-    class="batch-modal create-modal"
-    (click)="$event.stopPropagation()"
-  >
-
-    <!-- MODAL HEADER -->
-    <div class="modal-header">
-
-      <div>
-        <span class="modal-eyebrow">NEW BATCH RECORD</span>
-        <h2>Create Silkworm Batch</h2>
-        <p>Record the silkworm batch prepared and distributed to a farmer.</p>
-      </div>
 
       <button
         type="button"
-        class="modal-close"
-        (click)="closeCreateModal()"
+        class="save-btn"
+        (click)="assignWorms()"
+        [disabled]="isAssigning"
       >
-        ×
+        {{ isAssigning ? 'Saving Batch...' : 'Assign & Save Batch' }}
       </button>
-
     </div>
-
-    <!-- FORM -->
-    <form
-      #batchForm="ngForm"
-      (ngSubmit)="saveBatch()"
-      class="batch-form"
-    >
-
-      <div class="modal-body">
-
-        <!-- VALIDATION MESSAGE -->
-        <div class="form-error" *ngIf="modalError">
-          {{ modalError }}
-        </div>
-
-        <!-- FARMER INFORMATION -->
-        <div class="form-section">
-
-          <div class="form-section-heading">
-            <span>01</span>
-            <div>
-              <h3>Farmer Information</h3>
-              <p>Select the farmer and review their available mulberry resources.</p>
-            </div>
-          </div>
-
-          <div class="form-grid">
-
-            <div class="form-group full-width">
-              <label>Farmer Name <span>*</span></label>
-
-              <select
-                name="farmer"
-                [(ngModel)]="createForm.farmer"
-                (ngModelChange)="onFarmerChange()"
-                required
-              >
-                <option value="" disabled>Select Farmer</option>
-
-                <option
-                  *ngFor="let farmer of farmerDirectory"
-                  [value]="farmer.name"
-                >
-                  {{ farmer.name }}
-                </option>
-              </select>
-            </div>
-
-            <div class="form-group">
-              <label>Total Mulberry Hills</label>
-              <input
-                type="number"
-                name="totalMulberryHills"
-                [(ngModel)]="createForm.totalMulberryHills"
-                readonly
-              />
-            </div>
-
-            <div class="form-group">
-              <label>Available Mulberry Leaves (kg)</label>
-              <input
-                type="number"
-                name="availableMulberryLeavesKg"
-                [(ngModel)]="createForm.availableMulberryLeavesKg"
-                readonly
-              />
-            </div>
-
-            <div class="resource-note full-width">
-              <span>ⓘ</span>
-              <p>
-                Farmer resource information is automatically displayed
-                from their latest submitted farm request.
-              </p>
-            </div>
-
-          </div>
-
-        </div>
-
-        <!-- BATCH INFORMATION -->
-        <div class="form-section">
-
-          <div class="form-section-heading">
-            <span>02</span>
-            <div>
-              <h3>Silkworm Batch Details</h3>
-              <p>Enter the batch type and actual tray quantities.</p>
-            </div>
-          </div>
-
-          <div class="form-grid">
-
-            <div class="form-group">
-              <label>Silkworm Type <span>*</span></label>
-              <input
-                type="text"
-                name="silkwormType"
-                [(ngModel)]="createForm.silkwormType"
-                required
-              />
-            </div>
-
-            <div class="form-group">
-              <label>Breed / Hybrid</label>
-              <input
-                type="text"
-                name="breed"
-                [(ngModel)]="createForm.breed"
-                placeholder="Enter breed or hybrid"
-              />
-            </div>
-
-            <div class="form-group">
-              <label>Quantity Prepared (Trays) <span>*</span></label>
-              <input
-                type="number"
-                name="quantityPrepared"
-                [(ngModel)]="createForm.quantityPrepared"
-                min="1"
-                required
-              />
-            </div>
-
-            <div class="form-group">
-              <label>Quantity Given (Trays) <span>*</span></label>
-              <input
-                type="number"
-                name="quantityGiven"
-                [(ngModel)]="createForm.quantityGiven"
-                min="1"
-                required
-              />
-            </div>
-
-          </div>
-
-        </div>
-
-        <!-- DISTRIBUTION RECORD -->
-        <div class="form-section">
-
-          <div class="form-section-heading">
-            <span>03</span>
-            <div>
-              <h3>Distribution Details</h3>
-              <p>Record the actual handover of the silkworm batch.</p>
-            </div>
-          </div>
-
-          <div class="form-grid">
-
-            <div class="form-group">
-              <label>Date Given to Farmer <span>*</span></label>
-              <input
-                type="date"
-                name="dateGiven"
-                [(ngModel)]="createForm.dateGiven"
-                required
-              />
-            </div>
-
-            <div class="form-group">
-              <label>Received By <span>*</span></label>
-              <input
-                type="text"
-                name="receivedBy"
-                [(ngModel)]="createForm.receivedBy"
-                required
-              />
-            </div>
-
-            <div class="form-group full-width">
-              <label>Prepared By <span>*</span></label>
-              <input
-                type="text"
-                name="preparedBy"
-                [(ngModel)]="createForm.preparedBy"
-                required
-              />
-            </div>
-
-            <div class="form-group full-width">
-              <label>Additional Remarks</label>
-              <textarea
-                name="remarks"
-                [(ngModel)]="createForm.remarks"
-                rows="3"
-                placeholder="Enter additional batch or distribution notes..."
-              ></textarea>
-            </div>
-
-          </div>
-
-        </div>
-
-        <!-- QR INFORMATION -->
-        <div class="qr-info-note">
-          <span>▦</span>
-          <div>
-            <strong>Batch QR Reference</strong>
-            <p>
-              A unique Batch ID and QR reference will be assigned
-              automatically after saving.
-            </p>
-          </div>
-        </div>
-
-      </div>
-
-      <!-- FORM FOOTER -->
-      <div class="modal-footer">
-
-        <button
-          type="button"
-          class="secondary-btn"
-          (click)="closeCreateModal()"
-        >
-          Cancel
-        </button>
-
-        <button
-          type="submit"
-          class="save-btn"
-          [disabled]="batchForm.invalid"
-        >
-          Save Batch Record
-        </button>
-
-      </div>
-
-    </form>
-
   </section>
-
 </div>

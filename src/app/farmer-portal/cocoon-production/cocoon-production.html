@@ -1,0 +1,927 @@
+
+<div class="cocoon-page">
+
+
+
+  <!-- LOADING -->
+  <div *ngIf="loading" class="loading-state">
+    <div class="loader"></div>
+    <p>Loading your cocoon production records...</p>
+  </div>
+
+  <!-- ERROR -->
+  <div *ngIf="!loading && errorMessage" class="error-state">
+    <i class="fas fa-exclamation-circle"></i>
+    <p>{{ errorMessage }}</p>
+    <button type="button" (click)="initializeFarmer()">Try Again</button>
+  </div>
+
+  <ng-container *ngIf="!loading && farmerUid">
+
+    <!-- SUMMARY CARDS -->
+    <section class="summary-grid">
+
+      <div class="summary-card">
+        <div class="summary-icon harvest-icon">
+          <i class="fas fa-boxes-stacked"></i>
+        </div>
+        <div class="summary-info">
+          <span>Total Harvests</span>
+          <h2>{{ totalHarvests }}</h2>
+          <small>Recorded cocoon harvests</small>
+        </div>
+      </div>
+
+      <div class="summary-card">
+        <div class="summary-icon weight-icon">
+          <i class="fas fa-weight-hanging"></i>
+        </div>
+        <div class="summary-info">
+          <span>Total Cocoon Weight</span>
+          <h2>{{ formatWeight(totalCocoonWeight) }}</h2>
+          <small>Combined harvested weight</small>
+        </div>
+      </div>
+
+      <div class="summary-card">
+        <div class="summary-icon pending-icon">
+          <i class="fas fa-clock"></i>
+        </div>
+        <div class="summary-info">
+          <span>Pending Returns</span>
+          <h2>{{ pendingReturns }}</h2>
+          <small>Awaiting return submission</small>
+        </div>
+      </div>
+
+      <div class="summary-card">
+        <div class="summary-icon confirmed-icon">
+          <i class="fas fa-circle-check"></i>
+        </div>
+        <div class="summary-info">
+          <span>Confirmed Returns</span>
+          <h2>{{ confirmedReturns }}</h2>
+          <small>Received or verified by PTRI</small>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ACTION PANEL -->
+    <section class="production-actions">
+
+      <div class="action-intro">
+        <div class="action-icon">
+          <i class="fas fa-leaf"></i>
+        </div>
+        <div>
+          <h2>Manage Cocoon Production</h2>
+          <p>Record your cocoon harvest and submit your harvest records for return to PTRI.</p>
+        </div>
+      </div>
+
+      <div class="action-buttons">
+
+        <button
+          type="button"
+          class="harvest-btn"
+          (click)="openHarvestModal()">
+          <i class="fas fa-plus"></i>
+          Record Harvest
+        </button>
+
+        <button
+          type="button"
+          class="return-btn"
+          (click)="openReturnModal()">
+          <i class="fas fa-truck-ramp-box"></i>
+          Cocoon Return to PTRI
+          <i class="fas fa-arrow-right"></i>
+        </button>
+
+      </div>
+    </section>
+
+    <!-- ================================= -->
+    <!-- TWO-TAB NAVIGATION -->
+    <!-- ================================= -->
+
+    <section class="records-section">
+
+      <div class="production-tabs">
+
+        <button
+          type="button"
+          [class.active]="activeTab === 'harvest'"
+          (click)="changeTab('harvest')">
+
+          <i class="fas fa-box-open"></i>
+          <span>Cocoon Harvest Records</span>
+          <span class="tab-count">{{ harvestRecords.length }}</span>
+
+        </button>
+
+        <button
+          type="button"
+          [class.active]="activeTab === 'returns'"
+          (click)="changeTab('returns')">
+
+          <i class="fas fa-truck-ramp-box"></i>
+          <span>Cocoon Return to PTRI</span>
+          <span class="tab-count">{{ returnRecords.length }}</span>
+
+        </button>
+
+      </div>
+
+      <!-- ================================= -->
+      <!-- TAB 1: COCOON HARVEST RECORDS -->
+      <!-- ================================= -->
+
+      <div *ngIf="activeTab === 'harvest'">
+
+        <div class="section-heading">
+          <div>
+            <span class="section-eyebrow">PRODUCTION HISTORY</span>
+            <h2>Cocoon Harvest Records</h2>
+            <p>View your harvested cocoons, original worm batches, and return status.</p>
+          </div>
+
+          <span class="record-count">
+            {{ harvestRecords.length }} Records
+          </span>
+        </div>
+
+        <!-- HARVEST RECORD CARDS -->
+        <div
+          *ngIf="harvestRecords.length > 0"
+          class="records-grid">
+
+          <article
+            class="harvest-card"
+            *ngFor="let record of getHarvestRecordsForDisplay()">
+
+            <div class="harvest-card-top">
+              <div class="record-icon">
+                <i class="fas fa-box-open"></i>
+              </div>
+
+              <span
+                class="status-badge"
+                [ngClass]="getStatusClass(record.returnStatus)">
+                {{ record.returnStatus }}
+              </span>
+            </div>
+
+            <div class="record-number">
+              <span>HARVEST RECORD</span>
+              <h3>{{ record.harvestNumber }}</h3>
+            </div>
+
+            <div class="record-details">
+
+              <div class="detail-item">
+                <span>Original Worm Batch</span>
+                <strong>{{ record.batchNumber }}</strong>
+              </div>
+
+              <div class="detail-item">
+                <span>Harvest Date</span>
+                <strong>{{ formatDate(record.harvestDate) }}</strong>
+              </div>
+
+              <div class="detail-item">
+                <span>Cocoon Weight</span>
+                <strong class="weight-value">
+                  {{ formatWeight(record.harvestedWeight) }}
+                </strong>
+              </div>
+
+              <div class="detail-item">
+                <span>Condition</span>
+                <strong>{{ record.cocoonCondition }}</strong>
+              </div>
+
+            </div>
+
+            <button
+              type="button"
+              class="view-record-btn"
+              (click)="viewHarvestDetails(record)">
+              View Harvest Details
+              <i class="fas fa-arrow-right"></i>
+            </button>
+
+          </article>
+
+        </div>
+
+        <!-- EMPTY HARVEST STATE -->
+        <div
+          *ngIf="harvestRecords.length === 0"
+          class="empty-state">
+
+          <div class="empty-icon">
+            <i class="fas fa-box-open"></i>
+          </div>
+
+          <h3>No Cocoon Harvest Records Yet</h3>
+
+          <p>
+            Your recorded cocoon harvests will appear here once you
+            record a harvest from an eligible PTRI-assigned worm batch.
+          </p>
+
+          <button
+            type="button"
+            (click)="openHarvestModal()"
+            [disabled]="eligibleBatches.length === 0">
+            <i class="fas fa-plus"></i>
+            Record Your First Harvest
+          </button>
+
+        </div>
+
+      </div>
+
+      <!-- ================================= -->
+      <!-- TAB 2: COCOON RETURN TO PTRI -->
+      <!-- ================================= -->
+
+      <div *ngIf="activeTab === 'returns'">
+
+        <div class="section-heading">
+          <div>
+            <span class="section-eyebrow">RETURN TRACKING</span>
+            <h2>Cocoon Return to PTRI</h2>
+            <p>View your submitted cocoon returns, QR codes, and PTRI verification status.</p>
+          </div>
+
+          <span class="record-count">
+            {{ returnRecords.length }} Returns
+          </span>
+        </div>
+
+        <!-- SUBMITTED RETURN RECORD CARDS -->
+        <div
+          *ngIf="returnRecords.length > 0"
+          class="records-grid">
+
+          <article
+            class="harvest-card return-history-card"
+            *ngFor="let record of getSubmittedReturnRecordsForDisplay()">
+
+            <div class="harvest-card-top">
+              <div class="record-icon return-record-icon">
+                <i class="fas fa-qrcode"></i>
+              </div>
+
+              <span
+                class="status-badge"
+                [ngClass]="getStatusClass(record.status)">
+                {{ record.status }}
+              </span>
+            </div>
+
+            <div class="record-number">
+              <span>COCOON RETURN ID</span>
+              <h3>{{ record.returnNumber }}</h3>
+            </div>
+
+            <div class="record-details">
+
+              <div class="detail-item">
+                <span>Original Worm Batch</span>
+                <strong>{{ record.batchNumber }}</strong>
+              </div>
+
+              <div class="detail-item">
+                <span>Harvest Date</span>
+                <strong>{{ formatDate(record.harvestDate) }}</strong>
+              </div>
+
+              <div class="detail-item">
+                <span>Return Date</span>
+                <strong>{{ formatDate(record.returnDate) }}</strong>
+              </div>
+
+              <div class="detail-item">
+                <span>Returned Cocoon Weight</span>
+                <strong class="weight-value">
+                  {{ formatWeight(record.cocoonWeight) }}
+                </strong>
+              </div>
+
+              <div class="detail-item">
+                <span>Cocoon Quantity</span>
+                <strong>{{ record.cocoonQuantity }}</strong>
+              </div>
+
+              <div class="detail-item">
+                <span>Cocoon Condition</span>
+                <strong>{{ record.cocoonCondition }}</strong>
+              </div>
+
+            </div>
+
+            <button
+              type="button"
+              class="view-record-btn return-qr-btn"
+              (click)="viewReturnDetails(record)">
+
+              <i class="fas fa-qrcode"></i>
+              View Return Details & QR
+
+              <i class="fas fa-arrow-right"></i>
+
+            </button>
+
+          </article>
+
+        </div>
+
+        <!-- EMPTY RETURN STATE -->
+        <div
+          *ngIf="returnRecords.length === 0"
+          class="empty-state">
+
+          <div class="empty-icon">
+            <i class="fas fa-qrcode"></i>
+          </div>
+
+          <h3>No Cocoon Return Records Yet</h3>
+
+          <p>
+            Once you submit a cocoon harvest for return to PTRI,
+            your return record and its unique QR code will appear here.
+          </p>
+
+          <button
+            type="button"
+            (click)="openReturnModal()"
+            [disabled]="pendingReturns === 0">
+            <i class="fas fa-truck-ramp-box"></i>
+            Prepare Cocoon Return
+          </button>
+
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- ================================= -->
+    <!-- RECORD HARVEST MODAL -->
+    <!-- ================================= -->
+
+    <div
+      class="modal-overlay"
+      *ngIf="showHarvestModal"
+      (click)="closeHarvestModal()">
+
+      <section
+        class="modal-container harvest-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="harvestModalTitle"
+        (click)="$event.stopPropagation()">
+
+        <div class="modal-header">
+
+          <div class="modal-title-group">
+            <div class="modal-heading-icon">
+              <i class="fas fa-leaf"></i>
+            </div>
+
+            <div>
+              <span>COCOON PRODUCTION</span>
+              <h2 id="harvestModalTitle">Record Cocoon Harvest</h2>
+              <p>Enter the details of your harvested cocoons.</p>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            class="modal-close"
+            (click)="closeHarvestModal()"
+            [disabled]="submitting"
+            aria-label="Close modal">
+            <i class="fas fa-times"></i>
+          </button>
+
+        </div>
+
+        <form (ngSubmit)="submitHarvest()">
+
+          <div class="modal-body">
+
+            <div class="form-notice">
+              <i class="fas fa-circle-info"></i>
+              Assigned PTRI worm batches can be selected. Only record a harvest after the cocoons have actually been harvested.
+            </div>
+
+            <!-- BATCH SELECTION -->
+            <div class="form-group">
+
+              <label>
+                Original PTRI Silkworm Batch
+                <span>*</span>
+              </label>
+
+              <select
+                name="batchId"
+                [(ngModel)]="harvestForm.batchId"
+                required>
+
+                <option value="" disabled>Select assigned batch</option>
+
+                <option
+                  *ngFor="let batch of eligibleBatches"
+                  [value]="batch.id">
+                  {{ batch.batchNumber }} — {{ batch.trays }} Trays
+                </option>
+
+              </select>
+
+              <small>
+                Select the original PTRI-assigned silkworm batch used for this harvest.
+              </small>
+
+            </div>
+
+            <!-- HARVEST DATE AND WEIGHT -->
+            <div class="form-row">
+
+              <div class="form-group">
+                <label>
+                  Harvest Date
+                  <span>*</span>
+                </label>
+
+                <input
+                  type="date"
+                  name="harvestDate"
+                  [(ngModel)]="harvestForm.harvestDate"
+                  required>
+              </div>
+
+              <div class="form-group">
+                <label>
+                  Harvested Weight (kg)
+                  <span>*</span>
+                </label>
+
+                <input
+                  type="number"
+                  name="harvestedWeight"
+                  [(ngModel)]="harvestForm.harvestedWeight"
+                  min="0.01"
+                  step="0.01"
+                  placeholder="Enter weight"
+                  required>
+              </div>
+
+            </div>
+
+            <!-- QUANTITY AND CONDITION -->
+            <div class="form-row">
+
+              <div class="form-group">
+                <label>Cocoon Quantity</label>
+
+                <input
+                  type="number"
+                  name="cocoonQuantity"
+                  [(ngModel)]="harvestForm.cocoonQuantity"
+                  min="0"
+                  step="1"
+                  placeholder="Optional quantity">
+              </div>
+
+              <div class="form-group">
+                <label>
+                  Cocoon Condition
+                  <span>*</span>
+                </label>
+
+                <select
+                  name="cocoonCondition"
+                  [(ngModel)]="harvestForm.cocoonCondition"
+                  required>
+
+                  <option value="" disabled>Select condition</option>
+                  <option value="Good">Good</option>
+                  <option value="Damaged">Damaged</option>
+                  <option value="Mixed">Mixed</option>
+
+                </select>
+              </div>
+
+            </div>
+
+            <!-- EXPECTED RETURN DATE -->
+            <div class="form-group">
+
+              <label>Expected Return Date</label>
+
+              <input
+                type="date"
+                name="expectedReturnDate"
+                [(ngModel)]="harvestForm.expectedReturnDate">
+
+              <small>
+                Optional. Set your estimated date for returning the harvested cocoons to PTRI.
+              </small>
+
+            </div>
+
+            <!-- REMARKS -->
+            <div class="form-group">
+
+              <label>Remarks</label>
+
+              <textarea
+                name="remarks"
+                [(ngModel)]="harvestForm.remarks"
+                rows="3"
+                placeholder="Add additional harvest information..."></textarea>
+
+            </div>
+
+          </div>
+
+          <div class="modal-footer">
+
+            <button
+              type="button"
+              class="cancel-btn"
+              (click)="closeHarvestModal()"
+              [disabled]="submitting">
+              Cancel
+            </button>
+
+            <button
+              type="submit"
+              class="primary-btn"
+              [disabled]="submitting || eligibleBatches.length === 0">
+
+              <i class="fas fa-check"></i>
+              {{ submitting ? 'Submitting...' : 'Submit Harvest' }}
+
+            </button>
+
+          </div>
+
+        </form>
+
+      </section>
+    </div>
+
+    <!-- ================================= -->
+    <!-- HARVEST DETAILS MODAL -->
+    <!-- ================================= -->
+
+    <div
+      class="modal-overlay"
+      *ngIf="showDetailsModal && selectedRecord"
+      (click)="closeDetailsModal()">
+
+      <section
+        class="modal-container details-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="detailsModalTitle"
+        (click)="$event.stopPropagation()">
+
+        <div class="modal-header">
+
+          <div class="modal-title-group">
+            <div class="modal-heading-icon">
+              <i class="fas fa-file-lines"></i>
+            </div>
+
+            <div>
+              <span>HARVEST INFORMATION</span>
+              <h2 id="detailsModalTitle">Cocoon Record Details</h2>
+              <p>{{ selectedRecord.harvestNumber }}</p>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            class="modal-close"
+            (click)="closeDetailsModal()"
+            aria-label="Close modal">
+            <i class="fas fa-times"></i>
+          </button>
+
+        </div>
+
+        <div class="modal-body" *ngIf="selectedRecord">
+
+          <div class="detail-status-row">
+            <span>Return Status</span>
+
+            <span
+              class="status-badge"
+              [ngClass]="getStatusClass(selectedRecord.returnStatus)">
+              {{ selectedRecord.returnStatus }}
+            </span>
+          </div>
+
+          <div class="detail-information-grid">
+
+            <div class="information-box">
+              <span>Harvest Record Number</span>
+              <strong>{{ selectedRecord.harvestNumber }}</strong>
+            </div>
+
+            <div class="information-box">
+              <span>Original PTRI Worm Batch</span>
+              <strong>{{ selectedRecord.batchNumber }}</strong>
+            </div>
+
+            <div class="information-box">
+              <span>Request Number</span>
+              <strong>{{ selectedRecord.requestNumber }}</strong>
+            </div>
+
+            <div class="information-box">
+              <span>Harvest Date</span>
+              <strong>{{ formatDate(selectedRecord.harvestDate) }}</strong>
+            </div>
+
+            <div class="information-box">
+              <span>Harvested Weight</span>
+              <strong>{{ formatWeight(selectedRecord.harvestedWeight) }}</strong>
+            </div>
+
+            <div class="information-box">
+              <span>Cocoon Quantity</span>
+              <strong>{{ selectedRecord.cocoonQuantity }}</strong>
+            </div>
+
+            <div class="information-box">
+              <span>Cocoon Condition</span>
+              <strong>{{ selectedRecord.cocoonCondition }}</strong>
+            </div>
+
+            <div class="information-box">
+              <span>Expected Return Date</span>
+              <strong>
+                {{ selectedRecord.expectedReturnDate
+                  ? formatDate(selectedRecord.expectedReturnDate)
+                  : 'Not specified' }}
+              </strong>
+            </div>
+
+          </div>
+
+          <div class="remarks-box">
+            <span>Farmer Remarks</span>
+            <p>{{ selectedRecord.remarks || 'No remarks provided.' }}</p>
+          </div>
+
+          <div class="return-information-note">
+            <i class="fas fa-info-circle"></i>
+            <div>
+              <strong>Cocoon Return Information</strong>
+              <p>
+                Return submission is managed separately. Once you submit
+                this harvest record for return, its return status will be
+                updated accordingly.
+              </p>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="modal-footer">
+
+          <button
+            type="button"
+            class="cancel-btn"
+            (click)="closeDetailsModal()">
+            Close
+          </button>
+
+        </div>
+
+      </section>
+    </div>
+
+    <!-- ================================= -->
+    <!-- COCOON RETURN MODAL -->
+    <!-- ================================= -->
+
+    <div
+      class="modal-overlay return-overlay"
+      *ngIf="showReturnModal"
+      (click)="closeReturnModal()">
+
+      <section
+        class="modal-container return-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="returnModalTitle"
+        (click)="$event.stopPropagation()">
+
+        <div class="modal-header">
+
+          <div class="modal-title-group">
+            <div class="modal-heading-icon return-heading-icon">
+              <i class="fas fa-truck-ramp-box"></i>
+            </div>
+
+            <div>
+              <span>PTRI COCOON COLLECTION</span>
+              <h2 id="returnModalTitle">Cocoon Return to PTRI</h2>
+              <p>Select a harvest record and submit its return date.</p>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            class="modal-close"
+            (click)="closeReturnModal()"
+            [disabled]="submitting"
+            aria-label="Close modal">
+            <i class="fas fa-times"></i>
+          </button>
+
+        </div>
+
+        <div class="return-modal-content">
+
+          <!-- LEFT: AVAILABLE HARVEST RECORDS -->
+          <div class="return-record-list">
+
+            <div class="return-list-heading">
+
+              <div>
+                <h3>Available Harvest Records</h3>
+                <p>Select a record to prepare its return.</p>
+              </div>
+
+              <span>{{ pendingReturns }} Pending</span>
+
+            </div>
+
+            <div
+              *ngIf="getReturnEligibleRecordsForDisplay().length > 0"
+              class="return-record-items">
+
+              <button
+                type="button"
+                class="return-record-item"
+                *ngFor="let record of getReturnEligibleRecordsForDisplay()"
+                [class.selected]="selectedRecord?.id === record.id"
+                (click)="selectReturnRecord(record)">
+
+                <div class="return-record-top">
+                  <strong>{{ record.harvestNumber }}</strong>
+                  <i class="fas fa-chevron-right"></i>
+                </div>
+
+                <span>
+                  Original Batch: {{ record.batchNumber }}
+                </span>
+
+                <div class="return-record-meta">
+
+                  <span>
+                    <i class="fas fa-calendar"></i>
+                    {{ formatDate(record.harvestDate) }}
+                  </span>
+
+                  <strong>
+                    {{ formatWeight(record.harvestedWeight) }}
+                  </strong>
+
+                </div>
+
+                <small>Pending Return</small>
+
+              </button>
+
+            </div>
+
+            <div
+              *ngIf="getReturnEligibleRecordsForDisplay().length === 0"
+              class="return-empty">
+
+              <i class="fas fa-circle-check"></i>
+
+              <h4>No Pending Returns</h4>
+
+              <p>
+                You currently have no harvest records awaiting return submission.
+                Record a cocoon harvest first if you have completed a harvest.
+              </p>
+
+            </div>
+
+          </div>
+
+          <!-- RIGHT: RETURN FORM -->
+          <div class="return-form-panel">
+
+            <div
+              *ngIf="!selectedRecord"
+              class="select-record-prompt">
+
+              <div class="prompt-icon">
+                <i class="fas fa-hand-pointer"></i>
+              </div>
+
+              <h3>Select a Harvest Record</h3>
+
+              <p>
+                Choose a pending cocoon harvest record from the list
+                to display its return submission form.
+              </p>
+
+            </div>
+
+            <form
+              *ngIf="selectedRecord"
+              (ngSubmit)="submitReturn()">
+
+              <div class="selected-record-banner">
+
+                <span>SELECTED COCOON RECORD</span>
+
+                <strong>{{ selectedRecord.harvestNumber }}</strong>
+
+                <small>
+                  Original Batch: {{ selectedRecord.batchNumber }}
+                </small>
+
+              </div>
+
+              <div class="return-weight-card">
+
+                <span>Original Harvested Weight</span>
+
+                <strong>
+                  {{ formatWeight(selectedRecord.harvestedWeight) }}
+                </strong>
+
+                <small>
+                  Recorded during cocoon harvesting
+                </small>
+
+              </div>
+
+              <div class="form-group">
+
+                <label>
+                  Return Date
+                  <span>*</span>
+                </label>
+
+                <input
+                  type="date"
+                  name="returnDate"
+                  [(ngModel)]="returnForm.returnDate"
+                  required>
+
+                <small>
+                  Enter the date you are submitting the harvested cocoons to PTRI.
+                </small>
+
+              </div>
+
+              <div class="return-notice">
+                <i class="fas fa-info-circle"></i>
+
+                <p>
+                  By submitting, you are creating a cocoon return record
+                  linked to your original harvest and PTRI-assigned worm batch.
+                  PTRI staff will verify the actual received quantity and quality.
+                  A unique QR code will be generated for this return record.
+                </p>
+              </div>
+
+              <button
+                type="submit"
+                class="submit-return-btn"
+                [disabled]="submitting">
+
+                <i class="fas fa-paper-plane"></i>
+
+                {{ submitting ? 'Submitting...' : 'Submit Cocoon Return' }}
+
+              </button>
+
+            </form>
+
+          </div>
+
+        </div>
+
+      </section>
+    </div>
+
+  </ng-container>
+</div>

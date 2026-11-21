@@ -8,6 +8,16 @@ export const routes: Routes = [
       import('./login/login').then((m) => m.LoginComponent)
   },
 
+  // PUBLIC COCOON RETURN DETAILS
+  // Accessible through QR code without logging in
+  {
+    path: 'cocoon-return/:token',
+    loadComponent: () =>
+      import('./public-cocoon-return/public-cocoon-return').then(
+        (m) => m.PublicCocoonReturn
+      )
+  },
+
   // STAFF PORTAL
   {
     path: 'staff',
@@ -47,8 +57,6 @@ export const routes: Routes = [
             (m) => m.FarmerManagement
           )
       },
-
-      // MULBERRY PRUNING CALENDAR
       {
         path: 'mulberry-production-monitoring',
         loadComponent: () =>
@@ -56,8 +64,6 @@ export const routes: Routes = [
             (m) => m.MulberryProductionMonitoring
           )
       },
-
-      // FARMERS WHO STARTED PRUNING ON A SELECTED DATE
       {
         path: 'mulberry-production-monitoring/:date',
         loadComponent: () =>
@@ -65,8 +71,6 @@ export const routes: Routes = [
             (m) => m.PruningDateDetails
           )
       },
-
-      // SILKWORM & COCOON MANAGEMENT OVERVIEW
       {
         path: 'silkworm-cocoon-management',
         loadComponent: () =>
@@ -74,8 +78,6 @@ export const routes: Routes = [
             (m) => m.SilkwormCocoonManagement
           )
       },
-
-      // SILKWORM BATCHES
       {
         path: 'silkworm-cocoon-management/silkworm-batches',
         loadComponent: () =>
@@ -83,8 +85,6 @@ export const routes: Routes = [
             (m) => m.SilkwormBatches
           )
       },
-
-      // COCOON COLLECTION
       {
         path: 'silkworm-cocoon-management/cocoon-collection',
         loadComponent: () =>
@@ -92,8 +92,6 @@ export const routes: Routes = [
             (m) => m.CocoonCollection
           )
       },
-
-      // PRODUCTION HISTORY
       {
         path: 'silkworm-cocoon-management/production-history',
         loadComponent: () =>
@@ -101,7 +99,6 @@ export const routes: Routes = [
             (m) => m.ProductionHistory
           )
       },
-
       {
         path: 'messages',
         loadComponent: () =>
@@ -154,8 +151,6 @@ export const routes: Routes = [
             (m) => m.Reports
           )
       },
-
-      // STAFF PROFILE
       {
         path: 'profile',
         loadComponent: () =>
@@ -163,8 +158,6 @@ export const routes: Routes = [
             (m) => m.StaffProfile
           )
       },
-
-      // STAFF SETTINGS
       {
         path: 'settings',
         loadComponent: () =>
@@ -258,6 +251,20 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./farmer-portal/silkworm-cocoon-production/silkworm-cocoon-production').then(
             (m) => m.SilkwormCocoonProduction
+          )
+      },
+      {
+        path: 'silkworm-requests-batches',
+        loadComponent: () =>
+          import('./farmer-portal/silkworm-requests-batches/silkworm-requests-batches').then(
+            (m) => m.SilkwormRequestsBatches
+          )
+      },
+      {
+        path: 'cocoon-production',
+        loadComponent: () =>
+          import('./farmer-portal/cocoon-production/cocoon-production').then(
+            (m) => m.CocoonProduction
           )
       },
       {

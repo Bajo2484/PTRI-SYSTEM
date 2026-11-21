@@ -2,290 +2,584 @@
 <div class="cocoon-page">
 
   <!-- PAGE HEADER -->
-  <div class="page-header">
+  <header class="page-header">
     <div class="page-heading">
-      <span class="heading-icon">🥥</span>
+      <div class="heading-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <path d="M12 3c-3 2-7 5-7 10a7 7 0 0 0 14 0c0-5-4-8-7-10Z"/>
+          <path d="M8 14c2-1 5-1 8 0M10 17c1-2 3-3 5-3"/>
+        </svg>
+      </div>
+
       <div>
+        <span class="page-eyebrow">PRODUCTION MANAGEMENT</span>
         <h1>Cocoon Collection</h1>
-        <p>Record and monitor cocoons received from farmers, including collection dates and actual harvested weight.</p>
+        <p>Manage and review cocoon returns submitted by farmers.</p>
       </div>
     </div>
 
-    <button class="create-btn" (click)="createCollection()">
-      <span>＋</span> New Collection
-    </button>
-  </div>
+    <div class="header-actions">
+      <button class="refresh-btn" type="button"
+        (click)="refreshCollections()" [disabled]="loading">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 7v5h-5M4 17v-5h5"/>
+          <path d="M5.6 9a7 7 0 0 1 11.5-2L20 12M4 12l2.9 5a7 7 0 0 0 11.5-2"/>
+        </svg>
+        {{ loading ? 'Refreshing...' : 'Refresh Records' }}
+      </button>
+    </div>
+  </header>
 
-  <!-- OVERVIEW CARDS -->
-  <div class="overview-grid">
-    <div class="overview-card">
-      <div class="card-icon green">📦</div>
-      <div>
-        <span class="card-label">Collection Records</span>
+  <!-- SUMMARY CARDS -->
+  <section class="overview-grid">
+
+    <article class="overview-card total-card">
+      <div class="card-icon green">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="5" y="4" width="14" height="17" rx="2"/>
+          <path d="M9 4V2h6v2M9 10h6M9 14h6M9 18h3"/>
+        </svg>
+      </div>
+
+      <div class="card-content">
+        <span class="card-label">Total Returns</span>
         <h2>{{ totalCollections }}</h2>
-        <p>Total recorded collections</p>
+        <p>All farmer submissions</p>
       </div>
-    </div>
 
-    <div class="overview-card">
-      <div class="card-icon gold">⚖️</div>
-      <div>
-        <span class="card-label">Total Weight Collected</span>
-        <h2>{{ totalWeightCollected | number:'1.1-2' }} <small>kg</small></h2>
-        <p>Combined cocoon weight received</p>
+      <span class="card-decoration"></span>
+    </article>
+
+    <article class="overview-card pending-card">
+      <div class="card-icon gold">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="9"/>
+          <path d="M12 7v5l3 2"/>
+        </svg>
       </div>
-    </div>
 
-    <div class="overview-card">
-      <div class="card-icon sage">👨‍🌾</div>
-      <div>
-        <span class="card-label">Farmers Served</span>
-        <h2>{{ totalFarmers }}</h2>
-        <p>Farmers with recorded collections</p>
+      <div class="card-content">
+        <span class="card-label">Total Confirmed Weight</span>
+        <h2>{{ totalWeightCollected | number:'1.1-2' }} kg</h2>
+        <p>Total actual weight received by PTRI</p>
       </div>
-    </div>
-  </div>
 
-  <!-- COLLECTION TABLE -->
-  <div class="collection-panel">
+      <span class="card-decoration"></span>
+    </article>
+
+    <article class="overview-card received-card">
+      <div class="card-icon sage">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 12a9 9 0 1 1-2.6-6.4"/>
+          <path d="M21 3v6h-6"/>
+          <path d="m8 12 3 3 6-7"/>
+        </svg>
+      </div>
+
+      <div class="card-content">
+        <span class="card-label">Received</span>
+        <h2>{{ receivedReturns }}</h2>
+        <p>Cocoon returns received by PTRI</p>
+      </div>
+
+      <span class="card-decoration"></span>
+    </article>
+
+  </section>
+
+  <!-- FARMER RETURN RECORDS -->
+  <section class="collection-panel">
 
     <div class="panel-heading">
-      <div>
-        <h2>Cocoon Collection Records</h2>
-        <p>List of cocoons received from silkworm batches distributed to farmers.</p>
+      <div class="panel-title-group">
+        <div class="panel-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M8 4H5a2 2 0 0 0-2 2v14h18V6a2 2 0 0 0-2-2h-3"/>
+            <rect x="8" y="2" width="8" height="5" rx="1"/>
+            <path d="M7 11h10M7 15h10M7 19h6"/>
+          </svg>
+        </div>
+
+        <div>
+          <h2>Farmer Return Records</h2>
+          <p>Actual cocoon submissions from the Farmer Portal</p>
+        </div>
       </div>
-      <span class="record-count">{{ filteredCollections.length }} Records</span>
+
+      <span class="record-count">
+        {{ filteredCollections.length }} Records
+      </span>
     </div>
 
-    <!-- SEARCH -->
+    <!-- SEARCH TOOLBAR -->
     <div class="filter-toolbar">
       <div class="search-box">
-        <span>⌕</span>
-        <input
-          type="text"
-          placeholder="Search farmer name or batch ID..."
-          [(ngModel)]="searchTerm"
-        />
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2" stroke-linecap="round">
+          <circle cx="11" cy="11" r="7"/>
+          <path d="m16 16 4 4"/>
+        </svg>
+
+        <input type="text"
+          placeholder="Search farmer, return number, batch ID..."
+          [(ngModel)]="searchTerm"/>
       </div>
+
+      <button class="table-refresh-btn" type="button"
+        (click)="refreshCollections()" [disabled]="loading">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 7v5h-5M4 17v-5h5"/>
+          <path d="M5.6 9a7 7 0 0 1 11.5-2L20 12M4 12l2.9 5a7 7 0 0 0 11.5-2"/>
+        </svg>
+        Refresh
+      </button>
     </div>
 
-    <!-- TABLE -->
-    <div class="table-wrapper">
+    <!-- LOADING STATE -->
+    <div class="empty-state" *ngIf="loading && collections.length === 0">
+      <div class="loading-spinner"></div>
+      <h3>Loading cocoon return records</h3>
+      <p>Please wait while farmer submissions are retrieved.</p>
+    </div>
+
+    <!-- ERROR STATE -->
+    <div class="empty-state error-state" *ngIf="!loading && errorMessage">
+      <div class="empty-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="1.8">
+          <path d="m12 3 10 18H2L12 3Z"/>
+          <path d="M12 9v5M12 17h.01"/>
+        </svg>
+      </div>
+
+      <h3>Unable to Load Records</h3>
+      <p>{{ errorMessage }}</p>
+
+      <button class="view-btn" type="button" (click)="refreshCollections()">
+        Try Again
+      </button>
+    </div>
+
+    <!-- RECORD TABLE -->
+    <div class="table-wrapper"
+      *ngIf="!errorMessage && (!loading || collections.length > 0)">
+
       <table class="collection-table">
         <thead>
           <tr>
-            <th>Farmer / Farm Community</th>
-            <th>Silkworm Batch ID</th>
-            <th>Weight Received (kg)</th>
-            <th>Date Received</th>
+            <th>Farmer</th>
+            <th>Return Number</th>
+            <th>Worm Batch ID</th>
+            <th>Declared Weight</th>
+            <th>Date Returned</th>
+            <th>Status</th>
             <th>Action</th>
           </tr>
         </thead>
 
         <tbody>
           <tr *ngFor="let collection of filteredCollections">
+
             <td>
               <div class="farmer-cell">
                 <div class="farmer-avatar">
-                  {{ collection.farmerName.charAt(0) }}
+                  {{ (collection.farmerName || 'F').charAt(0) }}
                 </div>
-                <span>{{ collection.farmerName }}</span>
+
+                <div class="farmer-info">
+                  <strong>{{ collection.farmerName || 'Unknown Farmer' }}</strong>
+                  <span>Farmer submission</span>
+                </div>
               </div>
             </td>
 
             <td>
-              <span class="batch-id">{{ collection.batchId }}</span>
+              <span class="return-number">{{ collection.returnNumber }}</span>
             </td>
 
             <td>
-              <span class="weight-badge">
-                {{ collection.weightReceived | number:'1.1-2' }} kg
+              <span class="batch-id">{{ collection.batchNumber }}</span>
+            </td>
+
+            <td>
+              <span class="weight-value">
+                {{ collection.cocoonWeight | number:'1.1-2' }} kg
               </span>
             </td>
 
-            <td>{{ collection.dateReceived | date:'MMM d, y' }}</td>
+            <td>
+              <span class="date-value">
+                {{ collection.returnDate | date:'MMM d, y' }}
+              </span>
+            </td>
 
             <td>
-              <button
-                class="view-btn"
-                (click)="viewCollection(collection)"
-              >
+              <span class="status-badge"
+                [ngClass]="getStatusClass(collection.status)">
+                <span class="status-dot"></span>
+                {{ collection.status }}
+              </span>
+            </td>
+
+            <td>
+              <button class="view-btn" type="button"
+                (click)="viewCollection(collection)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/>
+                  <circle cx="12" cy="12" r="3"/>
+                </svg>
                 View Details
               </button>
             </td>
+
           </tr>
 
-          <tr *ngIf="filteredCollections.length === 0">
-            <td colspan="5">
-              <div class="empty-state">
-                <span>📦</span>
-                <h3>No collection records found</h3>
-                <p>Try another search or create a new collection record.</p>
+          <tr *ngIf="filteredCollections.length === 0 && !loading">
+            <td colspan="7">
+              <div class="empty-state table-empty">
+                <div class="empty-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="1.8">
+                    <path d="M4 5h16v15H4z"/>
+                    <path d="M8 9h8M8 13h8M8 17h4"/>
+                  </svg>
+                </div>
+
+                <h3>No cocoon return records found</h3>
+                <p>
+                  {{ searchTerm
+                    ? 'Try another search keyword.'
+                    : 'Farmer-submitted cocoon returns will appear here.' }}
+                </p>
               </div>
             </td>
           </tr>
+
         </tbody>
       </table>
     </div>
 
-    <div class="list-footer">
-      Showing {{ filteredCollections.length }} of {{ collections.length }} collection records
+    <!-- TABLE FOOTER -->
+    <div class="list-footer" *ngIf="!errorMessage">
+      <span>
+        Showing <strong>{{ filteredCollections.length }}</strong> of
+        <strong>{{ collections.length }}</strong> cocoon return records
+      </span>
     </div>
-  </div>
+
+  </section>
+
 </div>
 
 
-<!-- CREATE COLLECTION MODAL -->
-<div class="modal-overlay" *ngIf="showCreateModal" (click)="closeCreateModal()">
-  <div class="collection-modal" (click)="$event.stopPropagation()">
+<!-- =========================================
+     COCOON RETURN DETAILS MODAL
+========================================= -->
 
+<div class="modal-overlay"
+  *ngIf="showViewModal && selectedCollection"
+  (click)="closeViewModal()">
+
+  <div class="collection-modal view-modal"
+    (click)="$event.stopPropagation()">
+
+    <!-- MODAL HEADER -->
     <div class="modal-header">
-      <div>
-        <span class="modal-eyebrow">COCOON MANAGEMENT</span>
-        <h2>New Cocoon Collection</h2>
-        <p>Record the cocoons returned by a farmer.</p>
+
+      <div class="modal-heading">
+        <div class="modal-heading-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 3c-3 2-7 5-7 10a7 7 0 0 0 14 0c0-5-4-8-7-10Z"/>
+            <path d="M8 14c2-1 5-1 8 0"/>
+          </svg>
+        </div>
+
+        <div>
+          <span class="modal-eyebrow">FARMER SUBMISSION</span>
+          <h2>Cocoon Return Details</h2>
+          <p>{{ selectedCollection.returnNumber }}</p>
+        </div>
       </div>
-      <button class="modal-close" (click)="closeCreateModal()">×</button>
+
+      <button class="modal-close" type="button"
+        (click)="closeViewModal()" aria-label="Close modal">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2" stroke-linecap="round">
+          <path d="m18 6-12 12M6 6l12 12"/>
+        </svg>
+      </button>
+
     </div>
 
+    <!-- MODAL BODY -->
     <div class="modal-body">
-      <div class="form-section">
-        <div class="form-section-heading">
-          <span>01</span>
-          <div>
-            <h3>Silkworm Batch Reference</h3>
-            <p>Select the original batch associated with the returned cocoons.</p>
-          </div>
+
+      <div class="modal-top-grid">
+
+        <!-- LEFT: DETAILS -->
+        <div class="modal-information-column">
+
+          <!-- FARMER INFORMATION -->
+          <section class="details-card">
+
+            <div class="details-card-heading">
+              <span class="section-icon green-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  stroke-width="1.8">
+                  <circle cx="12" cy="8" r="4"/>
+                  <path d="M4 21v-2a8 8 0 0 1 16 0v2"/>
+                </svg>
+              </span>
+
+              <h3>Farmer Information</h3>
+            </div>
+
+            <div class="details-grid">
+
+              <div class="detail-item">
+                <span>Farmer Name</span>
+                <strong>{{ selectedCollection.farmerName || 'Not available' }}</strong>
+              </div>
+
+              <div class="detail-item">
+                <span>Return Number</span>
+                <strong>{{ selectedCollection.returnNumber || 'Not available' }}</strong>
+              </div>
+
+            </div>
+          </section>
+
+          <!-- ORIGINAL BATCH INFORMATION -->
+          <section class="details-card">
+
+            <div class="details-card-heading">
+              <span class="section-icon green-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  stroke-width="1.8" stroke-linejoin="round">
+                  <path d="m12 2 9 5-9 5-9-5 9-5Z"/>
+                  <path d="M3 7v10l9 5 9-5V7M12 12v10"/>
+                </svg>
+              </span>
+
+              <h3>Original Worm Batch Information</h3>
+            </div>
+
+            <div class="details-grid">
+
+              <div class="detail-item">
+                <span>Batch Number</span>
+                <strong>{{ selectedCollection.batchNumber || 'Not available' }}</strong>
+              </div>
+
+              <div class="detail-item">
+                <span>Harvest Number</span>
+                <strong>{{ selectedCollection.harvestNumber || 'Not available' }}</strong>
+              </div>
+
+              <div class="detail-item">
+                <span>Request Number</span>
+                <strong>{{ selectedCollection.requestNumber || 'Not available' }}</strong>
+              </div>
+
+              <div class="detail-item">
+                <span>Harvest Date</span>
+                <strong>
+                  {{ selectedCollection.harvestDate
+                    ? (selectedCollection.harvestDate | date:'MMM d, y')
+                    : 'Not available' }}
+                </strong>
+              </div>
+
+            </div>
+          </section>
+
+          <!-- RETURN INFORMATION -->
+          <section class="details-card">
+
+            <div class="details-card-heading">
+              <span class="section-icon sage-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M11 20A7 7 0 0 1 4 13c0-5 7-10 7-10s7 5 7 10a7 7 0 0 1-7 7Z"/>
+                  <path d="M11 20v-8M8 14l3-3 3 3"/>
+                </svg>
+              </span>
+
+              <h3>Return Information</h3>
+            </div>
+
+            <div class="details-grid">
+
+              <div class="detail-item">
+                <span>Related Request</span>
+                <strong>{{ selectedCollection.requestNumber || 'Not available' }}</strong>
+              </div>
+
+              <div class="detail-item">
+                <span>Return Date</span>
+                <strong>
+                  {{ selectedCollection.returnDate
+                    ? (selectedCollection.returnDate | date:'MMM d, y')
+                    : 'Not available' }}
+                </strong>
+              </div>
+
+            </div>
+          </section>
+
+          <!-- FARMER-DECLARED INFORMATION -->
+          <section class="details-card declared-card">
+
+            <div class="details-card-heading">
+              <span class="section-icon gold-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 3v18M5 7h14M5 17h14"/>
+                  <path d="m5 7-3 7h6L5 7Zm14 0-3 7h6l-3-7Z"/>
+                </svg>
+              </span>
+
+              <h3>Farmer-Declared Information</h3>
+            </div>
+
+            <div class="details-grid">
+
+              <div class="detail-item">
+                <span>Declared Cocoon Weight</span>
+                <strong class="detail-weight">
+                  {{ selectedCollection.cocoonWeight !== null &&
+                     selectedCollection.cocoonWeight !== undefined
+                    ? (selectedCollection.cocoonWeight | number:'1.1-2') + ' kg'
+                    : 'Not recorded' }}
+                </strong>
+              </div>
+
+              <div class="detail-item">
+                <span>Declared Quantity</span>
+                <strong>
+                  {{ selectedCollection.cocoonQuantity !== null &&
+                     selectedCollection.cocoonQuantity !== undefined
+                    ? selectedCollection.cocoonQuantity
+                    : 'Not recorded' }}
+                </strong>
+              </div>
+
+              <div class="detail-item">
+                <span>Cocoon Condition</span>
+                <strong>{{ selectedCollection.cocoonCondition || 'Not specified' }}</strong>
+              </div>
+
+            </div>
+
+            <div class="remarks-box" *ngIf="selectedCollection.farmerRemarks">
+              <span>Farmer Remarks</span>
+              <p>{{ selectedCollection.farmerRemarks }}</p>
+            </div>
+
+          </section>
+
+
         </div>
 
-        <div class="form-grid">
-          <div class="form-group">
-            <label>Silkworm Batch ID <span>*</span></label>
-            <select
-              [(ngModel)]="selectedBatchId"
-              (ngModelChange)="onBatchChange()"
-            >
-              <option value="" disabled>Select Silkworm Batch</option>
-              <option *ngFor="let batch of batchOptions" [value]="batch.batchId">
-                {{ batch.batchId }}
-              </option>
-            </select>
+        <!-- RIGHT: COCOON RETURN QR CODE -->
+        <div class="qr-column">
+
+          <div class="qr-details-card">
+
+            <!-- QR HEADER -->
+            <div class="qr-heading">
+              <div class="qr-heading-icon">
+                <svg viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="1.8"
+                  stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="3" width="7" height="7" rx="1"/>
+                  <rect x="14" y="3" width="7" height="7" rx="1"/>
+                  <rect x="3" y="14" width="7" height="7" rx="1"/>
+                  <path d="M14 14h3v3h-3zM20 14v2M14 20h2M20 20v1"/>
+                </svg>
+              </div>
+
+              <div>
+                <h3>COCOON RETURN QR CODE</h3>
+                <p>Digital record identification</p>
+              </div>
+            </div>
+
+            <!-- QR CODE DISPLAY -->
+            <div class="qr-code-frame">
+
+              <ng-container *ngIf="selectedCollection.qrValue; else noQrCode">
+
+                <div class="qr-image-wrapper">
+                  <qrcode
+                    [qrdata]="selectedCollection.qrValue"
+                    [width]="220"
+                    [errorCorrectionLevel]="'M'"
+                    [margin]="2">
+                  </qrcode>
+                </div>
+
+
+              </ng-container>
+
+              <ng-template #noQrCode>
+
+                <div class="qr-unavailable">
+                  <div class="qr-unavailable-icon">
+                    <svg viewBox="0 0 24 24" fill="none"
+                      stroke="currentColor" stroke-width="1.8"
+                      stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="3" y="3" width="7" height="7" rx="1"/>
+                      <rect x="14" y="3" width="7" height="7" rx="1"/>
+                      <rect x="3" y="14" width="7" height="7" rx="1"/>
+                      <path d="M14 14h7v7h-7z"/>
+                    </svg>
+                  </div>
+
+                  <strong>QR Code Not Available</strong>
+
+                  <p>
+                    The original QR code for this return record
+                    has not been loaded.
+                  </p>
+                </div>
+
+              </ng-template>
+
+            </div>
+
+            <!-- RETURN NUMBER -->
+            <div class="qr-return-number">
+              <span>RETURN NUMBER</span>
+              <strong>{{ selectedCollection.returnNumber }}</strong>
+            </div>
+
+          
+
           </div>
 
-          <div class="form-group">
-            <label>Farmer Name</label>
-            <input
-              type="text"
-              [value]="selectedFarmerName"
-              placeholder="Automatically displayed"
-              readonly
-            />
-            <small>Automatically filled based on the selected batch.</small>
-          </div>
         </div>
+
       </div>
 
-      <div class="form-section">
-        <div class="form-section-heading">
-          <span>02</span>
-          <div>
-            <h3>Collection Information</h3>
-            <p>Enter the actual date and weight of cocoons received.</p>
-          </div>
-        </div>
-
-        <div class="form-grid">
-          <div class="form-group">
-            <label>Date Received <span>*</span></label>
-            <input
-              type="date"
-              [(ngModel)]="dateReceived"
-            />
-          </div>
-
-          <div class="form-group">
-            <label>Weight Received (kg) <span>*</span></label>
-            <input
-              type="number"
-              min="0.01"
-              step="0.01"
-              [(ngModel)]="weightReceived"
-              placeholder="Enter weight in kilograms"
-            />
-          </div>
-        </div>
-      </div>
     </div>
 
+    <!-- MODAL FOOTER -->
     <div class="modal-footer">
-      <button class="secondary-btn" (click)="closeCreateModal()">Cancel</button>
-      <button
-        class="save-btn"
-        [disabled]="!selectedBatchId || !dateReceived || weightReceived === null || weightReceived <= 0"
-        (click)="saveCollection()"
-      >
-        Save Collection
+      <button class="secondary-btn" type="button"
+        (click)="closeViewModal()">
+        Close
       </button>
     </div>
 
   </div>
-</div>
 
-
-<!-- VIEW COLLECTION MODAL -->
-<div class="modal-overlay" *ngIf="showViewModal && selectedCollection" (click)="closeViewModal()">
-  <div class="collection-modal view-modal" (click)="$event.stopPropagation()">
-
-    <div class="modal-header">
-      <div>
-        <span class="modal-eyebrow">COLLECTION RECORD DETAILS</span>
-        <h2>Cocoon Collection Information</h2>
-        <p>Details of the cocoons received by PTRI.</p>
-      </div>
-      <button class="modal-close" (click)="closeViewModal()">×</button>
-    </div>
-
-    <div class="modal-body">
-
-      <div class="collection-identity">
-        <div class="identity-icon">📦</div>
-        <div>
-          <span>Silkworm Batch Reference</span>
-          <h3>{{ selectedCollection.batchId }}</h3>
-        </div>
-      </div>
-
-      <div class="details-card">
-        <h3>Collection Information</h3>
-
-        <div class="details-grid">
-          <div class="detail-item">
-            <span>Farmer / Farm Community</span>
-            <strong>{{ selectedCollection.farmerName }}</strong>
-          </div>
-
-          <div class="detail-item">
-            <span>Silkworm Batch ID</span>
-            <strong>{{ selectedCollection.batchId }}</strong>
-          </div>
-
-          <div class="detail-item">
-            <span>Date Received</span>
-            <strong>{{ selectedCollection.dateReceived | date:'MMMM d, y' }}</strong>
-          </div>
-
-          <div class="detail-item">
-            <span>Weight Received</span>
-            <strong class="detail-weight">{{ selectedCollection.weightReceived | number:'1.1-2' }} kg</strong>
-          </div>
-        </div>
-      </div>
-
-    </div>
-
-    <div class="modal-footer">
-      <button class="secondary-btn" (click)="closeViewModal()">Close</button>
-    </div>
-
-  </div>
 </div>

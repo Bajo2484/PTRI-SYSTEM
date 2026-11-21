@@ -1,170 +1,785 @@
+
 <div class="dashboard">
 
-  <!-- WELCOME HEADER -->
+  <!-- ==========================================
+       1. WELCOME HEADER
+  =========================================== -->
   <header class="dashboard-header">
     <div class="welcome-content">
       <div class="welcome-section">
-        <span class="welcome-label"><span class="welcome-dot"></span> FARMER PORTAL</span>
+        <span class="welcome-label">
+          <span class="welcome-dot"></span>
+          FARMER PORTAL
+        </span>
+
         <h1>Hello, {{ farmerProfile?.fullName || 'Farmer' }}!</h1>
-        <p class="farmer-info">{{ farmerProfile?.farmName || 'Your Farm' }} <span class="separator">·</span> {{ today | date:'EEEE, d MMMM yyyy' }}</p>
+
+        <p class="farmer-info">
+          {{ farmerProfile?.farmName || 'Your Farm' }}
+          <span class="separator">·</span>
+          {{ today | date:'EEEE, d MMMM yyyy' }}
+        </p>
       </div>
-      <button class="profile-button" type="button" aria-label="View profile" routerLink="/farmer/profile">
+
+      <button
+        class="profile-button"
+        type="button"
+        aria-label="View profile"
+        routerLink="/farmer/profile">
         <lucide-angular [img]="UserRound" [size]="20"></lucide-angular>
       </button>
     </div>
-    <div class="header-image"><img src="/images/silkworm-header.jpg" alt="Silkworms on mulberry leaves"></div>
+
+    <div class="header-image">
+      <img
+        src="/images/silkworm-header.png"
+        alt="Silkworms on mulberry leaves">
+    </div>
+
     <div class="header-leaf-decoration"></div>
   </header>
 
-  <div *ngIf="isLoading" class="dashboard-message"><span class="loading-spinner"></span><p>Loading your dashboard...</p></div>
-  <div *ngIf="!isLoading && loadError" class="dashboard-message error-message"><p>{{ loadError }}</p><button type="button" (click)="loadDashboard()">Try Again</button></div>
 
+  <!-- ==========================================
+       2. LOADING STATE
+  =========================================== -->
+  <div *ngIf="isLoading" class="dashboard-message">
+    <span class="loading-spinner"></span>
+    <p>Loading your dashboard...</p>
+  </div>
+
+
+  <!-- ==========================================
+       3. ERROR STATE
+  =========================================== -->
+  <div
+    *ngIf="!isLoading && loadError"
+    class="dashboard-message error-message">
+
+    <p>{{ loadError }}</p>
+
+    <button type="button" (click)="loadDashboard()">
+      Try Again
+    </button>
+  </div>
+
+
+  <!-- ==========================================
+       4. DASHBOARD CONTENT
+  =========================================== -->
   <ng-container *ngIf="!isLoading && !loadError">
     <ng-container *ngIf="farmerProfile as farmer">
 
-      <!-- SUMMARY CARDS -->
-      <section class="summary-grid">
-        <article class="summary-card production-card">
-          <img class="card-leaf-decoration" src="/images/leaf-decoration.jpg" alt="">
-          <div class="card-top">
-            <span class="card-icon production-icon"><lucide-angular [img]="Sprout" [size]="25"></lucide-angular></span>
-            <span class="card-period">ALL RECORDS</span>
-          </div>
-          <p class="card-label">Total Production</p>
-          <h2>{{ totalProduction | number:'1.0-2' }}</h2>
-          <p class="card-description">Combined submitted quantity</p>
-          <span class="card-bottom-icon"><lucide-angular [img]="Leaf" [size]="19"></lucide-angular></span>
-        </article>
 
-        <article class="summary-card requests-card">
-          <img class="card-leaf-decoration" src="/images/leaf-decoration.jpg" alt="">
-          <div class="card-top">
-            <span class="card-icon requests-icon"><lucide-angular [img]="ClipboardList" [size]="25"></lucide-angular></span>
-            <span class="card-period">PRODUCTION</span>
-          </div>
-          <p class="card-label">Production Records</p>
-          <h2>{{ totalRecords | number:'2.0' }}</h2>
-          <p class="card-description">{{ pendingReviewCount }} pending review <span>·</span> {{ reviewedCount }} reviewed</p>
-          <span class="card-bottom-icon"><lucide-angular [img]="Sprout" [size]="19"></lucide-angular></span>
-        </article>
-      </section>
-
-      <!-- FARM OVERVIEW -->
-      <section class="dashboard-section farm-overview-section">
-        <div class="section-heading">
-          <div><span class="section-kicker">YOUR FARM DETAILS</span><h2>Farm Overview</h2><p class="section-description">Your registered farm information and resources</p></div>
-          <span class="heading-icon"><lucide-angular [img]="Leaf" [size]="21"></lucide-angular></span>
-        </div>
-
-        <article class="farm-overview-card">
-          <div class="farm-info-content">
-            <div class="farm-main-info">
-              <span class="farm-icon"><lucide-angular [img]="Sprout" [size]="25"></lucide-angular></span>
-              <div><span class="farm-type-label">{{ farmer.farmerType || 'Farmer' }} FARM</span><h3>{{ farmer.farmName || 'Farm Name Not Set' }}</h3><p><lucide-angular [img]="UserRound" [size]="14"></lucide-angular> {{ farmer.fullName }} <span *ngIf="farmer.locality"> · {{ farmer.locality }}</span></p></div>
-            </div>
-
-            <div class="farm-details-grid">
-              <div class="farm-detail-item"><span class="detail-icon area-icon"><lucide-angular [img]="CalendarDays" [size]="17"></lucide-angular></span><div><span class="detail-label">FARM AREA</span><strong>{{ farmer.farmArea || 'Not recorded' }}</strong></div></div>
-              <div class="farm-detail-item"><span class="detail-icon tree-icon"><lucide-angular [img]="Sprout" [size]="17"></lucide-angular></span><div><span class="detail-label">MULBERRY TREES</span><strong>{{ farmer.mulberryTreeCount }}</strong></div></div>
-              <div class="farm-detail-item" *ngIf="farmer.farmerType === 'Community'"><span class="detail-icon community-icon"><lucide-angular [img]="UserRound" [size]="17"></lucide-angular></span><div><span class="detail-label">COMMUNITY</span><strong>{{ farmer.communityName || 'Not recorded' }}</strong></div></div>
-              <div class="farm-detail-item" *ngIf="farmer.farmerType === 'Community'"><span class="detail-icon member-icon"><lucide-angular [img]="ClipboardList" [size]="17"></lucide-angular></span><div><span class="detail-label">MEMBERS</span><strong>{{ farmer.memberCount ?? 0 }}</strong></div></div>
-            </div>
-          </div>
-          <div class="farm-photo"><img src="/images/mulberry-farm.jpg" alt="Mulberry farm"><span class="photo-caption"><lucide-angular [img]="Leaf" [size]="15"></lucide-angular> Growing a sustainable farm</span></div>
-        </article>
-      </section>
-
-      <!-- PRODUCTION CALENDAR -->
+      <!-- ======================================
+           PRODUCTION CALENDAR
+      ======================================= -->
       <section class="dashboard-section calendar-section">
+
         <div class="section-heading calendar-section-heading">
-          <div><span class="section-kicker">PLAN YOUR FARM ACTIVITIES</span><h2>Production Calendar</h2><p class="section-description">Keep track of your mulberry and silkworm production cycle</p></div>
-          <span class="heading-icon calendar-main-icon"><lucide-angular [img]="CalendarDays" [size]="22"></lucide-angular></span>
+          <div>
+            <span class="section-kicker">PLAN YOUR FARM ACTIVITIES</span>
+            <h2>Production Calendar</h2>
+            <p class="section-description">
+              Keep track of your mulberry and silkworm production cycle
+            </p>
+          </div>
+
+          <span class="heading-icon calendar-main-icon">
+            <lucide-angular [img]="CalendarDays" [size]="22"></lucide-angular>
+          </span>
         </div>
+
 
         <div class="calendar-card">
+
+          <!-- CALENDAR HEADER -->
           <div class="calendar-top">
-            <div class="calendar-month-info"><span class="calendar-overline">MONTHLY SCHEDULE</span><h3>{{ monthLabel }}</h3><p>Select a date to view its planned activities</p></div>
+
+            <div class="calendar-month-info">
+              <span class="calendar-overline">MONTHLY SCHEDULE</span>
+              <h3>{{ monthLabel }}</h3>
+              <p>Select a date to view its planned activities</p>
+            </div>
+
             <div class="calendar-controls">
-              <button type="button" class="calendar-nav" (click)="previousMonth()" aria-label="Previous month"><lucide-angular [img]="ChevronLeft" [size]="19"></lucide-angular></button>
-              <button type="button" class="today-button" (click)="goToToday()">Today</button>
-              <button type="button" class="calendar-nav" (click)="nextMonth()" aria-label="Next month"><lucide-angular [img]="ChevronRight" [size]="19"></lucide-angular></button>
+
+              <button
+                type="button"
+                class="calendar-nav"
+                (click)="previousMonth()"
+                aria-label="Previous month">
+                <lucide-angular [img]="ChevronLeft" [size]="19"></lucide-angular>
+              </button>
+
+              <button
+                type="button"
+                class="today-button"
+                (click)="goToToday()">
+                Today
+              </button>
+
+              <button
+                type="button"
+                class="calendar-nav"
+                (click)="nextMonth()"
+                aria-label="Next month">
+                <lucide-angular [img]="ChevronRight" [size]="19"></lucide-angular>
+              </button>
+
             </div>
           </div>
 
+
+          <!-- CALENDAR LEGEND -->
           <div class="calendar-legend">
-            <span><i class="legend-dot green-dot"></i> Farm Care</span>
-            <span><i class="legend-dot gold-dot"></i> PTRI / Rearing</span>
-            <span><i class="legend-dot brown-dot"></i> Harvest / Other</span>
+            <span>
+              <i class="legend-dot green-dot"></i>
+              Farm Care
+            </span>
+
+            <span>
+              <i class="legend-dot gold-dot"></i>
+              PTRI / Rearing
+            </span>
+
+            <span>
+              <i class="legend-dot brown-dot"></i>
+              Harvest / Other
+            </span>
           </div>
 
+
+          <!-- CALENDAR GRID -->
           <div class="calendar-grid">
-            <div class="calendar-weekday" *ngFor="let weekday of ['SUN','MON','TUE','WED','THU','FRI','SAT']">{{ weekday }}</div>
-            <button type="button" class="calendar-day" *ngFor="let day of calendarDays; trackBy: trackByDate" [class.outside-month]="!day.inCurrentMonth" [class.selected-day]="day.isSelected" [class.today-day]="day.isToday" (click)="selectDate(day)">
-              <span class="day-number">{{ day.dayNumber }}</span>
-              <span class="day-events" *ngIf="day.activities.length">
-                <span class="event-chip" *ngFor="let activity of day.activities" [ngClass]="activity.color">
-                  <lucide-angular [img]="activity.icon" [size]="11"></lucide-angular><span>{{ activity.title }}</span>
-                </span>
+
+            <div
+              class="calendar-weekday"
+              *ngFor="let weekday of ['SUN','MON','TUE','WED','THU','FRI','SAT']">
+              {{ weekday }}
+            </div>
+
+            <button
+              type="button"
+              class="calendar-day"
+              *ngFor="let day of calendarDays; trackBy: trackByDate"
+              [class.outside-month]="!day.inCurrentMonth"
+              [class.selected-day]="day.isSelected"
+              [class.today-day]="day.isToday"
+              [attr.aria-label]="day.date | date:'fullDate'"
+              (click)="selectDate(day)">
+
+              <span class="day-number">
+                {{ day.dayNumber }}
               </span>
-              <span class="mobile-event-dot" *ngIf="day.activities.length"></span>
+
+              <span class="day-events" *ngIf="day.activities.length">
+
+                <span
+                  class="event-chip"
+                  *ngFor="let activity of day.activities"
+                  [ngClass]="activity.color">
+
+                  <lucide-angular
+                    [img]="activity.icon"
+                    [size]="11">
+                  </lucide-angular>
+
+                  <span>{{ activity.title }}</span>
+                </span>
+
+              </span>
+
+              <span
+                class="mobile-event-dot"
+                *ngIf="day.activities.length">
+              </span>
+
             </button>
+
           </div>
 
-          <div class="selected-date-panel">
-            <div class="selected-date-heading">
-              <span class="selected-date-icon"><lucide-angular [img]="CalendarCheck" [size]="20"></lucide-angular></span>
-              <div><span class="selected-overline">SELECTED DATE</span><h4>{{ selectedDateLabel }}</h4></div>
-            </div>
-            <div class="selected-activities" *ngIf="selectedActivities.length; else noActivities">
-              <article class="selected-activity" *ngFor="let activity of selectedActivities" [ngClass]="activity.color">
-                <span class="selected-activity-icon"><lucide-angular [img]="activity.icon" [size]="20"></lucide-angular></span>
-                <div class="selected-activity-content"><span class="activity-stage">{{ activity.stage }}</span><h5>{{ activity.title }}</h5><p>{{ activity.description }}</p><span class="activity-schedule">{{ activity.schedule }}</span></div>
-              </article>
-            </div>
-            <ng-template #noActivities><div class="no-activities"><span class="no-activity-icon"><lucide-angular [img]="Leaf" [size]="19"></lucide-angular></span><div><strong>No scheduled activity</strong><p>There are no sample activities assigned to this date.</p></div></div></ng-template>
-          </div>
-          <p class="calendar-disclaimer"><lucide-angular [img]="CalendarDays" [size]="14"></lucide-angular> Demonstration schedule only. Actual dates and activities must be confirmed with PTRI and updated based on farm conditions.</p>
+
+          <!-- CALENDAR DISCLAIMER -->
+          <p class="calendar-disclaimer">
+            <lucide-angular [img]="CalendarDays" [size]="14"></lucide-angular>
+            Demonstration schedule only. Actual dates and activities must
+            be confirmed with PTRI and updated based on farm conditions.
+          </p>
+
         </div>
       </section>
 
-      <!-- SILKWORM BATCH TRACKING -->
+
+      <!-- ======================================
+           SUMMARY CARDS
+      ======================================= -->
+      <section class="summary-grid">
+
+        <!-- TOTAL COCOON PRODUCTION -->
+        <article class="summary-card production-card">
+
+          <img
+            class="card-leaf-decoration"
+            src="/images/leaf-decoration.jpg"
+            alt="">
+
+          <div class="card-top">
+            <span class="card-icon production-icon">
+              <lucide-angular [img]="Sprout" [size]="25"></lucide-angular>
+            </span>
+
+            <span class="card-period">ALL HARVESTS</span>
+          </div>
+
+          <p class="card-label">Total Cocoon Production</p>
+
+          <h2>
+            {{ totalCocoonProduction | number:'1.0-2' }} kg
+          </h2>
+
+          <p class="card-description">
+            Combined recorded cocoon harvest weight
+          </p>
+
+          <span class="card-bottom-icon">
+            <lucide-angular [img]="Leaf" [size]="19"></lucide-angular>
+          </span>
+
+        </article>
+
+
+        <!-- COCOON HARVEST RECORDS -->
+        <article class="summary-card requests-card">
+
+          <img
+            class="card-leaf-decoration"
+            src="/images/leaf-decoration.jpg"
+            alt="">
+
+          <div class="card-top">
+            <span class="card-icon requests-icon">
+              <lucide-angular [img]="ClipboardList" [size]="25"></lucide-angular>
+            </span>
+
+            <span class="card-period">COCOON HARVEST</span>
+          </div>
+
+          <p class="card-label">Harvest Records</p>
+
+          <h2>{{ totalRecords | number:'1.0-0' }}</h2>
+
+          <p class="card-description">
+            {{ pendingReviewCount }} pending return
+            <span>·</span>
+            {{ reviewedCount }} submitted / received
+          </p>
+
+          <span class="card-bottom-icon">
+            <lucide-angular [img]="Sprout" [size]="19"></lucide-angular>
+          </span>
+
+        </article>
+
+      </section>
+
+
+      <!-- ======================================
+           FARM OVERVIEW
+      ======================================= -->
+      <section class="dashboard-section farm-overview-section">
+
+        <div class="section-heading">
+          <div>
+            <span class="section-kicker">YOUR FARM DETAILS</span>
+            <h2>Farm Overview</h2>
+            <p class="section-description">
+              Your registered farm information and resources
+            </p>
+          </div>
+
+          <span class="heading-icon">
+            <lucide-angular [img]="Leaf" [size]="21"></lucide-angular>
+          </span>
+        </div>
+
+
+        <article class="farm-overview-card">
+
+          <!-- FARM INFORMATION -->
+          <div class="farm-info-content">
+
+            <div class="farm-main-info">
+
+              <span class="farm-icon">
+                <lucide-angular [img]="Sprout" [size]="25"></lucide-angular>
+              </span>
+
+              <div>
+                <span class="farm-type-label">
+                  {{ farmer.farmerType || 'Farmer' }} FARM
+                </span>
+
+                <h3>
+                  {{ farmer.farmName || 'Farm Name Not Set' }}
+                </h3>
+
+                <p>
+                  <lucide-angular [img]="UserRound" [size]="14"></lucide-angular>
+                  {{ farmer.fullName }}
+
+                  <span *ngIf="farmer.locality">
+                    · {{ farmer.locality }}
+                  </span>
+                </p>
+              </div>
+
+            </div>
+
+
+            <!-- FARM DETAILS -->
+            <div class="farm-details-grid">
+
+              <div class="farm-detail-item">
+                <span class="detail-icon area-icon">
+                  <lucide-angular [img]="CalendarDays" [size]="17"></lucide-angular>
+                </span>
+
+                <div>
+                  <span class="detail-label">FARM AREA</span>
+                  <strong>{{ farmer.farmArea || 'Not recorded' }}</strong>
+                </div>
+              </div>
+
+
+              <div class="farm-detail-item">
+                <span class="detail-icon tree-icon">
+                  <lucide-angular [img]="Sprout" [size]="17"></lucide-angular>
+                </span>
+
+                <div>
+                  <span class="detail-label">MULBERRY TREES</span>
+                  <strong>{{ farmer.memberCount }}</strong>
+                </div>
+              </div>
+
+
+              <div
+                class="farm-detail-item"
+                *ngIf="farmer.farmerType === 'Community'">
+
+                <span class="detail-icon community-icon">
+                  <lucide-angular [img]="UserRound" [size]="17"></lucide-angular>
+                </span>
+
+                <div>
+                  <span class="detail-label">COMMUNITY</span>
+                  <strong>
+                    {{ farmer.communityName || 'Not recorded' }}
+                  </strong>
+                </div>
+              </div>
+
+
+              <div
+                class="farm-detail-item"
+                *ngIf="farmer.farmerType === 'Community'">
+
+                <span class="detail-icon member-icon">
+                  <lucide-angular [img]="ClipboardList" [size]="17"></lucide-angular>
+                </span>
+
+                <div>
+                  <span class="detail-label">MEMBERS</span>
+                  <strong>{{ farmer.memberCount }}</strong>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+
+          <!-- FARM PHOTO -->
+          <div class="farm-photo">
+            <img
+              src="/images/mulberry-farm.jpg"
+              alt="Mulberry farm">
+
+            <span class="photo-caption">
+              <lucide-angular [img]="Leaf" [size]="15"></lucide-angular>
+              Growing a sustainable farm
+            </span>
+          </div>
+
+        </article>
+      </section>
+
+
+      <!-- ======================================
+           SILKWORM BATCH TRACKING
+      ======================================= -->
       <section class="dashboard-section batch-section">
-        <div class="section-heading"><div><span class="section-kicker">BATCH MONITORING</span><h2>Silkworm Batch Tracking</h2><p class="section-description">Monitor silkworm batches received from PTRI</p></div><span class="demo-label">DEMO DATA</span></div>
+
+        <div class="section-heading">
+          <div>
+            <span class="section-kicker">BATCH MONITORING</span>
+            <h2>Silkworm Batch Tracking</h2>
+            <p class="section-description">
+              Monitor silkworm batches received from PTRI
+            </p>
+          </div>
+
+          <span class="demo-label">DEMO DATA</span>
+        </div>
+
 
         <article class="batch-card">
-          <div class="batch-photo"><img src="/images/silkworm-batch.jpg" alt="Silkworms feeding on mulberry leaves"><span class="batch-photo-tag"><lucide-angular [img]="Bug" [size]="14"></lucide-angular> Silkworm Rearing</span></div>
+
+          <div class="batch-photo">
+            <img
+              src="/images/silkworm-batch.jpg"
+              alt="Silkworms feeding on mulberry leaves">
+
+            <span class="batch-photo-tag">
+              <lucide-angular [img]="Bug" [size]="14"></lucide-angular>
+              Silkworm Rearing
+            </span>
+          </div>
+
+
           <div class="batch-information">
-            <div class="batch-card-top"><div><span class="batch-overline">BATCH IDENTIFICATION</span><h3>{{ sampleBatch.batchId }}</h3></div><span class="batch-status">{{ sampleBatch.status }}</span></div>
-            <div class="batch-details-grid">
-              <div class="batch-detail"><span class="detail-label">SILKWORMS</span><strong>{{ sampleBatch.silkwormCount | number }} <small>pcs</small></strong></div>
-              <div class="batch-detail"><span class="detail-label">NUMBER OF BOXES</span><strong>{{ sampleBatch.boxCount }} <small>boxes</small></strong></div>
-              <div class="batch-detail"><span class="detail-label">HATCH DATE</span><strong>{{ sampleBatch.hatchDate }}</strong></div>
-              <div class="batch-detail"><span class="detail-label">GROWTH STAGE</span><strong>{{ sampleBatch.currentStage }}</strong></div>
+
+            <div class="batch-card-top">
+              <div>
+                <span class="batch-overline">
+                  BATCH IDENTIFICATION
+                </span>
+
+                <h3>{{ sampleBatch.batchId }}</h3>
+              </div>
+
+              <span class="batch-status">
+                {{ sampleBatch.status }}
+              </span>
             </div>
-            <div class="batch-footer"><span class="detail-label">EXPECTED COCOON HARVEST</span><strong>{{ sampleBatch.expectedHarvest }}</strong></div>
-            <p class="demo-disclaimer">Sample batch information for demonstration only. No actual PTRI delivery has been recorded.</p>
+
+
+            <div class="batch-details-grid">
+
+              <div class="batch-detail">
+                <span class="detail-label">SILKWORMS</span>
+                <strong>
+                  {{ sampleBatch.silkwormCount | number }}
+                  <small>pcs</small>
+                </strong>
+              </div>
+
+              <div class="batch-detail">
+                <span class="detail-label">NUMBER OF BOXES</span>
+                <strong>
+                  {{ sampleBatch.boxCount }}
+                  <small>boxes</small>
+                </strong>
+              </div>
+
+              <div class="batch-detail">
+                <span class="detail-label">HATCH DATE</span>
+                <strong>{{ sampleBatch.hatchDate }}</strong>
+              </div>
+
+              <div class="batch-detail">
+                <span class="detail-label">GROWTH STAGE</span>
+                <strong>{{ sampleBatch.currentStage }}</strong>
+              </div>
+
+            </div>
+
+
+            <div class="batch-footer">
+              <span class="detail-label">
+                EXPECTED COCOON HARVEST
+              </span>
+
+              <strong>{{ sampleBatch.expectedHarvest }}</strong>
+            </div>
+
+            <p class="demo-disclaimer">
+              Sample batch information for demonstration only.
+              No actual PTRI delivery has been recorded.
+            </p>
+
           </div>
         </article>
       </section>
 
-      <!-- LATEST PRODUCTION UPDATE -->
+
+      <!-- ======================================
+           LATEST COCOON HARVEST UPDATE
+      ======================================= -->
       <section class="dashboard-section latest-section">
-        <div class="section-heading"><div><span class="section-kicker">RECENT ACTIVITY</span><h2>Latest Production Update</h2><p class="section-description">Your most recent production record</p></div></div>
-        <article class="update-card" *ngIf="latestProduction as latest; else noProduction">
-          <span class="update-icon"><lucide-angular [img]="Package" [size]="22"></lucide-angular></span>
-          <div class="update-content"><h3>{{ latest.productionType }}</h3><p class="update-quantity">{{ latest.quantity }} {{ latest.unit }} expected by {{ latest.expectedAvailability | date:'d MMM yyyy' }}</p><p class="update-date">Your latest submitted production record</p></div>
-          <span class="status-badge" [class.reviewed]="latest.status === 'Reviewed'"><lucide-angular [img]="latest.status === 'Reviewed' ? CheckCircle2 : Clock3" [size]="14"></lucide-angular>{{ latest.status }}</span>
+
+        <div class="section-heading">
+          <div>
+            <span class="section-kicker">RECENT ACTIVITY</span>
+            <h2>Latest Cocoon Harvest</h2>
+            <p class="section-description">
+              Your most recently recorded cocoon harvest
+            </p>
+          </div>
+        </div>
+
+
+        <article
+          class="update-card"
+          *ngIf="latestProduction as latest; else noProduction">
+
+          <span class="update-icon">
+            <lucide-angular [img]="Package" [size]="22"></lucide-angular>
+          </span>
+
+          <div class="update-content">
+
+            <h3>Cocoon Harvest</h3>
+
+            <p class="update-quantity">
+              {{ latest.harvestedWeight | number:'1.0-2' }} kg harvested
+            </p>
+
+            <p class="update-date">
+              Recorded on
+              {{ latest.createdAt | date:'d MMM yyyy' }}
+            </p>
+
+          </div>
+
+
+          <span class="status-badge">
+            <lucide-angular
+              [img]="latest.returnStatus === 'Received' ? CheckCircle2 : Clock3"
+              [size]="14">
+            </lucide-angular>
+
+            {{ latest.returnStatus || 'Pending Return' }}
+          </span>
+
         </article>
-        <ng-template #noProduction><article class="update-card"><span class="update-icon"><lucide-angular [img]="Package" [size]="22"></lucide-angular></span><div class="update-content"><h3>No production records yet</h3><p class="update-quantity">Submit your first production update to get started.</p></div></article></ng-template>
+
+
+        <ng-template #noProduction>
+          <article class="update-card">
+
+            <span class="update-icon">
+              <lucide-angular [img]="Package" [size]="22"></lucide-angular>
+            </span>
+
+            <div class="update-content">
+              <h3>No cocoon harvest records yet</h3>
+
+              <p class="update-quantity">
+                Your submitted cocoon harvest records will appear here.
+              </p>
+            </div>
+
+          </article>
+        </ng-template>
+
       </section>
 
-      <!-- QUICK ACTION -->
+
+      <!-- ======================================
+           QUICK ACTION
+      ======================================= -->
       <section class="action-section">
-        <div class="action-decoration"><img src="/images/leaf-decoration.jpg" alt=""></div>
-        <div class="action-content"><span class="action-kicker">KEEP YOUR RECORDS UPDATED</span><h3>Have a new production update?</h3><p>Record your latest farm production details and keep your progress up to date.</p></div>
-        <button class="submit-button" type="button" routerLink="/farmer/production"><span class="submit-icon"><lucide-angular [img]="Plus" [size]="19"></lucide-angular></span><span>Submit Production Update</span><lucide-angular class="button-arrow" [img]="ArrowRight" [size]="18"></lucide-angular></button>
+
+        <div class="action-decoration">
+          <img src="/images/leaf-decoration.jpg" alt="">
+        </div>
+
+        <div class="action-content">
+          <span class="action-kicker">
+            KEEP YOUR RECORDS UPDATED
+          </span>
+
+          <h3>Have a new cocoon harvest?</h3>
+
+          <p>
+            Record your harvested cocoon weight and keep
+            your production records up to date.
+          </p>
+        </div>
+
+
+        <button
+          class="submit-button"
+          type="button"
+          routerLink="/farmer/production">
+
+          <span class="submit-icon">
+            <lucide-angular [img]="Plus" [size]="19"></lucide-angular>
+          </span>
+
+          <span>Submit Production Update</span>
+
+          <lucide-angular
+            class="button-arrow"
+            [img]="ArrowRight"
+            [size]="18">
+          </lucide-angular>
+
+        </button>
+
       </section>
 
     </ng-container>
   </ng-container>
+
+
+  <!-- ==========================================
+       SCHEDULE ACTIVITIES MODAL
+  =========================================== -->
+  <div
+    class="schedule-modal-overlay"
+    *ngIf="isScheduleModalOpen"
+    (click)="closeScheduleModal()">
+
+    <div
+      class="schedule-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="schedule-modal-title"
+      (click)="$event.stopPropagation()">
+
+
+      <!-- MODAL HEADER -->
+      <div class="schedule-modal-header">
+
+        <div class="modal-heading-content">
+
+          <span class="modal-calendar-icon">
+            <lucide-angular
+              [img]="CalendarCheck"
+              [size]="23">
+            </lucide-angular>
+          </span>
+
+          <div>
+            <span class="modal-overline">
+              FARM ACTIVITY SCHEDULE
+            </span>
+
+            <h2 id="schedule-modal-title">
+              Scheduled Activities
+            </h2>
+
+            <p>{{ selectedDateLabel }}</p>
+          </div>
+
+        </div>
+
+
+        <button
+          type="button"
+          class="modal-close-button"
+          aria-label="Close modal"
+          (click)="closeScheduleModal()">
+          &times;
+        </button>
+
+      </div>
+
+
+      <!-- MODAL BODY -->
+      <div class="schedule-modal-body">
+
+        <div
+          class="modal-activity-list"
+          *ngIf="selectedActivities.length > 0; else noActivities">
+
+          <article
+            class="modal-activity-card"
+            *ngFor="let activity of selectedActivities"
+            [ngClass]="activity.color">
+
+            <span class="modal-activity-icon">
+              <lucide-angular
+                [img]="activity.icon"
+                [size]="23">
+              </lucide-angular>
+            </span>
+
+
+            <div class="modal-activity-content">
+
+              <span class="modal-activity-stage">
+                {{ activity.stage }}
+              </span>
+
+              <h3>{{ activity.title }}</h3>
+
+              <p>{{ activity.description }}</p>
+
+              <span class="modal-activity-schedule">
+                <lucide-angular
+                  [img]="Clock3"
+                  [size]="14">
+                </lucide-angular>
+
+                {{ activity.schedule }}
+              </span>
+
+            </div>
+
+          </article>
+
+        </div>
+
+
+        <!-- EMPTY STATE -->
+        <ng-template #noActivities>
+          <div class="modal-no-activities">
+
+            <span class="empty-calendar-icon">
+              <lucide-angular
+                [img]="CalendarDays"
+                [size]="30">
+              </lucide-angular>
+            </span>
+
+            <h3>No scheduled activity</h3>
+
+            <p>
+              There are no activities scheduled for this date.
+              You can check another date in the production calendar.
+            </p>
+
+          </div>
+        </ng-template>
+
+      </div>
+
+
+      <!-- MODAL FOOTER -->
+      <div class="schedule-modal-footer">
+
+        <span class="modal-demo-note">
+          <lucide-angular
+            [img]="CalendarDays"
+            [size]="14">
+          </lucide-angular>
+
+          Demonstration schedule only
+        </span>
+
+        <button
+          type="button"
+          class="modal-done-button"
+          (click)="closeScheduleModal()">
+          Done
+        </button>
+
+      </div>
+
+    </div>
+  </div>
+
 </div>

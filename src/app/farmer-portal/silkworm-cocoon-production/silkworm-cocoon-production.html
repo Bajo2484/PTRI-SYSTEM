@@ -2,734 +2,163 @@
 <div class="production-page">
 
   <!-- PAGE HEADER -->
-  <div class="page-header">
-    <div>
+  <section class="page-header">
+    <div class="header-content">
       <span class="eyebrow">FARMER PORTAL / PRODUCTION</span>
-      <h1>Silkworm & Cocoon Production</h1>
-      <p>Monitor your received silkworm batches, rearing progress, cocoon harvest, and returns to PTRI.</p>
+      <h1>Silkworm & Cocoon Management</h1>
+      <p>
+        Manage your silkworm requests, monitor rearing activities,
+        and track your cocoon production and returns to PTRI.
+      </p>
     </div>
+
     <div class="header-icon">
       <i-lucide [img]="icons.Bug" [size]="30"></i-lucide>
     </div>
-  </div>
+  </section>
 
   <!-- SUMMARY CARDS -->
   <section class="summary-grid">
-    <div class="summary-card">
+
+    <!-- TOTAL REQUESTS -->
+    <article class="summary-card">
       <div class="summary-icon green">
-        <i-lucide [img]="icons.Package" [size]="22"></i-lucide>
+        <i-lucide [img]="icons.ClipboardList" [size]="22"></i-lucide>
       </div>
-      <div>
-        <span>Total Batches</span>
-        <h2>{{ totalBatches }}</h2>
-        <small>Silkworm batches received</small>
+      <div class="summary-content">
+        <span>Total Requests</span>
+        <h2>{{ totalRequests }}</h2>
+        <small>Your submitted silkworm requests</small>
       </div>
-    </div>
+    </article>
 
-    <div class="summary-card">
+    <!-- ACTIVE BATCHES -->
+    <article class="summary-card">
       <div class="summary-icon blue">
-        <i-lucide [img]="icons.Activity" [size]="22"></i-lucide>
+        <i-lucide [img]="icons.Bug" [size]="22"></i-lucide>
       </div>
-      <div>
-        <span>Active Rearing</span>
-        <h2>{{ activeRearing }}</h2>
-        <small>Currently being raised</small>
+      <div class="summary-content">
+        <span>Active Batches</span>
+        <h2>{{ activeBatches }}</h2>
+        <small>Silkworm batches currently in rearing</small>
       </div>
-    </div>
+    </article>
 
-    <div class="summary-card">
+    <!-- COCOON RETURNS -->
+    <article class="summary-card">
       <div class="summary-icon gold">
-        <i-lucide [img]="icons.Sprout" [size]="22"></i-lucide>
+        <i-lucide [img]="icons.PackageCheck" [size]="22"></i-lucide>
       </div>
-      <div>
-        <span>Ready for Harvest</span>
-        <h2>{{ readyForHarvest }}</h2>
-        <small>Batches ready for harvesting</small>
+      <div class="summary-content">
+        <span>Cocoon Returns</span>
+        <h2>{{ cocoonReturns }}</h2>
+        <small>Cocoon returns recorded as returned</small>
       </div>
-    </div>
+    </article>
 
-    <div class="summary-card">
-      <div class="summary-icon brown">
-        <i-lucide [img]="icons.CheckCircle" [size]="22"></i-lucide>
-      </div>
-      <div>
-        <span>Returned to PTRI</span>
-        <h2>{{ returnedBatches }}</h2>
-        <small>Confirmed cocoon returns</small>
-      </div>
-    </div>
   </section>
 
   <!-- PRODUCTION INFORMATION -->
   <section class="info-banner">
     <div class="info-icon">
-      <i-lucide [img]="icons.Info" [size]="22"></i-lucide>
+      <i-lucide [img]="icons.Activity" [size]="22"></i-lucide>
     </div>
-    <div>
-      <strong>Your silkworm production journey</strong>
-      <p>PTRI provides your silkworm batches. Record their rearing progress, harvest the cocoons, and submit the harvested cocoons back to PTRI.</p>
+
+    <div class="info-content">
+      <strong>Your Production Journey</strong>
+      <p>
+        Start by requesting silkworms from PTRI and monitoring your
+        assigned batches. Once your silkworms produce cocoons,
+        record your harvest and submit the cocoons back to PTRI.
+      </p>
     </div>
   </section>
 
-  <!-- BATCH SECTION -->
-  <section class="batch-section">
+  <!-- FEATURE MODULES -->
+  <section class="modules-section">
+
     <div class="section-heading">
       <div>
-        <h2>My Silkworm Batches</h2>
-        <p>View and monitor the silkworm batches assigned to your farm.</p>
+        <span class="section-eyebrow">PRODUCTION MANAGEMENT</span>
+        <h2>Explore Production Modules</h2>
+        <p>Select a module to manage and monitor your production activities.</p>
       </div>
-      <span class="record-count">{{ filteredBatches.length }} Records</span>
     </div>
 
-    <!-- FILTER TABS -->
-    <div class="filter-tabs">
-      <button type="button" [class.active]="activeTab === 'all'" (click)="setActiveTab('all')">
-        All Batches
-      </button>
-      <button type="button" [class.active]="activeTab === 'In Rearing'" (click)="setActiveTab('In Rearing')">
-        In Rearing
-      </button>
-      <button type="button" [class.active]="activeTab === 'Ready for Harvest'" (click)="setActiveTab('Ready for Harvest')">
-        Ready for Harvest
-      </button>
-      <button type="button" [class.active]="activeTab === 'Harvested'" (click)="setActiveTab('Harvested')">
-        Harvested
-      </button>
-      <button type="button" [class.active]="activeTab === 'Return Submitted'" (click)="setActiveTab('Return Submitted')">
-        Return Submitted
-      </button>
-      <button type="button" [class.active]="activeTab === 'Returned to PTRI'" (click)="setActiveTab('Returned to PTRI')">
-        Returned
-      </button>
-    </div>
+    <div class="module-grid">
 
-    <!-- BATCH CARDS -->
-    <div class="batch-list">
-      @for (batch of filteredBatches; track batch.id) {
-        <article class="batch-card">
-
-          <div class="batch-top">
-            <div class="batch-reference">
-              <div class="batch-icon">
-                <i-lucide [img]="icons.Bug" [size]="23"></i-lucide>
-              </div>
-              <div>
-                <span class="batch-label">BATCH REFERENCE</span>
-                <h3>{{ batch.batchNumber }}</h3>
-              </div>
-            </div>
-
-            <span class="status-badge" [ngClass]="getStatusClass(batch.status)">
-              {{ batch.status }}
-            </span>
+      <!-- SILKWORM REQUESTS & MY BATCHES -->
+      <article
+        class="module-card silkworm-module"
+        role="button"
+        tabindex="0"
+        (click)="openSilkwormRequests()"
+        (keydown.enter)="openSilkwormRequests()"
+        (keydown.space)="$event.preventDefault(); openSilkwormRequests()"
+        aria-label="Open Silkworm Requests and My Batches"
+      >
+        <div class="module-top">
+          <div class="module-icon green">
+            <i-lucide [img]="icons.Bug" [size]="30"></i-lucide>
           </div>
 
-          <div class="batch-details">
-            <div class="detail-item">
-              <span>Received Date</span>
-              <strong>{{ batch.receivedDate | date:'MMM d, y' }}</strong>
-            </div>
-            <div class="detail-item">
-              <span>Number of Boxes</span>
-              <strong>{{ batch.boxes }} Boxes</strong>
-            </div>
-            <div class="detail-item">
-              <span>Current Stage</span>
-              <strong>{{ batch.currentStage }}</strong>
-            </div>
-            <div class="detail-item">
-              <span>Last Updated</span>
-              <strong>{{ batch.lastUpdated | date:'MMM d, y' }}</strong>
-            </div>
-          </div>
-
-          <div class="batch-bottom">
-            <div class="batch-note">
-              <i-lucide [img]="icons.Info" [size]="15"></i-lucide>
-              <span>{{ batch.remarks }}</span>
-            </div>
-
-            <button type="button" class="view-button" (click)="openBatchDetails(batch)">
-              View Details
-              <i-lucide [img]="icons.ChevronRight" [size]="17"></i-lucide>
-            </button>
-          </div>
-        </article>
-      } @empty {
-        <div class="empty-state">
-          <div class="empty-icon">
-            <i-lucide [img]="icons.PackageOpen" [size]="32"></i-lucide>
-          </div>
-          <h3>No production records found</h3>
-          <p>There are no batches under this category yet. Your assigned silkworm batches from PTRI will appear here.</p>
+          <span class="module-arrow">
+            <i-lucide [img]="icons.ArrowRight" [size]="21"></i-lucide>
+          </span>
         </div>
-      }
+
+        <div class="module-content">
+          <span class="module-label">MODULE 01</span>
+          <h3>Silkworm Requests & My Batches</h3>
+          <p>
+            Submit silkworm requests, monitor PTRI approval and
+            allocation, view assigned batches, and update your
+            silkworm rearing progress.
+          </p>
+        </div>
+
+        <div class="module-footer">
+          <span>Manage Silkworm Activities</span>
+          <i-lucide [img]="icons.ArrowRight" [size]="17"></i-lucide>
+        </div>
+      </article>
+
+      <!-- COCOON PRODUCTION -->
+      <article
+        class="module-card cocoon-module"
+        role="button"
+        tabindex="0"
+        (click)="openCocoonProduction()"
+        (keydown.enter)="openCocoonProduction()"
+        (keydown.space)="$event.preventDefault(); openCocoonProduction()"
+        aria-label="Open Cocoon Production"
+      >
+        <div class="module-top">
+          <div class="module-icon gold">
+            <i-lucide [img]="icons.PackageCheck" [size]="30"></i-lucide>
+          </div>
+
+          <span class="module-arrow">
+            <i-lucide [img]="icons.ArrowRight" [size]="21"></i-lucide>
+          </span>
+        </div>
+
+        <div class="module-content">
+          <span class="module-label">MODULE 02</span>
+          <h3>Cocoon Production</h3>
+          <p>
+            Record harvested cocoons, view harvest records and QR codes,
+            submit cocoon returns, and monitor PTRI receiving verification.
+          </p>
+        </div>
+
+        <div class="module-footer">
+          <span>Manage Cocoon Activities</span>
+          <i-lucide [img]="icons.ArrowRight" [size]="17"></i-lucide>
+        </div>
+      </article>
+
     </div>
   </section>
-
-  <!-- BATCH DETAILS MODAL -->
-  @if (showDetailsModal && selectedBatch) {
-    <div class="modal-overlay" (click)="closeBatchDetails()">
-      <div
-        class="details-modal"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="batch-modal-title"
-        (click)="$event.stopPropagation()"
-      >
-
-        <div class="modal-header">
-          <div>
-            <span class="eyebrow">PRODUCTION RECORD</span>
-            <h2 id="batch-modal-title">Batch Details</h2>
-          </div>
-          <button type="button" class="modal-close" (click)="closeBatchDetails()" aria-label="Close modal">
-            <i-lucide [img]="icons.X" [size]="21"></i-lucide>
-          </button>
-        </div>
-
-        <div class="modal-body">
-
-          <!-- BATCH HEADING -->
-          <div class="modal-batch-heading">
-            <div class="batch-icon">
-              <i-lucide [img]="icons.Bug" [size]="25"></i-lucide>
-            </div>
-            <div>
-              <span>Batch Number</span>
-              <h3>{{ selectedBatch.batchNumber }}</h3>
-            </div>
-          </div>
-
-          <div class="modal-status">
-            <span>Status</span>
-            <span class="status-badge" [ngClass]="getStatusClass(selectedBatch.status)">
-              {{ selectedBatch.status }}
-            </span>
-          </div>
-
-          <!-- BATCH INFORMATION -->
-          <div class="modal-details-grid">
-            <div class="detail-item">
-              <span>Received Date</span>
-              <strong>{{ selectedBatch.receivedDate | date:'MMM d, y' }}</strong>
-            </div>
-            <div class="detail-item">
-              <span>Number of Boxes</span>
-              <strong>{{ selectedBatch.boxes }}</strong>
-            </div>
-            <div class="detail-item">
-              <span>Current Stage</span>
-              <strong>{{ selectedBatch.currentStage }}</strong>
-            </div>
-            <div class="detail-item">
-              <span>Last Updated</span>
-              <strong>{{ selectedBatch.lastUpdated | date:'MMM d, y' }}</strong>
-            </div>
-
-            @if (selectedBatch.mountingDate) {
-              <div class="detail-item">
-                <span>Mounting Date</span>
-                <strong>{{ selectedBatch.mountingDate | date:'MMM d, y' }}</strong>
-              </div>
-            }
-
-            @if (selectedBatch.harvestDate) {
-              <div class="detail-item">
-                <span>Harvest Date</span>
-                <strong>{{ selectedBatch.harvestDate | date:'MMM d, y' }}</strong>
-              </div>
-            }
-
-            @if (selectedBatch.harvestedWeight !== undefined) {
-              <div class="detail-item">
-                <span>Harvested Weight</span>
-                <strong>{{ selectedBatch.harvestedWeight | number:'1.2-2' }} kg</strong>
-              </div>
-            }
-
-            @if (selectedBatch.returnDate) {
-              <div class="detail-item">
-                <span>Return Date</span>
-                <strong>{{ selectedBatch.returnDate | date:'MMM d, y' }}</strong>
-              </div>
-            }
-
-            @if (selectedBatch.returnedWeight !== undefined) {
-              <div class="detail-item">
-                <span>Returned Weight</span>
-                <strong>{{ selectedBatch.returnedWeight | number:'1.2-2' }} kg</strong>
-              </div>
-            }
-          </div>
-
-          <!-- ORIGINAL SILKWORM QR CODE -->
-          <div class="qr-information qr-code-section">
-            <div class="qr-heading">
-              <strong>Original Silkworm QR Code</strong>
-              <span class="qr-type-label">PTRI BATCH</span>
-            </div>
-
-            @if (selectedBatch.silkwormQrCodeValue) {
-              <div class="qr-code-display">
-                <qrcode
-                  [qrdata]="selectedBatch.silkwormQrCodeValue"
-                  [width]="qrCodeWidth"
-                  [errorCorrectionLevel]="qrCodeErrorCorrectionLevel"
-                  [margin]="2"
-                  [elementType]="'canvas'"
-                ></qrcode>
-              </div>
-
-              <p class="qr-reference">
-                {{ selectedBatch.silkwormQrCodeValue }}
-              </p>
-
-              <small>
-                This QR code identifies the original silkworm batch supplied by PTRI.
-                It is linked to your production and rearing records.
-              </small>
-            } @else {
-              <p>No Silkworm QR code available for this batch.</p>
-            }
-          </div>
-
-          <!-- COCOON HARVEST RECORD -->
-          @if (getCocoonRecord(selectedBatch.id); as cocoonRecord) {
-            <div class="cocoon-record">
-
-              <div class="record-heading">
-                <i-lucide [img]="icons.Package" [size]="19"></i-lucide>
-                <strong>Cocoon Harvest Record</strong>
-              </div>
-
-              <div class="modal-details-grid">
-                <div class="detail-item">
-                  <span>Cocoon Batch Number</span>
-                  <strong>{{ cocoonRecord.cocoonBatchNumber }}</strong>
-                </div>
-                <div class="detail-item">
-                  <span>Harvest Date</span>
-                  <strong>{{ cocoonRecord.harvestDate | date:'MMM d, y' }}</strong>
-                </div>
-                <div class="detail-item">
-                  <span>Farmer-Declared Weight</span>
-                  <strong>{{ cocoonRecord.harvestedWeight | number:'1.2-2' }} kg</strong>
-                </div>
-                <div class="detail-item">
-                  <span>Cocoon Quantity</span>
-                  <strong>{{ cocoonRecord.cocoonQuantity ?? 'Not provided' }}</strong>
-                </div>
-                <div class="detail-item">
-                  <span>Condition</span>
-                  <strong>{{ cocoonRecord.cocoonCondition }}</strong>
-                </div>
-                <div class="detail-item">
-                  <span>Return Status</span>
-                  <strong>{{ cocoonRecord.returnStatus }}</strong>
-                </div>
-              </div>
-
-              <!-- COCOON HARVEST QR CODE -->
-              <div class="qr-information cocoon-qr qr-code-section">
-                <div class="qr-heading">
-                  <strong>Cocoon Harvest QR Code</strong>
-                  <span class="qr-type-label">HARVEST RECORD</span>
-                </div>
-
-                @if (cocoonRecord.cocoonQrCodeValue) {
-                  <div class="qr-code-display">
-                    <qrcode
-                      [qrdata]="cocoonRecord.cocoonQrCodeValue"
-                      [width]="qrCodeWidth"
-                      [errorCorrectionLevel]="qrCodeErrorCorrectionLevel"
-                      [margin]="2"
-                      [elementType]="'canvas'"
-                    ></qrcode>
-                  </div>
-
-                  <p class="qr-reference">
-                    {{ cocoonRecord.cocoonQrCodeValue }}
-                  </p>
-
-                  <small>
-                    This QR code identifies your harvested cocoon record and links it
-                    to the original silkworm batch for PTRI verification.
-                  </small>
-                } @else {
-                  <p>No Cocoon QR code available.</p>
-                }
-              </div>
-
-              @if (cocoonRecord.actualReceivedWeight !== undefined) {
-                <div class="detail-item">
-                  <span>PTRI Verified Received Weight</span>
-                  <strong>{{ cocoonRecord.actualReceivedWeight | number:'1.2-2' }} kg</strong>
-                </div>
-              }
-
-              @if (cocoonRecord.receivingRemarks) {
-                <div class="remarks-box">
-                  <strong>PTRI Receiving Remarks</strong>
-                  <p>{{ cocoonRecord.receivingRemarks }}</p>
-                </div>
-              }
-
-            </div>
-          }
-
-          <!-- PRODUCTION REMARKS -->
-          <div class="remarks-box">
-            <strong>Production Remarks</strong>
-            <p>{{ selectedBatch.remarks || 'No remarks available.' }}</p>
-          </div>
-
-          <!-- START REARING ACTION -->
-          @if (selectedBatch.status === 'Received') {
-            <div class="action-panel">
-              <h3>Start Silkworm Rearing</h3>
-              <p>Begin recording the rearing progress when you start caring for this batch.</p>
-              <button type="button" class="action-button" (click)="startRearing(selectedBatch)">
-                <i-lucide [img]="icons.Sprout" [size]="18"></i-lucide>
-                Start Rearing
-              </button>
-            </div>
-          }
-
-          <!-- REARING PROGRESS ACTION -->
-          @if (selectedBatch.status === 'In Rearing') {
-            <div class="action-panel">
-              <h3>Update Rearing Progress</h3>
-              <p>Select the current instar stage of your silkworms.</p>
-
-              <label for="instar-stage">Current Instar Stage</label>
-              <select
-                id="instar-stage"
-                [value]="selectedStage"
-                (change)="selectedStage = $any($event.target).value"
-              >
-                @for (stage of stageOptions; track stage) {
-                  <option [value]="stage">{{ stage }}</option>
-                }
-              </select>
-
-              <label for="rearing-remarks">Remarks (Optional)</label>
-              <textarea
-                id="rearing-remarks"
-                rows="3"
-                [value]="rearingRemarks"
-                (input)="rearingRemarks = $any($event.target).value"
-                placeholder="Add notes about the silkworms' progress..."
-              ></textarea>
-
-              <button type="button" class="action-button" (click)="updateStage(selectedBatch)">
-                <i-lucide [img]="icons.Activity" [size]="18"></i-lucide>
-                Save Stage Update
-              </button>
-
-              <button type="button" class="secondary-action" (click)="markReadyForHarvest(selectedBatch)">
-                Mark Ready for Harvest
-              </button>
-            </div>
-          }
-
-          <!-- HARVEST ACTION -->
-          @if (selectedBatch.status === 'Ready for Harvest') {
-            <div class="action-panel">
-              <h3>Cocoons Ready for Harvest</h3>
-              <p>Record the harvested cocoons to create a separate Cocoon QR reference.</p>
-              <button type="button" class="action-button" (click)="openHarvestForm(selectedBatch)">
-                <i-lucide [img]="icons.Package" [size]="18"></i-lucide>
-                Submit Harvest Details
-              </button>
-            </div>
-          }
-
-          <!-- RETURN ACTION -->
-          @if (selectedBatch.status === 'Harvested') {
-            <div class="action-panel">
-              <h3>Return Harvested Cocoons</h3>
-              <p>After physically delivering the harvested cocoons to PTRI, record the return date here.</p>
-              <button type="button" class="action-button" (click)="openReturnForm(selectedBatch)">
-                <i-lucide [img]="icons.PackageOpen" [size]="18"></i-lucide>
-                Submit Cocoon Return
-              </button>
-            </div>
-          }
-
-          <!-- RETURN SUBMITTED STATUS -->
-          @if (selectedBatch.status === 'Return Submitted') {
-            <div class="confirmation-box">
-              <i-lucide [img]="icons.Clock" [size]="19"></i-lucide>
-              <div>
-                <strong>Awaiting PTRI Confirmation</strong>
-                <p>Your cocoon return has been submitted. PTRI staff still needs to verify the actual received weight and condition.</p>
-              </div>
-            </div>
-          }
-
-          <!-- RETURN CONFIRMATION STATUS -->
-          @if (selectedBatch.status === 'Returned to PTRI') {
-            <div class="confirmation-box">
-              <i-lucide
-                [img]="selectedBatch.returnConfirmed ? icons.CheckCircle : icons.Clock"
-                [size]="19"
-              ></i-lucide>
-              <div>
-                <strong>
-                  {{ selectedBatch.returnConfirmed ? 'PTRI Receipt Confirmed' : 'Awaiting PTRI Confirmation' }}
-                </strong>
-                <p>
-                  {{ selectedBatch.returnConfirmed
-                    ? (selectedBatch.receivingRemarks || 'PTRI has confirmed receipt of this batch.')
-                    : 'Your cocoon return is waiting for PTRI staff verification.' }}
-                </p>
-              </div>
-            </div>
-          }
-
-        </div>
-
-        <div class="modal-footer">
-          <button type="button" class="close-button" (click)="closeBatchDetails()">
-            Close
-          </button>
-        </div>
-
-      </div>
-    </div>
-  }
-
-  <!-- HARVEST FORM MODAL -->
-  @if (showHarvestModal && selectedBatch) {
-    <div class="modal-overlay" (click)="closeHarvestForm()">
-      <div
-        class="details-modal form-modal"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="harvest-modal-title"
-        (click)="$event.stopPropagation()"
-      >
-
-        <div class="modal-header">
-          <div>
-            <span class="eyebrow">COCOON PRODUCTION</span>
-            <h2 id="harvest-modal-title">Submit Harvest Details</h2>
-          </div>
-          <button type="button" class="modal-close" (click)="closeHarvestForm()" aria-label="Close modal">
-            <i-lucide [img]="icons.X" [size]="21"></i-lucide>
-          </button>
-        </div>
-
-        <div class="modal-body">
-
-          <p class="form-description">
-            Record the cocoon harvest information for batch {{ selectedBatch.batchNumber }}.
-          </p>
-
-          <div class="form-group">
-            <label for="harvest-date">Harvest Date *</label>
-            <input
-              id="harvest-date"
-              type="date"
-              [value]="harvestDate"
-              (change)="harvestDate = $any($event.target).value"
-              required
-            >
-          </div>
-
-          <div class="form-group">
-            <label for="harvest-weight">Harvested Weight (kg) *</label>
-            <input
-              id="harvest-weight"
-              type="number"
-              min="0.01"
-              step="0.01"
-              [value]="harvestedWeight ?? ''"
-              (input)="onHarvestWeightChange($any($event.target).value)"
-              placeholder="Enter harvested weight"
-              required
-            >
-          </div>
-
-          <div class="form-group">
-            <label for="cocoon-quantity">Cocoon Quantity (Optional)</label>
-            <input
-              id="cocoon-quantity"
-              type="number"
-              min="1"
-              step="1"
-              [value]="cocoonQuantity ?? ''"
-              (input)="onCocoonQuantityChange($any($event.target).value)"
-              placeholder="Enter estimated quantity"
-            >
-          </div>
-
-          <div class="form-group">
-            <label for="cocoon-condition">Cocoon Condition *</label>
-            <select
-              id="cocoon-condition"
-              [value]="cocoonCondition"
-              (change)="cocoonCondition = $any($event.target).value"
-            >
-              <option value="Good">Good</option>
-              <option value="Fair">Fair</option>
-              <option value="Needs Inspection">Needs Inspection</option>
-            </select>
-          </div>
-
-          <div class="form-group">
-            <label for="expected-return-date">Expected Return Date (Optional)</label>
-            <input
-              id="expected-return-date"
-              type="date"
-              [value]="expectedReturnDate"
-              (change)="expectedReturnDate = $any($event.target).value"
-            >
-          </div>
-
-          <div class="form-group">
-            <label for="harvest-remarks">Harvest Remarks (Optional)</label>
-            <textarea
-              id="harvest-remarks"
-              rows="3"
-              [value]="harvestRemarks"
-              (input)="harvestRemarks = $any($event.target).value"
-              placeholder="Add additional harvest details..."
-            ></textarea>
-          </div>
-
-          <div class="info-banner">
-            <div class="info-icon">
-              <i-lucide [img]="icons.Info" [size]="20"></i-lucide>
-            </div>
-            <div>
-              <strong>Separate Cocoon QR Reference</strong>
-              <p>Submitting this form creates a new cocoon harvest record linked to the original silkworm batch. It does not confirm physical return to PTRI.</p>
-            </div>
-          </div>
-
-        </div>
-
-        <div class="modal-footer">
-          <button type="button" class="close-button" (click)="closeHarvestForm()">
-            Cancel
-          </button>
-          <button
-            type="button"
-            class="action-button"
-            [disabled]="!harvestDate || !harvestedWeight || harvestedWeight <= 0 || !cocoonCondition"
-            (click)="submitHarvest()"
-          >
-            Submit Harvest
-          </button>
-        </div>
-
-      </div>
-    </div>
-  }
-
-  <!-- RETURN FORM MODAL -->
-  @if (showReturnModal && selectedBatch) {
-    <div class="modal-overlay" (click)="closeReturnForm()">
-      <div
-        class="details-modal form-modal"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="return-modal-title"
-        (click)="$event.stopPropagation()"
-      >
-
-        <div class="modal-header">
-          <div>
-            <span class="eyebrow">COCOON RETURN</span>
-            <h2 id="return-modal-title">Submit Cocoon Return</h2>
-          </div>
-          <button type="button" class="modal-close" (click)="closeReturnForm()" aria-label="Close modal">
-            <i-lucide [img]="icons.X" [size]="21"></i-lucide>
-          </button>
-        </div>
-
-        <div class="modal-body">
-
-          <p class="form-description">
-            Record the date you physically returned the harvested cocoons to PTRI for batch {{ selectedBatch.batchNumber }}.
-          </p>
-
-          <div class="form-group">
-            <label for="return-date">Date Returned to PTRI *</label>
-            <input
-              id="return-date"
-              type="date"
-              [value]="returnDate"
-              (change)="returnDate = $any($event.target).value"
-              required
-            >
-          </div>
-
-          <!-- COCOON QR FOR PTRI VERIFICATION -->
-          @if (getCocoonRecord(selectedBatch.id); as cocoonRecord) {
-            <div class="qr-information cocoon-qr qr-code-section">
-
-              <div class="qr-heading">
-                <strong>Present this Cocoon QR Code to PTRI</strong>
-                <span class="qr-type-label">FOR VERIFICATION</span>
-              </div>
-
-              @if (cocoonRecord.cocoonQrCodeValue) {
-                <div class="qr-code-display">
-                  <qrcode
-                    [qrdata]="cocoonRecord.cocoonQrCodeValue"
-                    [width]="qrCodeWidth"
-                    [errorCorrectionLevel]="qrCodeErrorCorrectionLevel"
-                    [margin]="2"
-                    [elementType]="'canvas'"
-                  ></qrcode>
-                </div>
-
-                <p class="qr-reference">
-                  {{ cocoonRecord.cocoonQrCodeValue }}
-                </p>
-
-                <small>
-                  Present this QR code to PTRI staff when physically returning
-                  your harvested cocoons. They will use it to locate your harvest record.
-                </small>
-              } @else {
-                <p>No Cocoon QR code available.</p>
-              }
-
-            </div>
-          }
-
-          <div class="info-banner">
-            <div class="info-icon">
-              <i-lucide [img]="icons.Info" [size]="20"></i-lucide>
-            </div>
-            <div>
-              <strong>Important</strong>
-              <p>Submitting this return only records that you have returned the cocoons. PTRI must still verify the actual received weight and confirm the transaction.</p>
-            </div>
-          </div>
-
-        </div>
-
-        <div class="modal-footer">
-          <button type="button" class="close-button" (click)="closeReturnForm()">
-            Cancel
-          </button>
-          <button
-            type="button"
-            class="action-button"
-            [disabled]="!returnDate"
-            (click)="submitReturn()"
-          >
-            Submit Return
-          </button>
-        </div>
-
-      </div>
-    </div>
-  }
 
 </div>

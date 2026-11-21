@@ -1,44 +1,29 @@
 
-import { Component } from '@angular/core';
+import Swal from 'sweetalert2';
+import QRCode from 'qrcode';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
-// =====================================
-// INTERFACES
-// =====================================
+import {
+  SilkwormRequest,
+  SilkwormRequestService,
+  SilkwormBatch,
+  AssignWormsData
+} from '../../../services/silkworm-request.service';
 
-interface SilkwormBatch {
-  id: string;
-  farmer: string;
-  farmerId: string;
+import {
+  FarmerAccount,
+  FarmerAccountService
+} from '../../../services/farmer-account.service';
 
-  totalMulberryHills: number;
-  availableMulberryLeavesKg: number;
-
-  silkwormType: string;
-  breed: string;
-
-  quantityPrepared: number;
-  quantityGiven: number;
-
-  dateGiven: string;
-  receivedBy: string;
-  preparedBy: string;
-
-  remarks: string;
-  qrValue: string;
+interface FarmerRequestView extends SilkwormRequest {
+  farmArea: string;
+  registeredMulberryTreeCount: number | null;
+  farmerRecordFound: boolean;
+  farmName: string;
+  communityName: string;
 }
-
-interface FarmerOption {
-  name: string;
-  farmerId: string;
-  totalMulberryHills: number;
-  availableMulberryLeavesKg: number;
-}
-
-// =====================================
-// COMPONENT
-// =====================================
 
 @Component({
   selector: 'app-silkworm-batches',
@@ -47,250 +32,169 @@ interface FarmerOption {
   templateUrl: './silkworm-batches.html',
   styleUrl: './silkworm-batches.css',
 })
-export class SilkwormBatches {
+export class SilkwormBatches implements OnInit {
+
+  constructor(
+    private silkwormRequestService: SilkwormRequestService,
+    private farmerAccountService: FarmerAccountService,
+    private cdr: ChangeDetectorRef
+  ) {}
 
   pageTitle = 'Silkworm Batches';
 
   pageDescription =
-    'Manage silkworm batches distributed to farmers and monitor their mulberry resources and batch records.';
+    'Review farmer silkworm requests and assign prepared silkworm batches.';
 
-  // =====================================
-  // SEARCH AND FILTER
-  // =====================================
+  requests: FarmerRequestView[] = [];
+  farmers: FarmerAccount[] = [];
+  batches: SilkwormBatch[] = [];
+
+  isLoading = false;
+  isAssigning = false;
+  isGeneratingQr = false;
+  errorMessage = '';
 
   searchTerm = '';
-  selectedFarmer = 'All Farmers';
+  selectedStatus = 'All Requests';
 
-  get farmers(): string[] {
-    return [
-      'All Farmers',
-      ...new Set(this.batches.map(batch => batch.farmer))
-    ];
+  showViewModal = false;
+  showAssignModal = false;
+
+  selectedRequest: FarmerRequestView | null = null;
+  selectedBatch: SilkwormBatch | null = null;
+
+  qrCodeDataUrl = '';
+
+  // This route must be registered in the Angular routing configuration.
+  private readonly batchScanRoute = '/farmer/batch-scan';
+
+  assignForm: AssignWormsData = this.createEmptyAssignForm();
+
+  ngOnInit(): void {
+    void this.loadData();
   }
 
-  // =====================================
-  // FARMER DIRECTORY
-  // Sample farmer resource information
-  // Replace with latest farmer requests
-  // when Firebase is integrated.
-  // =====================================
-
-  farmerDirectory: FarmerOption[] = [
-    {
-      name: 'Juan Dela Cruz',
-      farmerId: 'FRM-001',
-      totalMulberryHills: 250,
-      availableMulberryLeavesKg: 85
-    },
-    {
-      name: 'Maria Santos',
-      farmerId: 'FRM-002',
-      totalMulberryHills: 180,
-      availableMulberryLeavesKg: 60
-    },
-    {
-      name: 'Pedro Reyes',
-      farmerId: 'FRM-003',
-      totalMulberryHills: 220,
-      availableMulberryLeavesKg: 75
-    },
-    {
-      name: 'Ana Dela Cruz',
-      farmerId: 'FRM-004',
-      totalMulberryHills: 150,
-      availableMulberryLeavesKg: 50
-    },
-    {
-      name: 'Ramon Garcia',
-      farmerId: 'FRM-005',
-      totalMulberryHills: 300,
-      availableMulberryLeavesKg: 100
-    }
-  ];
-
-  // =====================================
-  // MODAL CONTROLS
-  // =====================================
-
-  showCreateModal = false;
-  showViewModal = false;
-
-  selectedBatchId = '';
-  modalError = '';
-
-  // =====================================
-  // CREATE BATCH FORM
-  // =====================================
-
-  createForm = this.getEmptyForm();
-
-  private getEmptyForm() {
+  private createEmptyAssignForm(): AssignWormsData {
     return {
-      farmer: '',
-      farmerId: '',
-
-      totalMulberryHills: 0,
-      availableMulberryLeavesKg: 0,
-
-      silkwormType: 'Mulberry Silkworm',
+      silkwormType: '',
       breed: '',
-
-      quantityPrepared: 0,
-      quantityGiven: 0,
-
-      dateGiven: '',
-      receivedBy: '',
-      preparedBy: 'PTRI Staff',
-
-      remarks: ''
+      trays: 0,
+      quantity: 0,
+      preparationDate: '',
+      deliveryDate: '',
+      ptriRemarks: '',
+      farmArea: '',
+      registeredMulberryTreeCount: 0
     };
   }
 
   // =====================================
-  // SAMPLE BATCH RECORDS
+  // LOAD REQUESTS, FARMER RECORDS AND BATCHES
   // =====================================
 
-  batches: SilkwormBatch[] = [
-    {
-      id: 'SWB-2026-001',
-      farmer: 'Juan Dela Cruz',
-      farmerId: 'FRM-001',
+  async loadData(showLoading = true): Promise<void> {
+    this.isLoading = true;
+    this.errorMessage = '';
 
-      totalMulberryHills: 250,
-      availableMulberryLeavesKg: 85,
-
-      silkwormType: 'Mulberry Silkworm',
-      breed: 'Not specified',
-
-      quantityPrepared: 5,
-      quantityGiven: 5,
-
-      dateGiven: 'Nov. 19, 2026',
-      receivedBy: 'Juan Dela Cruz',
-      preparedBy: 'PTRI Staff',
-
-      remarks: 'Batch successfully given to the farmer.',
-      qrValue: 'SWB-2026-001'
-    },
-    {
-      id: 'SWB-2026-002',
-      farmer: 'Maria Santos',
-      farmerId: 'FRM-002',
-
-      totalMulberryHills: 180,
-      availableMulberryLeavesKg: 60,
-
-      silkwormType: 'Mulberry Silkworm',
-      breed: 'Not specified',
-
-      quantityPrepared: 3,
-      quantityGiven: 3,
-
-      dateGiven: 'Nov. 20, 2026',
-      receivedBy: 'Maria Santos',
-      preparedBy: 'PTRI Staff',
-
-      remarks: 'Batch successfully given to the farmer.',
-      qrValue: 'SWB-2026-002'
-    },
-    {
-      id: 'SWB-2026-003',
-      farmer: 'Pedro Reyes',
-      farmerId: 'FRM-003',
-
-      totalMulberryHills: 220,
-      availableMulberryLeavesKg: 75,
-
-      silkwormType: 'Mulberry Silkworm',
-      breed: 'Not specified',
-
-      quantityPrepared: 4,
-      quantityGiven: 4,
-
-      dateGiven: 'Nov. 21, 2026',
-      receivedBy: 'Pedro Reyes',
-      preparedBy: 'PTRI Staff',
-
-      remarks: 'Batch successfully given to the farmer.',
-      qrValue: 'SWB-2026-003'
-    },
-    {
-      id: 'SWB-2026-004',
-      farmer: 'Ana Dela Cruz',
-      farmerId: 'FRM-004',
-
-      totalMulberryHills: 150,
-      availableMulberryLeavesKg: 50,
-
-      silkwormType: 'Mulberry Silkworm',
-      breed: 'Not specified',
-
-      quantityPrepared: 2,
-      quantityGiven: 2,
-
-      dateGiven: 'Nov. 22, 2026',
-      receivedBy: 'Ana Dela Cruz',
-      preparedBy: 'PTRI Staff',
-
-      remarks: 'Batch successfully given to the farmer.',
-      qrValue: 'SWB-2026-004'
-    },
-    {
-      id: 'SWB-2026-005',
-      farmer: 'Ramon Garcia',
-      farmerId: 'FRM-005',
-
-      totalMulberryHills: 300,
-      availableMulberryLeavesKg: 100,
-
-      silkwormType: 'Mulberry Silkworm',
-      breed: 'Not specified',
-
-      quantityPrepared: 6,
-      quantityGiven: 6,
-
-      dateGiven: 'Nov. 18, 2026',
-      receivedBy: 'Ramon Garcia',
-      preparedBy: 'PTRI Staff',
-
-      remarks: 'Batch successfully given to the farmer.',
-      qrValue: 'SWB-2026-005'
+    if (showLoading) {
+      Swal.fire({
+        title: 'Loading Silkworm Requests',
+        text: 'Please wait while we retrieve farmer requests and batch records...',
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        showConfirmButton: false,
+        background: '#fffdf8',
+        color: '#493a2c',
+        didOpen: () => Swal.showLoading()
+      });
     }
-  ];
 
-  // =====================================
-  // SELECTED BATCH
-  // =====================================
+    try {
+      const [requests, farmers, batches] = await Promise.all([
+        this.silkwormRequestService.getAllRequests(),
+        this.farmerAccountService.getFarmers(),
+        this.silkwormRequestService.getAllBatches()
+      ]);
 
-  get selectedBatch(): SilkwormBatch | undefined {
-    return this.batches.find(
-      batch => batch.id === this.selectedBatchId
-    );
+      this.farmers = farmers;
+      this.batches = batches;
+
+      this.requests = requests.map(request => {
+        const farmer = farmers.find(
+          item => item.authUid === request.farmerUid
+        );
+
+        return {
+          ...request,
+          farmArea: farmer?.farmArea || '',
+          registeredMulberryTreeCount:
+            farmer ? Number(farmer.mulberryTreeCount || 0) : null,
+          farmerRecordFound: !!farmer,
+          farmName: farmer?.farmName || '',
+          communityName: farmer?.communityName || ''
+        };
+      });
+
+    } catch (error) {
+      console.error('Error loading silkworm data:', error);
+
+      this.errorMessage =
+        'Unable to load farmer requests and batch records. Please check your connection and Firebase permissions.';
+
+      await Swal.fire({
+        icon: 'error',
+        title: 'Unable to Load Data',
+        text: this.errorMessage,
+        confirmButtonColor: '#245638',
+        background: '#fffdf8',
+        color: '#493a2c'
+      });
+
+    } finally {
+      this.isLoading = false;
+
+      if (showLoading) {
+        Swal.close();
+      }
+
+      this.cdr.detectChanges();
+    }
   }
 
   // =====================================
-  // FILTERED BATCH RECORDS
+  // FILTER FARMER REQUEST CARDS
   // =====================================
 
-  get filteredBatches(): SilkwormBatch[] {
+  get filteredRequests(): FarmerRequestView[] {
     const search = this.searchTerm.toLowerCase().trim();
 
-    return this.batches.filter(batch => {
+    return this.requests.filter(request => {
       const matchesSearch =
-        batch.farmer.toLowerCase().includes(search) ||
-        batch.id.toLowerCase().includes(search);
+        !search ||
+        (request.farmerName || '').toLowerCase().includes(search) ||
+        (request.requestNumber || '').toLowerCase().includes(search) ||
+        (request.farmName || '').toLowerCase().includes(search) ||
+        (request.communityName || '').toLowerCase().includes(search);
 
-      const matchesFarmer =
-        this.selectedFarmer === 'All Farmers' ||
-        batch.farmer === this.selectedFarmer;
+      const matchesStatus =
+        this.selectedStatus === 'All Requests' ||
+        request.status === this.selectedStatus;
 
-      return matchesSearch && matchesFarmer;
+      return matchesSearch && matchesStatus;
     });
   }
 
-  // =====================================
-  // OVERVIEW CARDS
-  // =====================================
+  get pendingRequests(): number {
+    return this.requests.filter(
+      request => request.status === 'Pending'
+    ).length;
+  }
+
+  get assignedRequests(): number {
+    return this.requests.filter(
+      request => request.status === 'Worms Assigned'
+    ).length;
+  }
 
   get totalBatches(): number {
     return this.batches.length;
@@ -298,185 +202,369 @@ export class SilkwormBatches {
 
   get farmersServed(): number {
     return new Set(
-      this.batches.map(batch => batch.farmerId)
+      this.batches.map(batch => batch.farmerUid)
     ).size;
   }
 
   get totalTraysGiven(): number {
     return this.batches.reduce(
-      (total, batch) => total + batch.quantityGiven,
+      (total, batch) => total + Number(batch.trays || 0),
       0
     );
   }
 
+  getFarmDisplayName(request: FarmerRequestView): string {
+    return request.farmName ||
+      request.communityName ||
+      'Farm name not provided';
+  }
+
+  getRequestBatch(request: FarmerRequestView): SilkwormBatch | undefined {
+    const batchId = request.linkedBatchIds?.[0];
+
+    if (!batchId) return undefined;
+
+    return this.batches.find(batch => batch.id === batchId);
+  }
+
+  isAssigned(request: FarmerRequestView): boolean {
+    return request.status === 'Worms Assigned' ||
+      !!this.getRequestBatch(request);
+  }
+
+  canAssign(request: FarmerRequestView): boolean {
+    return request.farmerRecordFound &&
+      !!this.farmers.find(
+        farmer => farmer.authUid === request.farmerUid
+      ) &&
+      !this.isAssigned(request) &&
+      request.status !== 'Rejected';
+  }
+
   // =====================================
-  // VIEW BATCH MODAL
+  // VIEW REQUEST AND ASSIGNED BATCH DETAILS
   // =====================================
 
-  openBatchDetails(batch: SilkwormBatch): void {
-    this.selectedBatchId = batch.id;
+  async openViewModal(request: FarmerRequestView): Promise<void> {
+    this.selectedRequest = request;
+    this.selectedBatch = this.getRequestBatch(request) || null;
+    this.qrCodeDataUrl = '';
+
     this.showViewModal = true;
+    this.cdr.detectChanges();
+
+    if (this.selectedBatch) {
+      await this.loadBatchQrCode(this.selectedBatch);
+    }
   }
 
   closeViewModal(): void {
     this.showViewModal = false;
+    this.selectedRequest = null;
+    this.selectedBatch = null;
+    this.qrCodeDataUrl = '';
   }
 
   // =====================================
-  // CREATE BATCH MODAL
+  // OPEN ASSIGN WORMS MODAL
   // =====================================
 
-  createBatch(): void {
-    this.createForm = this.getEmptyForm();
-    this.modalError = '';
-    this.showCreateModal = true;
-  }
+  async openAssignModal(request: FarmerRequestView): Promise<void> {
+    if (this.isAssigning) return;
 
-  closeCreateModal(): void {
-    this.showCreateModal = false;
-    this.modalError = '';
-  }
-
-  // =====================================
-  // AUTOMATIC FARMER INFORMATION
-  // =====================================
-
-  onFarmerChange(): void {
-    const farmer = this.farmerDirectory.find(
-      item => item.name === this.createForm.farmer
-    );
-
-    if (!farmer) {
-      this.createForm.farmerId = '';
-      this.createForm.totalMulberryHills = 0;
-      this.createForm.availableMulberryLeavesKg = 0;
-      this.createForm.receivedBy = '';
+    if (this.isAssigned(request)) {
+      await Swal.fire({
+        icon: 'info',
+        title: 'Worms Already Assigned',
+        text: 'This farmer request already has an assigned batch.',
+        confirmButtonColor: '#245638',
+        background: '#fffdf8',
+        color: '#493a2c'
+      });
       return;
     }
 
-    this.createForm.farmerId = farmer.farmerId;
-    this.createForm.totalMulberryHills =
-      farmer.totalMulberryHills;
-
-    this.createForm.availableMulberryLeavesKg =
-      farmer.availableMulberryLeavesKg;
-
-    this.createForm.receivedBy = farmer.name;
-  }
-
-  // =====================================
-  // GENERATE UNIQUE BATCH ID
-  // =====================================
-
-  private generateBatchId(): string {
-    const year = new Date().getFullYear();
-
-    const highestNumber = this.batches.reduce(
-      (highest, batch) => {
-        const number = Number(batch.id.split('-').pop()) || 0;
-        return Math.max(highest, number);
-      },
-      0
-    );
-
-    const nextNumber = String(highestNumber + 1).padStart(3, '0');
-
-    return `SWB-${year}-${nextNumber}`;
-  }
-
-  // =====================================
-  // SAVE NEW BATCH
-  // =====================================
-
-  saveBatch(): void {
-    this.modalError = '';
-
-    const form = this.createForm;
-
-    if (
-      !form.farmer ||
-      !form.dateGiven ||
-      !form.receivedBy ||
-      !form.preparedBy
-    ) {
-      this.modalError = 'Please complete all required fields.';
+    if (!this.canAssign(request)) {
+      await Swal.fire({
+        icon: 'warning',
+        title: 'Farmer Record Unavailable',
+        text: 'A matching Farmer Record with a valid account link is required before assigning worms.',
+        confirmButtonColor: '#245638',
+        background: '#fffdf8',
+        color: '#493a2c'
+      });
       return;
     }
 
-    if (
-      !form.totalMulberryHills ||
-      !form.availableMulberryLeavesKg
-    ) {
-      this.modalError =
-        'The selected farmer must have available farm resource information.';
-      return;
-    }
+    this.selectedRequest = request;
 
-    if (
-      form.quantityPrepared <= 0 ||
-      form.quantityGiven <= 0
-    ) {
-      this.modalError = 'Please enter a valid tray quantity.';
-      return;
-    }
-
-    if (form.quantityGiven > form.quantityPrepared) {
-      this.modalError =
-        'Quantity given cannot exceed the quantity prepared.';
-      return;
-    }
-
-    if (!form.silkwormType.trim()) {
-      this.modalError = 'Please enter the silkworm type.';
-      return;
-    }
-
-    const batchId = this.generateBatchId();
-
-    const newBatch: SilkwormBatch = {
-      id: batchId,
-
-      farmer: form.farmer,
-      farmerId: form.farmerId,
-
-      totalMulberryHills: Number(form.totalMulberryHills),
-      availableMulberryLeavesKg:
-        Number(form.availableMulberryLeavesKg),
-
-      silkwormType: form.silkwormType,
-      breed: form.breed.trim() || 'Not specified',
-
-      quantityPrepared: Number(form.quantityPrepared),
-      quantityGiven: Number(form.quantityGiven),
-
-      dateGiven: form.dateGiven,
-      receivedBy: form.receivedBy,
-      preparedBy: form.preparedBy,
-
-      remarks: form.remarks.trim(),
-
-      qrValue: batchId
+    this.assignForm = {
+      ...this.createEmptyAssignForm(),
+      farmArea: request.farmArea,
+      registeredMulberryTreeCount:
+        request.registeredMulberryTreeCount ?? 0
     };
 
-    this.batches.unshift(newBatch);
+    this.showAssignModal = true;
+  }
 
-    this.selectedBatchId = batchId;
-    this.selectedFarmer = 'All Farmers';
-    this.searchTerm = '';
+  closeAssignModal(): void {
+    if (this.isAssigning) return;
 
-    this.showCreateModal = false;
-    this.showViewModal = true;
-
-    this.createForm = this.getEmptyForm();
+    this.showAssignModal = false;
+    this.selectedRequest = null;
+    this.assignForm = this.createEmptyAssignForm();
   }
 
   // =====================================
-  // RESET FILTERS
+  // ASSIGN WORMS AND SAVE ACTUAL BATCH
+  // =====================================
+
+  async assignWorms(): Promise<void> {
+    const request = this.selectedRequest;
+
+    if (!request || this.isAssigning) return;
+
+    const form = this.assignForm;
+
+    if (
+      !form.silkwormType.trim() ||
+      !form.breed.trim() ||
+      !form.preparationDate ||
+      !form.deliveryDate
+    ) {
+      await Swal.fire({
+        icon: 'warning',
+        title: 'Incomplete Assignment Details',
+        text: 'Please complete the silkworm type, breed, preparation date, and delivery date.',
+        confirmButtonColor: '#245638',
+        background: '#fffdf8',
+        color: '#493a2c'
+      });
+      return;
+    }
+
+    if (
+      !Number.isInteger(Number(form.trays)) ||
+      Number(form.trays) <= 0 ||
+      !Number.isInteger(Number(form.quantity)) ||
+      Number(form.quantity) <= 0
+    ) {
+      await Swal.fire({
+        icon: 'warning',
+        title: 'Invalid Quantity',
+        text: 'Enter a positive whole number for both trays and silkworm quantity.',
+        confirmButtonColor: '#245638',
+        background: '#fffdf8',
+        color: '#493a2c'
+      });
+      return;
+    }
+
+    if (form.deliveryDate < form.preparationDate) {
+      await Swal.fire({
+        icon: 'warning',
+        title: 'Invalid Delivery Date',
+        text: 'The delivery date cannot be earlier than the preparation date.',
+        confirmButtonColor: '#245638',
+        background: '#fffdf8',
+        color: '#493a2c'
+      });
+      return;
+    }
+
+    const confirmation = await Swal.fire({
+      icon: 'question',
+      title: 'Assign Silkworm Batch?',
+      html: `You are assigning <strong>${Number(form.trays)} tray(s)</strong> to <strong>${request.farmerName}</strong>.`,
+      showCancelButton: true,
+      confirmButtonText: 'Yes, Assign & Save',
+      cancelButtonText: 'Go Back',
+      confirmButtonColor: '#245638',
+      cancelButtonColor: '#795033',
+      background: '#fffdf8',
+      color: '#493a2c',
+      reverseButtons: true
+    });
+
+    if (!confirmation.isConfirmed) return;
+
+    this.isAssigning = true;
+
+    Swal.fire({
+      title: 'Saving Silkworm Batch',
+      text: 'Please wait while we create the batch record...',
+      allowOutsideClick: false,
+      allowEscapeKey: false,
+      showConfirmButton: false,
+      background: '#fffdf8',
+      color: '#493a2c',
+      didOpen: () => Swal.showLoading()
+    });
+
+    try {
+      const savedBatch = await this.silkwormRequestService.assignWorms(
+        request,
+        {
+          ...form,
+          trays: Number(form.trays),
+          quantity: Number(form.quantity),
+          registeredMulberryTreeCount:
+            Number(form.registeredMulberryTreeCount || 0)
+        }
+      );
+
+      this.showAssignModal = false;
+      this.showViewModal = false;
+      this.selectedRequest = null;
+      this.selectedBatch = null;
+      this.assignForm = this.createEmptyAssignForm();
+
+      await this.loadData(false);
+
+      await Swal.fire({
+        icon: 'success',
+        title: 'Silkworm Batch Assigned!',
+        html: `
+          <p>The batch for <strong>${savedBatch.farmerName}</strong> has been saved successfully.</p>
+          <p><strong>Batch ID:</strong> ${savedBatch.batchNumber}</p>
+          <p><strong>Status:</strong> Assigned</p>
+        `,
+        confirmButtonText: 'View Batch & QR Code',
+        confirmButtonColor: '#245638',
+        background: '#fffdf8',
+        color: '#493a2c'
+      });
+
+      // Open the newly assigned batch details and generate its QR.
+      const updatedRequest = this.requests.find(
+        item => item.id === request.id
+      ) || request;
+
+      this.selectedRequest = updatedRequest;
+      this.selectedBatch = savedBatch;
+      this.showViewModal = true;
+
+      await this.loadBatchQrCode(savedBatch);
+
+      this.cdr.detectChanges();
+
+    } catch (error) {
+      console.error('Error assigning silkworm batch:', error);
+      Swal.close();
+
+      const message = error instanceof Error
+        ? error.message
+        : 'The batch could not be saved. Please check your Firebase permissions and try again.';
+
+      await Swal.fire({
+        icon: 'error',
+        title: 'Unable to Assign Worms',
+        text: message,
+        confirmButtonColor: '#245638',
+        background: '#fffdf8',
+        color: '#493a2c'
+      });
+
+    } finally {
+      this.isAssigning = false;
+      this.cdr.detectChanges();
+    }
+  }
+
+  // =====================================
+  // BUILD BATCH SCANNING URL
+  // =====================================
+
+  getBatchScanUrl(batch: SilkwormBatch): string {
+    const baseUrl = window.location.origin;
+    const batchId = encodeURIComponent(batch.id);
+
+    return `${baseUrl}${this.batchScanRoute}/${batchId}`;
+  }
+
+  // =====================================
+  // GENERATE BATCH QR CODE
+  // =====================================
+
+  async generateQrCode(value: string): Promise<string> {
+    if (!value) return '';
+
+    try {
+      return await QRCode.toDataURL(value, {
+        width: 400,
+        margin: 3,
+        errorCorrectionLevel: 'H',
+        color: {
+          dark: '#203d2c',
+          light: '#ffffff'
+        }
+      });
+
+    } catch (error) {
+      console.error('Error generating batch QR code:', error);
+      return '';
+    }
+  }
+
+  async loadBatchQrCode(batch: SilkwormBatch): Promise<void> {
+    if (!batch?.id) {
+      this.qrCodeDataUrl = '';
+      return;
+    }
+
+    this.isGeneratingQr = true;
+    this.qrCodeDataUrl = '';
+    this.cdr.detectChanges();
+
+    try {
+      const scanUrl = this.getBatchScanUrl(batch);
+
+      this.qrCodeDataUrl = await this.generateQrCode(scanUrl);
+
+    } catch (error) {
+      console.error('Unable to load batch QR code:', error);
+      this.qrCodeDataUrl = '';
+
+    } finally {
+      this.isGeneratingQr = false;
+      this.cdr.detectChanges();
+    }
+  }
+
+  // =====================================
+  // DOWNLOAD BATCH QR CODE
+  // =====================================
+
+  downloadQrCode(): void {
+    if (!this.selectedBatch || !this.qrCodeDataUrl) {
+      void Swal.fire({
+        icon: 'warning',
+        title: 'QR Code Not Available',
+        text: 'Please wait until the QR code has been generated.',
+        confirmButtonColor: '#245638',
+        background: '#fffdf8',
+        color: '#493a2c'
+      });
+      return;
+    }
+
+    const link = document.createElement('a');
+
+    link.href = this.qrCodeDataUrl;
+    link.download = `${this.selectedBatch.batchNumber}-QR-Code.png`;
+
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
+
+  // =====================================
+  // FILTER CONTROLS
   // =====================================
 
   resetFilters(): void {
     this.searchTerm = '';
-    this.selectedFarmer = 'All Farmers';
+    this.selectedStatus = 'All Requests';
   }
-
 }

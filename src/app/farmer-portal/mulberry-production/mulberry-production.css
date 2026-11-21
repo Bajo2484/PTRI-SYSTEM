@@ -252,3 +252,54 @@
   .calendar-legend{gap:7px}
   .calendar-legend span{font-size:7px}
 }
+
+/* MANUAL START PRUNING DATE */
+.date-selection{display:flex;flex-direction:column;gap:7px;margin:9px 0 10px}
+.date-selection label{color:#245b38;font-size:11px;font-weight:800}
+.date-selection input{width:100%;min-height:40px;padding:8px 11px;border:1px solid #c9dfca;border-radius:9px;background:#fff;color:#263342;font-family:inherit;font-size:12px;font-weight:600;outline:none;transition:border-color .2s,box-shadow .2s}
+.date-selection input:focus{border-color:#238e4b;box-shadow:0 0 0 3px #238e4b18}
+.date-selection input:disabled{background:#f1f4f1;opacity:.6;cursor:not-allowed}
+.date-help{color:#718075;font-size:9px;line-height:1.4}
+
+/* CALCULATED END DATE PREVIEW */
+.calculated-date{border-color:#e8d5a9;background:#fffaf0}
+.calculated-date .date-icon{color:#c48716}
+.calculated-date small{color:#98712b}
+.calculated-date strong{color:#80520c}
+
+/* BUTTON DISABLED STATE */
+.start-button:disabled{opacity:.55;cursor:not-allowed;transform:none;box-shadow:none;filter:none}
+
+/* MOBILE DATE INPUT */
+@media(max-width:700px){
+  .date-selection{gap:6px;margin:8px 0}
+  .date-selection label{font-size:10px}
+  .date-selection input{min-height:39px;padding:8px 9px;font-size:11px}
+  .date-help{font-size:8px}
+}
+
+/* COMPACT CALENDAR HIGHLIGHTS */
+.calendar-day { min-height: 68px; padding: 7px 4px; border: 1px solid #e8eee8; border-radius: 9px; display: flex; flex-direction: column; align-items: center; gap: 6px; background: #fff; transition: .2s ease; }
+.calendar-day.start-day { background: #e0f4e6; border: 2px solid #269653; }
+.calendar-day.end-day { background: #fff1cf; border: 2px solid #e5a323; }
+.calendar-day.today:not(.start-day):not(.end-day) { background: #e5efff; border: 2px solid #3979d8; }
+.day-number { font-size: 14px; font-weight: 800; color: #34483b; }
+.start-day .day-number { color: #16743b; }
+.end-day .day-number { color: #9a6500; }
+.today .day-number { color: #205bb5; }
+.calendar-marker { width: 100%; padding: 4px 2px; border-radius: 5px; text-align: center; font-size: 8px; font-weight: 900; letter-spacing: .2px; }
+.start-marker { background: #269653; color: #fff; }
+.end-marker { background: #e5a323; color: #fff; }
+.today-marker { padding: 3px 7px; border-radius: 20px; background: #3979d8; color: #fff; font-size: 8px; font-weight: 900; }
+.calendar-day.other-month { opacity: .35; }
+.calendar-day.start-day.other-month, .calendar-day.end-day.other-month { opacity: .65; }
+.start-dot { background: #269653; }
+.end-dot { background: #e5a323; }
+.next-dot { background: #3979d8; }
+
+@media (max-width: 600px) {
+  .calendar-day { min-height: 56px; padding: 6px 2px; gap: 5px; border-radius: 7px; }
+  .day-number { font-size: 12px; }
+  .calendar-marker { font-size: 6px; padding: 3px 1px; }
+  .today-marker { font-size: 7px; padding: 2px 5px; }
+}

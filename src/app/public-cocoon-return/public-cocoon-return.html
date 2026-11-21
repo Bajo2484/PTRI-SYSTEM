@@ -1,0 +1,151 @@
+<p>public-cocoon-return works!</p>
+
+<div class="public-page">
+
+  <header class="public-header">
+    <div class="brand">
+      <div class="brand-icon">
+        <span>PTRI</span>
+      </div>
+      <div>
+        <h2>PTRI Silk System</h2>
+        <p>Silk Supply and Delivery Communication System</p>
+      </div>
+    </div>
+    <span class="public-label">PUBLIC RECORD</span>
+  </header>
+
+  <main class="page-content">
+
+    <div class="loading-container" *ngIf="loading">
+      <div class="loader"></div>
+      <h2>Retrieving Cocoon Return Details</h2>
+      <p>Please wait while we verify your QR code.</p>
+    </div>
+
+    <div class="error-container" *ngIf="!loading && errorMessage">
+      <div class="error-icon">!</div>
+      <h2>Record Unavailable</h2>
+      <p>{{ errorMessage }}</p>
+      <button type="button" (click)="retry()">Try Again</button>
+    </div>
+
+    <ng-container *ngIf="!loading && record">
+
+      <section class="success-banner">
+        <div class="success-icon">✓</div>
+        <div>
+          <span>COCOON RETURN RECORD</span>
+          <h1>Return Details</h1>
+          <p>This QR code is linked to a PTRI cocoon return record.</p>
+        </div>
+      </section>
+
+      <section class="record-card">
+
+        <div class="record-heading">
+          <div>
+            <span class="eyebrow">RETURN REFERENCE</span>
+            <h2>{{ record.returnNumber }}</h2>
+          </div>
+
+          <span class="status-badge" [ngClass]="getStatusClass(record.status)">
+            {{ record.status }}
+          </span>
+        </div>
+
+        <div class="section-heading">
+          <span class="section-icon">01</span>
+          <div>
+            <h3>Reference Information</h3>
+            <p>Original production and batch references</p>
+          </div>
+        </div>
+
+        <div class="details-grid">
+          <div class="detail-item">
+            <span>Harvest Number</span>
+            <strong>{{ record.harvestNumber || '—' }}</strong>
+          </div>
+
+          <div class="detail-item">
+            <span>Worm Batch ID</span>
+            <strong>{{ record.batchNumber || '—' }}</strong>
+          </div>
+
+          <div class="detail-item full-width">
+            <span>Silkworm Request Number</span>
+            <strong>{{ record.requestNumber || '—' }}</strong>
+          </div>
+        </div>
+
+        <div class="section-divider"></div>
+
+        <div class="section-heading">
+          <span class="section-icon">02</span>
+          <div>
+            <h3>Cocoon Return Information</h3>
+            <p>Farmer-submitted harvest and return details</p>
+          </div>
+        </div>
+
+        <div class="details-grid">
+          <div class="detail-item">
+            <span>Harvest Date</span>
+            <strong>{{ record.harvestDate | date:'MMM d, y' }}</strong>
+          </div>
+
+          <div class="detail-item">
+            <span>Return Date</span>
+            <strong>{{ record.returnDate | date:'MMM d, y' }}</strong>
+          </div>
+
+          <div class="detail-item">
+            <span>Declared Cocoon Weight</span>
+            <strong class="highlight-value">
+              {{ formatWeight(record.cocoonWeight) }}
+            </strong>
+          </div>
+
+          <div class="detail-item">
+            <span>Cocoon Quantity</span>
+            <strong>{{ record.cocoonQuantity }}</strong>
+          </div>
+
+          <div class="detail-item full-width">
+            <span>Cocoon Condition</span>
+            <strong>{{ record.cocoonCondition || 'Not specified' }}</strong>
+          </div>
+        </div>
+
+        <div class="notice">
+          <span class="notice-icon">i</span>
+          <p>
+            The displayed weight and quantity are farmer-submitted information.
+            Actual received measurements and official verification are handled
+            separately by authorized PTRI staff.
+          </p>
+        </div>
+
+      </section>
+
+      <div class="verification-note">
+        <span class="verification-icon">✓</span>
+        <p>
+          This page displays limited public information associated with the
+          QR code. It does not provide access to private farmer information
+          or PTRI staff verification records.
+        </p>
+      </div>
+
+    </ng-container>
+
+  </main>
+
+  <footer class="public-footer">
+    <strong>Philippine Textile Research Institute (PTRI)</strong>
+    <p>Silk Supply and Delivery Communication System</p>
+    <span>Public Cocoon Return Information Page</span>
+  </footer>
+
+</div>

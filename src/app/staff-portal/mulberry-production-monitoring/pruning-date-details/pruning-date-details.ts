@@ -20,6 +20,7 @@ import {
   Info,
   Leaf,
   Scissors,
+   Flag,
   BadgeCheck
 } from 'lucide-angular';
 
@@ -63,6 +64,7 @@ interface PruningDateEntry {
         Info,
         Leaf,
         Scissors,
+         Flag,
         BadgeCheck
       })
     }

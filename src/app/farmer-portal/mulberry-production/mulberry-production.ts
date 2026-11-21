@@ -37,6 +37,8 @@ export class MulberryProduction implements OnInit, OnDestroy {
 
   farmerUid = '';
   farmerName = 'Farmer';
+  selectedStartDate = '';
+
   loading = false;
   processing = false;
 
@@ -61,6 +63,7 @@ export class MulberryProduction implements OnInit, OnDestroy {
         this.farmerUid = '';
         this.farmerName = 'Farmer';
         this.pruningRecords = [];
+        this.selectedStartDate = '';
         this.generateCalendar();
         this.cdr.detectChanges();
       }
@@ -87,6 +90,20 @@ export class MulberryProduction implements OnInit, OnDestroy {
     return new Date(year, month - 1, day);
   }
 
+  // Check whether a selected date is a valid calendar date.
+  private isValidDate(value: string): boolean {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+      return false;
+    }
+
+    const date = this.parseDate(value);
+
+    return (
+      !isNaN(date.getTime()) &&
+      this.formatDate(date) === value
+    );
+  }
+
   // Convert Date into YYYY-MM-DD.
   private formatDate(value: Date): string {
     const year = value.getFullYear();
@@ -96,7 +113,7 @@ export class MulberryProduction implements OnInit, OnDestroy {
     return `${year}-${month}-${day}`;
   }
 
-  // Automatically calculate a date after the given number of days.
+  // Calculate a date after the given number of days.
   private addDays(value: string, days: number): string {
     const date = this.parseDate(value);
     date.setDate(date.getDate() + days);
@@ -122,6 +139,15 @@ export class MulberryProduction implements OnInit, OnDestroy {
     );
 
     return Math.round((secondUTC - firstUTC) / 86400000);
+  }
+
+  // Preview the automatically calculated End Pruning date.
+  get selectedEndDate(): string | null {
+    if (!this.selectedStartDate || !this.isValidDate(this.selectedStartDate)) {
+      return null;
+    }
+
+    return this.addDays(this.selectedStartDate, this.cycleDays);
   }
 
   // Load the farmer's pruning records from Firestore.
@@ -159,11 +185,23 @@ export class MulberryProduction implements OnInit, OnDestroy {
     }
   }
 
-  // Get the currently active pruning cycle.
+  // Get the current scheduled or ongoing pruning cycle.
   get activePruning(): MulberryPruningRecord | undefined {
     return this.pruningRecords.find(
-      record => record.status === 'In Progress'
+      record =>
+        record.status === 'Scheduled' ||
+        record.status === 'In Progress'
     );
+  }
+
+  // Check whether the current cycle is scheduled for a future date.
+  get isScheduled(): boolean {
+    return this.activePruning?.status === 'Scheduled';
+  }
+
+  // Check whether the current cycle is already ongoing.
+  get isInProgress(): boolean {
+    return this.activePruning?.status === 'In Progress';
   }
 
   // Get the most recent pruning record.
@@ -176,7 +214,7 @@ export class MulberryProduction implements OnInit, OnDestroy {
     })[0];
   }
 
-  // Use the active cycle first; otherwise use the latest cycle.
+  // Use the scheduled or ongoing cycle first; otherwise use the latest cycle.
   get currentCycleRecord(): MulberryPruningRecord | undefined {
     return this.activePruning || this.latestPruning;
   }
@@ -188,7 +226,7 @@ export class MulberryProduction implements OnInit, OnDestroy {
     return record?.startDate || record?.pruningDate || null;
   }
 
-  // Display the latest recorded start date.
+  // Display the latest recorded or scheduled start date.
   get lastPruningDate(): string | null {
     return this.currentCycleStartDate;
   }
@@ -210,7 +248,7 @@ export class MulberryProduction implements OnInit, OnDestroy {
       : null;
   }
 
-  // Automatically calculate the remaining days until End Pruning.
+  // Get the number of days until the calculated End Pruning date.
   get daysRemaining(): number | null {
     if (!this.nextPruningDate) return null;
 
@@ -220,9 +258,26 @@ export class MulberryProduction implements OnInit, OnDestroy {
     );
   }
 
+  // Get the number of days before a scheduled cycle starts.
+  get daysUntilStart(): number | null {
+    if (!this.isScheduled || !this.currentCycleStartDate) {
+      return null;
+    }
+
+    return Math.max(
+      this.getDateDifference(this.getToday(), this.currentCycleStartDate),
+      0
+    );
+  }
+
   // Calculate the progress of the 45-day pruning cycle.
   get cycleProgress(): number {
     if (!this.currentCycleStartDate) return 0;
+
+    // A scheduled cycle has not started yet.
+    if (this.currentCycleStartDate > this.getToday()) {
+      return 0;
+    }
 
     const elapsed = this.getDateDifference(
       this.currentCycleStartDate,
@@ -239,6 +294,10 @@ export class MulberryProduction implements OnInit, OnDestroy {
   get cycleStatus(): string {
     if (!this.currentCycleStartDate) return 'Not Started';
 
+    if (this.isScheduled) {
+      return 'Scheduled';
+    }
+
     if (this.daysRemaining === 0) {
       return 'Pruning Due';
     }
@@ -250,9 +309,10 @@ export class MulberryProduction implements OnInit, OnDestroy {
     return 'Growing';
   }
 
-  // Show PTRI reminder when 7 days or less remain.
+  // Show PTRI reminder when an ongoing cycle has 7 days or less remaining.
   get showPreparationReminder(): boolean {
     return (
+      this.isInProgress &&
       this.daysRemaining !== null &&
       this.daysRemaining <= 7
     );
@@ -263,42 +323,80 @@ export class MulberryProduction implements OnInit, OnDestroy {
     return `conic-gradient(#36a852 ${this.cycleProgress}%, #dce8df ${this.cycleProgress}%)`;
   }
 
-  // Start a new pruning cycle using today's date automatically.
+  // Schedule or start a new pruning cycle using the farmer's selected date.
   async startPruning(): Promise<void> {
-    if (!this.farmerUid || this.processing || this.activePruning) {
+    if (
+      !this.farmerUid ||
+      this.processing ||
+      this.loading ||
+      this.activePruning
+    ) {
       return;
     }
 
+    const selectedDate = this.selectedStartDate;
+
+    // Validate the selected Start Pruning date.
+    if (!selectedDate || !this.isValidDate(selectedDate)) {
+      await Swal.fire({
+        icon: 'warning',
+        title: 'Select a Valid Date',
+        text: 'Please select a valid Start Pruning date.',
+        confirmButtonColor: '#218449'
+      });
+
+      return;
+    }
+
+    // Future dates are allowed.
+    const automaticEndDate = this.addDays(
+      selectedDate,
+      this.cycleDays
+    );
+
     const today = this.getToday();
-    const automaticEndDate = this.addDays(today, this.cycleDays);
+    const isFutureDate = selectedDate > today;
+
+    const formattedStartDate = this.parseDate(selectedDate).toLocaleDateString(
+      'en-US',
+      {
+        month: 'long',
+        day: 'numeric',
+        year: 'numeric'
+      }
+    );
+
+    const formattedEndDate = this.parseDate(automaticEndDate).toLocaleDateString(
+      'en-US',
+      {
+        month: 'long',
+        day: 'numeric',
+        year: 'numeric'
+      }
+    );
 
     const confirmation = await Swal.fire({
       icon: 'question',
-      title: 'Start Pruning?',
+      title: isFutureDate ? 'Confirm Pruning Schedule?' : 'Confirm Start Pruning?',
       html: `
-        The system will automatically record
-        <strong>${this.parseDate(today).toLocaleDateString('en-US', {
-          month: 'long',
-          day: 'numeric',
-          year: 'numeric'
-        })}</strong>
-        as your Start Pruning date.
+        Your selected Start Pruning date is
+        <strong>${formattedStartDate}</strong>.
 
         <br><br>
 
-        Your calculated End Pruning date will be
-        <strong>${this.parseDate(automaticEndDate).toLocaleDateString('en-US', {
-          month: 'long',
-          day: 'numeric',
-          year: 'numeric'
-        })}</strong>.
+        The system will automatically calculate your End Pruning date as
+        <strong>${formattedEndDate}</strong>.
 
         <br><br>
 
-        Your 45-day pruning countdown will begin automatically.
+        ${
+          isFutureDate
+            ? 'Your pruning cycle will remain scheduled until the selected Start Pruning date.'
+            : 'Your 45-day pruning countdown will be based on your selected date.'
+        }
       `,
       showCancelButton: true,
-      confirmButtonText: 'Yes, Start Pruning',
+      confirmButtonText: isFutureDate ? 'Yes, Schedule' : 'Yes, Confirm',
       cancelButtonText: 'Cancel',
       confirmButtonColor: '#218449'
     });
@@ -308,24 +406,50 @@ export class MulberryProduction implements OnInit, OnDestroy {
     this.processing = true;
 
     try {
-      // The service automatically saves today's date and calculates End Pruning.
-      await this.mulberryService.startPruning(this.farmerUid);
+      // Save the farmer's selected date and calculate End Pruning in the service.
+      await this.mulberryService.startPruning(
+        this.farmerUid,
+        selectedDate
+      );
 
+      this.selectedStartDate = '';
+
+      // Reload saved records and refresh the calendar.
       await this.loadMulberryData();
 
       await Swal.fire({
         icon: 'success',
-        title: 'Pruning Started!',
-        text: 'Your Start Pruning date has been saved and your automatic 45-day cycle has started.',
+        title: isFutureDate ? 'Pruning Scheduled!' : 'Pruning Started!',
+        html: `
+          ${
+            isFutureDate
+              ? 'Your future pruning schedule has been saved.'
+              : 'Your selected Start Pruning date has been saved.'
+          }
+
+          <br><br>
+
+          <strong>Start:</strong> ${formattedStartDate}
+          <br>
+          <strong>End:</strong> ${formattedEndDate}
+
+          <br><br>
+
+          ${
+            isFutureDate
+              ? 'The 45-day pruning cycle will begin on your selected Start Pruning date.'
+              : 'Your automatic 45-day cycle is now being monitored.'
+          }
+        `,
         confirmButtonColor: '#218449'
       });
 
     } catch (error) {
-      console.error('Error starting pruning:', error);
+      console.error('Error scheduling pruning:', error);
 
       await Swal.fire({
         icon: 'error',
-        title: 'Unable to Start Pruning',
+        title: 'Unable to Save Pruning Schedule',
         text: error instanceof Error ? error.message : 'Please try again.',
         confirmButtonColor: '#218449'
       });
@@ -354,7 +478,7 @@ export class MulberryProduction implements OnInit, OnDestroy {
     return record.startDate || record.pruningDate || null;
   }
 
-  // Navigate to the previous calendar month.
+  // Navigate to the previous calendar month without restrictions.
   previousMonth(): void {
     this.calendarMonth = new Date(
       this.calendarMonth.getFullYear(),
@@ -365,7 +489,7 @@ export class MulberryProduction implements OnInit, OnDestroy {
     this.generateCalendar();
   }
 
-  // Navigate to the next calendar month.
+  // Navigate to the next calendar month without restrictions.
   nextMonth(): void {
     this.calendarMonth = new Date(
       this.calendarMonth.getFullYear(),

@@ -17,7 +17,7 @@ export interface MulberryPruningRecord {
   farmerUid: string;
   startDate?: string;
   endDate?: string;
-  status?: 'In Progress' | 'Completed';
+  status?: 'Scheduled' | 'In Progress' | 'Completed';
   cycleDays: number;
 
   // Legacy fields: preserve existing records
@@ -31,10 +31,9 @@ export interface MulberryPruningRecord {
 @Injectable({ providedIn: 'root' })
 export class MulberryProductionService {
   private pruningCollection = collection(db, 'mulberry-pruning-records');
-
   private readonly cycleDays = 45;
 
-  // Get the current local date in YYYY-MM-DD format.
+  // Get today's local date.
   private getToday(): string {
     const today = new Date();
     const year = today.getFullYear();
@@ -44,11 +43,25 @@ export class MulberryProductionService {
     return `${year}-${month}-${day}`;
   }
 
-  // Automatically calculate the End Pruning date.
+  // Validate a YYYY-MM-DD date.
+  private isValidStartDate(value: string): boolean {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+
+    const [year, month, day] = value.split('-').map(Number);
+    const date = new Date(year, month - 1, day);
+
+    return (
+      date.getFullYear() === year &&
+      date.getMonth() === month - 1 &&
+      date.getDate() === day
+    );
+  }
+
+  // Automatically calculate End Pruning 45 days after Start Pruning.
   private calculateEndDate(startDate: string): string {
     const [year, month, day] = startDate.split('-').map(Number);
-
     const endDate = new Date(year, month - 1, day);
+
     endDate.setDate(endDate.getDate() + this.cycleDays);
 
     const endYear = endDate.getFullYear();
@@ -58,34 +71,108 @@ export class MulberryProductionService {
     return `${endYear}-${endMonth}-${endDay}`;
   }
 
-  // Start a new pruning cycle using today's date automatically.
-  // The optional second parameter is retained temporarily
-  // for compatibility with the previous component version.
-  async startPruning(
-    farmerUid: string,
-    _unusedStartDate?: string
-  ): Promise<string> {
-    const records = await this.getFarmerPruningRecords(farmerUid);
-
-    const today = this.getToday();
-
-    const activeCycle = records.find(record =>
-      record.status === 'In Progress' &&
-      (!record.endDate || record.endDate >= today)
-    );
-
-    if (activeCycle) {
-      throw new Error('You already have an ongoing pruning cycle.');
+  // Determine the correct status based on the pruning dates.
+  private getExpectedStatus(
+    startDate: string,
+    endDate: string,
+    today: string
+  ): 'Scheduled' | 'In Progress' | 'Completed' {
+    if (startDate > today) {
+      return 'Scheduled';
     }
 
-    const startDate = today;
+    if (endDate <= today) {
+      return 'Completed';
+    }
+
+    return 'In Progress';
+  }
+
+  // Synchronize saved pruning statuses with their dates.
+  private async synchronizeStatuses(
+    records: MulberryPruningRecord[]
+  ): Promise<MulberryPruningRecord[]> {
+    const today = this.getToday();
+
+    const updatedRecords = await Promise.all(
+      records.map(async record => {
+        const startDate = record.startDate || record.pruningDate;
+
+        if (!record.id || !startDate || !this.isValidStartDate(startDate)) {
+          return record;
+        }
+
+        const endDate =
+          record.endDate && this.isValidStartDate(record.endDate)
+            ? record.endDate
+            : this.calculateEndDate(startDate);
+
+        const expectedStatus = this.getExpectedStatus(
+          startDate,
+          endDate,
+          today
+        );
+
+        if (record.status !== expectedStatus) {
+          await updateDoc(doc(this.pruningCollection, record.id), {
+            status: expectedStatus
+          });
+        }
+
+        return {
+          ...record,
+          endDate,
+          status: expectedStatus
+        };
+      })
+    );
+
+    return updatedRecords;
+  }
+
+  // Start or schedule a pruning cycle using the farmer-selected date.
+  async startPruning(
+    farmerUid: string,
+    selectedStartDate: string
+  ): Promise<string> {
+    if (!farmerUid) {
+      throw new Error('Farmer account not found.');
+    }
+
+    if (!selectedStartDate || !this.isValidStartDate(selectedStartDate)) {
+      throw new Error('Please select a valid Start Pruning date.');
+    }
+
+    // Load and synchronize existing cycles first.
+    const records = await this.getFarmerPruningRecords(farmerUid);
+
+    // Only one scheduled or ongoing cycle is allowed at a time.
+    const existingCycle = records.find(record =>
+      record.status === 'Scheduled' ||
+      record.status === 'In Progress'
+    );
+
+    if (existingCycle) {
+      throw new Error(
+        'You already have a scheduled or ongoing pruning cycle. Complete the current cycle before creating another one.'
+      );
+    }
+
+    const startDate = selectedStartDate;
     const endDate = this.calculateEndDate(startDate);
+    const today = this.getToday();
+
+    const status = this.getExpectedStatus(
+      startDate,
+      endDate,
+      today
+    );
 
     const docRef = await addDoc(this.pruningCollection, {
       farmerUid,
       startDate,
       endDate,
-      status: 'In Progress',
+      status,
       cycleDays: this.cycleDays,
       createdAt: serverTimestamp()
     });
@@ -93,8 +180,7 @@ export class MulberryProductionService {
     return docRef.id;
   }
 
-  // Retrieve pruning records and automatically complete
-  // cycles whose calculated End Pruning date has arrived.
+  // Retrieve and synchronize the farmer's pruning records.
   async getFarmerPruningRecords(
     farmerUid: string
   ): Promise<MulberryPruningRecord[]> {
@@ -110,42 +196,10 @@ export class MulberryProductionService {
       ...document.data()
     })) as MulberryPruningRecord[];
 
-    const today = this.getToday();
-
-    const expiredCycles = records.filter(record =>
-      record.id &&
-      record.status === 'In Progress' &&
-      !!record.endDate &&
-      record.endDate <= today
-    );
-
-    // Update expired cycles in Firestore.
-    await Promise.all(
-      expiredCycles.map(record =>
-        updateDoc(doc(this.pruningCollection, record.id!), {
-          status: 'Completed'
-        })
-      )
-    );
-
-    // Reflect the updated status in the returned records.
-    return records.map(record => {
-      if (
-        record.status === 'In Progress' &&
-        record.endDate &&
-        record.endDate <= today
-      ) {
-        return {
-          ...record,
-          status: 'Completed'
-        };
-      }
-
-      return record;
-    });
+    return this.synchronizeStatuses(records);
   }
 
-    // Retrieve pruning records from all farmers for Staff monitoring.
+  // Retrieve all pruning records for PTRI Staff monitoring.
   async getAllPruningRecords(): Promise<MulberryPruningRecord[]> {
     const snapshot = await getDocs(this.pruningCollection);
 
@@ -154,33 +208,6 @@ export class MulberryProductionService {
       ...document.data()
     })) as MulberryPruningRecord[];
 
-    const today = this.getToday();
-
-    const expiredCycles = records.filter(record =>
-      record.id &&
-      record.status === 'In Progress' &&
-      !!record.endDate &&
-      record.endDate <= today
-    );
-
-    await Promise.all(
-      expiredCycles.map(record =>
-        updateDoc(doc(this.pruningCollection, record.id!), {
-          status: 'Completed'
-        })
-      )
-    );
-
-    return records.map(record => {
-      if (
-        record.status === 'In Progress' &&
-        record.endDate &&
-        record.endDate <= today
-      ) {
-        return { ...record, status: 'Completed' as const };
-      }
-
-      return record;
-    });
+    return this.synchronizeStatuses(records);
   }
 }
