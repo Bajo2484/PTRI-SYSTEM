@@ -164,3 +164,56 @@
 .update-item strong { font-size: 11px; }
 .update-item p { font-size: 10px; }
 .update-item small { font-size: 9px; }
+
+/* DYNAMIC DASHBOARD STATES */
+.status-badge.delivered { background: #e5f3e9; color: #286342; }
+.status-badge.rejected { background: #fae8e7; color: #a13d37; }
+.status-badge.default { background: #eef1ef; color: #65736a; }
+
+.empty-state, .empty-message, .empty-delivery, .empty-updates {
+  padding: 18px 10px;
+  color: #849087;
+  font-size: 10px;
+  text-align: center;
+}
+
+.empty-message p, .empty-delivery p, .empty-updates p {
+  margin: 5px 0;
+  color: #65756a;
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+.empty-message small, .empty-updates small {
+  color: #929d95;
+  font-size: 9px;
+}
+
+.empty-delivery {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  text-align: left;
+}
+
+.empty-delivery .delivery-icon {
+  flex-shrink: 0;
+}
+
+.empty-delivery strong {
+  color: #405448;
+  font-size: 10px;
+}
+
+.delivery-bottom .reply-btn {
+  flex-shrink: 0;
+}
+
+.updates-panel .update-item {
+  min-width: 0;
+}
+
+.updates-panel .update-item > div:last-child {
+  min-width: 0;
+}

@@ -250,6 +250,7 @@ export class CocoonCollection implements OnInit, OnDestroy {
     }
   }
 
+  
   // =====================================
   // OVERVIEW CARD VALUES
   // =====================================
@@ -260,8 +261,13 @@ export class CocoonCollection implements OnInit, OnDestroy {
 
   get totalWeightCollected(): number {
     return this.collections.reduce(
-      (total, item) =>
-        total + (Number(item.actualReceivedWeight) || 0),
+      (total, item) => {
+        const weight = Number(
+          item.actualReceivedWeight ?? item.cocoonWeight ?? 0
+        );
+
+        return total + (Number.isFinite(weight) ? weight : 0);
+      },
       0
     );
   }
@@ -273,16 +279,15 @@ export class CocoonCollection implements OnInit, OnDestroy {
   }
 
   get pendingReturns(): number {
+    return 0;
+  }
+
+  get receivedReturns(): number {
     return this.collections.filter(
       item => item.status === 'Submitted'
     ).length;
   }
 
-  get receivedReturns(): number {
-    return this.collections.filter(
-      item => item.status === 'Received'
-    ).length;
-  }
 
   // =====================================
   // SEARCH FILTER

@@ -2,8 +2,32 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { RouterLink } from '@angular/router';
+
 import { SilkOrderService, SilkOrder } from '../../services/silk-order.service';
 import { FarmerProductionService, FarmerProductionRecord } from '../../services/farmer-production.service';
+import { MulberryProductionService, MulberryPruningRecord } from '../../services/mulberry-production.service';
+import { FarmerAccountService, FarmerAccount } from '../../services/farmer-account.service';
+import { CocoonProductionService, CocoonReturnRecord } from '../../services/cocoon-production.service';
+
+interface CalendarEvent {
+  id: string;
+  date: string;
+  type: 'pruning' | 'delivery';
+  label: string;
+  title: string;
+  description: string;
+  status: string;
+}
+
+interface CalendarDay {
+  date: Date;
+  dateKey: string;
+  dayNumber: number;
+  inCurrentMonth: boolean;
+  isToday: boolean;
+  isSelected: boolean;
+  events: CalendarEvent[];
+}
 
 @Component({
   selector: 'app-staff-dashboard',
@@ -15,42 +39,32 @@ import { FarmerProductionService, FarmerProductionRecord } from '../../services/
 export class StaffDashboard implements OnInit {
   allOrders: SilkOrder[] = [];
   allProductions: FarmerProductionRecord[] = [];
+  allPruningRecords: MulberryPruningRecord[] = [];
+  allFarmers: FarmerAccount[] = [];
+  allCocoonReturns: CocoonReturnRecord[] = [];
+
   isLoading = true;
 
-  todayLabel = new Date().toLocaleDateString('en-PH', {
+  today = this.getTodayStart();
+
+  todayLabel = this.today.toLocaleDateString('en-PH', {
     day: 'numeric',
     month: 'long',
     year: 'numeric',
   });
 
-  monthLabel = new Date().toLocaleDateString('en-PH', {
-    month: 'long',
-    year: 'numeric',
-  });
+  productionGraphYear = this.today.getFullYear();
+  currentMonthIndex = this.today.getMonth();
 
-  // MONTHLY FARMER PRODUCTION GRAPH
   monthlyProduction: { month: string; quantity: number }[] = [];
-
-  productionGraphYear = new Date().getFullYear();
-  currentMonthIndex = new Date().getMonth();
+  monthlyAxisLabels: number[] = [0, 0, 0, 0, 0];
 
   stats = [
     { title: 'Active partner orders', value: '0', detail: 'Loading order records...', icon: '▣', color: 'teal' },
-    { title: 'Available silk yarn', value: 'Not tracked', detail: 'Inventory records are not yet available', icon: '⬡', color: 'orange' },
-    { title: 'Expected cocoon output', value: '0 kg', detail: '0 kg confirmed · 0 kg awaiting', icon: '♧', color: 'green' },
+    { title: 'Pending Order Reviews', value: '0', detail: 'Awaiting staff review', icon: '◷', color: 'orange' },
+    { title: 'Cocoon stock received', value: '0 kg', detail: '0 kg received · 0 kg submitted', icon: '♧', color: 'green' },
     { title: 'Scheduled movements', value: '0', detail: 'Upcoming partner deliveries', icon: '⇄', color: 'blue' },
   ];
-
-  stockDemand: { date: string; onHand: number; reserved: number }[] = [];
-
-  alerts: {
-    icon: string;
-    title: string;
-    description: string;
-    action: string;
-    type: string;
-    link: string;
-  }[] = [];
 
   recentOrders: {
     id: string;
@@ -69,9 +83,21 @@ export class StaffDashboard implements OnInit {
     time: string;
   }[] = [];
 
+  // OPERATIONS CALENDAR
+  calendarMonth = new Date(this.today.getFullYear(), this.today.getMonth(), 1);
+  calendarDays: CalendarDay[] = [];
+  calendarEvents: CalendarEvent[] = [];
+  selectedDate = this.getDateKey(this.today);
+  selectedDateEvents: CalendarEvent[] = [];
+
+  readonly weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
   constructor(
     private silkOrderService: SilkOrderService,
     private farmerProductionService: FarmerProductionService,
+    private mulberryProductionService: MulberryProductionService,
+    private farmerAccountService: FarmerAccountService,
+    private cocoonProductionService: CocoonProductionService,
     private cdr: ChangeDetectorRef
   ) {}
 
@@ -83,19 +109,32 @@ export class StaffDashboard implements OnInit {
     this.isLoading = true;
 
     try {
-      const [orders, productions] = await Promise.all([
+      const [
+        orders,
+        productions,
+        pruningRecords,
+        farmers,
+        cocoonReturns
+      ] = await Promise.all([
         this.silkOrderService.getAllOrders(),
         this.farmerProductionService.getAllProductions(),
+        this.mulberryProductionService.getAllPruningRecords(),
+        this.farmerAccountService.getFarmers(),
+        this.cocoonProductionService.getAllReturnRecordsForStaff(),
       ]);
 
       this.allOrders = orders || [];
       this.allProductions = productions || [];
+      this.allPruningRecords = pruningRecords || [];
+      this.allFarmers = farmers || [];
+      this.allCocoonReturns = cocoonReturns || [];
 
       this.generateDashboardStats();
       this.generateMonthlyProductionGraph();
       this.generateRecentOrders();
       this.generateUpcomingMovements();
-      this.generateAlerts();
+      this.generateCalendarEvents();
+      this.buildCalendarGrid();
 
     } catch (error) {
       console.error('Error loading staff dashboard data:', error);
@@ -105,7 +144,7 @@ export class StaffDashboard implements OnInit {
     }
   }
 
-  // MONTHLY PRODUCTION GRAPH
+  // MONTHLY EXPECTED COCOON OUTPUT GRAPH
   private generateMonthlyProductionGraph(): void {
     const year = this.productionGraphYear;
 
@@ -127,27 +166,38 @@ export class StaffDashboard implements OnInit {
           return sum + Number(record.quantity || 0);
         }, 0);
 
-      return {
-        month,
-        quantity: total,
-      };
+      return { month, quantity: total };
     });
-  }
 
-  // DYNAMIC BAR HEIGHT FOR MONTHLY PRODUCTION
-  getMonthlyProductionBarHeight(quantity: number): number {
     const maxQuantity = Math.max(
       ...this.monthlyProduction.map(item => item.quantity),
       0
     );
 
-    if (maxQuantity === 0 || quantity <= 0) {
+    const axisMaximum = maxQuantity > 0
+      ? Math.ceil(maxQuantity / 4) * 4
+      : 4;
+
+    this.monthlyAxisLabels = [
+      axisMaximum,
+      axisMaximum * 0.75,
+      axisMaximum * 0.5,
+      axisMaximum * 0.25,
+      0
+    ];
+  }
+
+  getMonthlyProductionBarHeight(quantity: number): number {
+    const axisMaximum = this.monthlyAxisLabels[0] || 0;
+
+    if (axisMaximum <= 0 || quantity <= 0) {
       return 0;
     }
 
-    return Math.max((quantity / maxQuantity) * 100, 3);
+    return Math.max((quantity / axisMaximum) * 100, 3);
   }
 
+  // DASHBOARD SUMMARY
   private generateDashboardStats(): void {
     const activeOrders = this.allOrders.filter(order =>
       order.status !== 'Delivered' && order.status !== 'Rejected'
@@ -161,25 +211,28 @@ export class StaffDashboard implements OnInit {
       (total, order) => total + Number(order.quantity || 0), 0
     );
 
-    const reviewedProductions = this.allProductions.filter(
-      production => production.status === 'Reviewed'
+   const submittedReturns = this.allCocoonReturns.filter(
+  record => record.status === 'Submitted'
+);
+
+const receivedWeight = submittedReturns.reduce(
+  (total, record) => {
+    const weight = Number(
+      record.actualReceivedWeight ?? record.cocoonWeight ?? 0
     );
 
-    const pendingProductions = this.allProductions.filter(
-      production => production.status === 'Pending Review'
-    );
+    return total + (Number.isFinite(weight) ? weight : 0);
+  },
+  0
+);
 
-    const confirmedQuantity = reviewedProductions.reduce(
-      (total, production) => total + Number(production.quantity || 0), 0
-    );
+    
 
-    const pendingQuantity = pendingProductions.reduce(
-      (total, production) => total + Number(production.quantity || 0), 0
+    const submittedWeight = submittedReturns.reduce(
+      (total, record) =>
+        total + Number(record.cocoonWeight || 0),
+      0
     );
-
-    const productionUnit = this.allProductions.find(
-      production => production.unit
-    )?.unit || 'kg';
 
     const upcomingCount = this.getUpcomingOrders().length;
 
@@ -187,21 +240,21 @@ export class StaffDashboard implements OnInit {
       {
         title: 'Active partner orders',
         value: String(activeOrders.length),
-        detail: `${this.formatQuantity(totalRequested)} kg requested · ${pendingOrders.length} pending review`,
+        detail: `${this.formatQuantity(totalRequested)} kg requested`,
         icon: '▣',
         color: 'teal',
       },
       {
-        title: 'Available silk yarn',
-        value: 'Not tracked',
-        detail: 'Inventory records are not yet available',
-        icon: '⬡',
+        title: 'Pending Order Reviews',
+        value: String(pendingOrders.length),
+        detail: 'Partner orders awaiting review',
+        icon: '◷',
         color: 'orange',
       },
       {
-        title: 'Expected cocoon output',
-        value: `${this.formatQuantity(confirmedQuantity + pendingQuantity)} ${productionUnit}`,
-        detail: `${this.formatQuantity(confirmedQuantity)} ${productionUnit} confirmed · ${this.formatQuantity(pendingQuantity)} ${productionUnit} awaiting`,
+        title: 'Cocoon stock received',
+        value: `${this.formatQuantity(receivedWeight)} kg`,
+        detail: `${this.formatQuantity(receivedWeight)} kg received · ${this.formatQuantity(submittedWeight)} kg submitted`,
         icon: '♧',
         color: 'green',
       },
@@ -245,42 +298,187 @@ export class StaffDashboard implements OnInit {
       });
   }
 
-  private generateAlerts(): void {
-    const pendingOrders = this.allOrders.filter(
-      order => order.status === 'Pending Review'
+  // BUILD CALENDAR EVENTS FROM ACTUAL FIRESTORE RECORDS
+  private generateCalendarEvents(): void {
+    const events: CalendarEvent[] = [];
+
+    this.allPruningRecords.forEach((record, index) => {
+      const startDate = this.parseDate(record.startDate || record.pruningDate);
+
+      if (!startDate) return;
+
+      const farmer = this.allFarmers.find(item =>
+        item.authUid === record.farmerUid ||
+        item.id === record.farmerUid
+      );
+
+      const farmerName = farmer?.fullName || 'Unknown Farmer';
+      const pruningStatus = record.status || 'Not specified';
+
+      let endDate = this.parseDate(record.endDate);
+
+      if (!endDate) {
+        endDate = new Date(startDate);
+        endDate.setDate(
+          endDate.getDate() + Number(record.cycleDays || 45)
+        );
+      }
+
+      const recordId = record.id || `pruning-${index}`;
+
+      events.push({
+        id: `${recordId}-start`,
+        date: this.getDateKey(startDate),
+        type: 'pruning',
+        label: `Start · ${farmerName}`,
+        title: 'Start Pruning',
+        description: `Farmer: ${farmerName}`,
+        status: pruningStatus,
+      });
+
+      events.push({
+        id: `${recordId}-end`,
+        date: this.getDateKey(endDate),
+        type: 'pruning',
+        label: `End · ${farmerName}`,
+        title: 'End Pruning',
+        description: `Farmer: ${farmerName}`,
+        status: pruningStatus,
+      });
+    });
+
+    this.allOrders.forEach((order, index) => {
+      const deliveryDate = this.parseDate(order.deliveryDate);
+
+      if (!deliveryDate) return;
+
+      events.push({
+        id: `delivery-${order.id || order.orderId || index}`,
+        date: this.getDateKey(deliveryDate),
+        type: 'delivery',
+        label: `Delivery · ${order.partnerName || 'Partner'}`,
+        title: 'Partner Delivery',
+        description: `${order.partnerName || 'Unknown Partner'} · ${this.formatQuantity(Number(order.quantity || 0))} kg ${order.silkType || 'silk'}`,
+        status: order.status || 'Not specified',
+      });
+    });
+
+    this.calendarEvents = events;
+    this.updateSelectedDateEvents();
+  }
+
+  // CALENDAR MONTH NAVIGATION
+  get calendarMonthLabel(): string {
+    return this.calendarMonth.toLocaleDateString('en-PH', {
+      month: 'long',
+      year: 'numeric',
+    });
+  }
+
+  previousCalendarMonth(): void {
+    this.calendarMonth = new Date(
+      this.calendarMonth.getFullYear(),
+      this.calendarMonth.getMonth() - 1,
+      1
     );
 
-    const pendingProductions = this.allProductions.filter(
-      production => production.status === 'Pending Review'
+    this.buildCalendarGrid();
+  }
+
+  nextCalendarMonth(): void {
+    this.calendarMonth = new Date(
+      this.calendarMonth.getFullYear(),
+      this.calendarMonth.getMonth() + 1,
+      1
     );
 
-    this.alerts = [];
+    this.buildCalendarGrid();
+  }
 
-    if (pendingOrders.length > 0) {
-      this.alerts.push({
-        icon: '▣',
-        title: `${pendingOrders.length} order${pendingOrders.length > 1 ? 's' : ''} awaiting review`,
-        description: pendingOrders.slice(0, 2).map(order => order.orderId || order.id).join(' · '),
-        action: 'Review partner orders',
-        type: 'green',
-        link: '/staff/silk-orders',
-      });
-    }
+  goToToday(): void {
+    this.calendarMonth = new Date(
+      this.today.getFullYear(),
+      this.today.getMonth(),
+      1
+    );
 
-    if (pendingProductions.length > 0) {
-      const farmerNames = [...new Set(
-        pendingProductions.slice(0, 2).map(production => production.farmerName || 'Farmer')
-      )];
+    this.selectCalendarDate(this.getDateKey(this.today));
+  }
 
-      this.alerts.push({
-        icon: '♧',
-        title: `${pendingProductions.length} farmer production record${pendingProductions.length > 1 ? 's' : ''} awaiting confirmation`,
-        description: farmerNames.join(' and '),
-        action: 'Review farmer production',
-        type: 'teal',
-        link: '/staff/farmer-production',
-      });
-    }
+  private buildCalendarGrid(): void {
+    const year = this.calendarMonth.getFullYear();
+    const month = this.calendarMonth.getMonth();
+
+    const firstDay = new Date(year, month, 1);
+    const mondayOffset = (firstDay.getDay() + 6) % 7;
+
+    const gridStart = new Date(year, month, 1 - mondayOffset);
+
+    const eventsByDate = new Map<string, CalendarEvent[]>();
+
+    this.calendarEvents.forEach(event => {
+      const existing = eventsByDate.get(event.date) || [];
+      existing.push(event);
+      eventsByDate.set(event.date, existing);
+    });
+
+    this.calendarDays = Array.from({ length: 42 }, (_, index) => {
+      const date = new Date(gridStart);
+      date.setDate(gridStart.getDate() + index);
+
+      const dateKey = this.getDateKey(date);
+
+      return {
+        date,
+        dateKey,
+        dayNumber: date.getDate(),
+        inCurrentMonth: date.getMonth() === month,
+        isToday: dateKey === this.getDateKey(this.today),
+        isSelected: dateKey === this.selectedDate,
+        events: eventsByDate.get(dateKey) || [],
+      };
+    });
+
+    this.updateSelectedDateEvents();
+  }
+
+  selectCalendarDate(dateKey: string): void {
+    this.selectedDate = dateKey;
+
+    this.calendarDays = this.calendarDays.map(day => ({
+      ...day,
+      isSelected: day.dateKey === dateKey,
+    }));
+
+    this.updateSelectedDateEvents();
+  }
+
+  private updateSelectedDateEvents(): void {
+    this.selectedDateEvents = this.calendarEvents.filter(
+      event => event.date === this.selectedDate
+    );
+  }
+
+  get selectedDateLabel(): string {
+    const date = this.parseDate(this.selectedDate);
+
+    return date
+      ? date.toLocaleDateString('en-PH', {
+          weekday: 'long',
+          day: 'numeric',
+          month: 'long',
+          year: 'numeric',
+        })
+      : '';
+  }
+
+  // DATE HELPERS
+  private getDateKey(date: Date): string {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+
+    return `${year}-${month}-${day}`;
   }
 
   private getUpcomingOrders(): SilkOrder[] {
@@ -347,9 +545,5 @@ export class StaffDashboard implements OnInit {
     return value.toLocaleString('en-PH', {
       maximumFractionDigits: 2,
     });
-  }
-
-  getBarHeight(value: number): number {
-    return (value / 160) * 100;
   }
 }

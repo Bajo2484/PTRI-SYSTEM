@@ -4,10 +4,10 @@
   <!-- WELCOME HEADER -->
   <section class="welcome-section">
     <div>
-      <h2>Good morning, Maria</h2>
-      <p>Here's the latest for Habing Pilipino Weavers Cooperative.</p>
+      <h2>{{ greeting }}, {{ currentPartnerName || 'Business Partner' }}</h2>
+      <p>Here's the latest update for your organization.</p>
     </div>
-    <span class="welcome-date">Friday, 23 October 2026</span>
+    <span class="welcome-date">{{ today | date:'EEEE, dd MMMM yyyy' }}</span>
   </section>
 
   <!-- PTRI COMMUNICATION BANNER -->
@@ -22,7 +22,10 @@
       <a routerLink="/partner/messages" class="open-messages-btn">
         ↗ Open messages
       </a>
-      <span>3 unread messages from PTRI Staff</span>
+      <span>
+        {{ unreadMessages }} unread
+        {{ unreadMessages === 1 ? 'message' : 'messages' }} from PTRI
+      </span>
     </div>
   </section>
 
@@ -34,26 +37,26 @@
         <span>Active orders</span>
         <span class="summary-icon green">▣</span>
       </div>
-      <h3>04</h3>
-      <p>1 preparing · 1 scheduled</p>
+      <h3>{{ activeOrders | number:'2.0-0' }}</h3>
+      <p>Orders not yet delivered or rejected</p>
     </div>
 
     <div class="summary-card">
       <div class="summary-top">
-        <span>Deliveries this month</span>
-        <span class="summary-icon green">▣</span>
+        <span>Pending review</span>
+        <span class="summary-icon green">◷</span>
       </div>
-      <h3>06</h3>
-      <p>4 received · 1 scheduled</p>
+      <h3>{{ pendingOrders | number:'2.0-0' }}</h3>
+      <p>Waiting for PTRI review</p>
     </div>
 
     <div class="summary-card">
       <div class="summary-top">
-        <span>Awaiting your receipt</span>
-        <span class="summary-icon green">⛶</span>
+        <span>Delivered orders</span>
+        <span class="summary-icon green">✓</span>
       </div>
-      <h3>01</h3>
-      <p>DEL-2026-0318 · arrived today</p>
+      <h3>{{ completedOrders | number:'2.0-0' }}</h3>
+      <p>Successfully marked as delivered</p>
     </div>
 
     <div class="summary-card">
@@ -61,8 +64,8 @@
         <span>Unread PTRI messages</span>
         <span class="summary-icon green">▱</span>
       </div>
-      <h3>03</h3>
-      <p>Across 2 conversations</p>
+      <h3>{{ unreadMessages | number:'2.0-0' }}</h3>
+      <p>Across {{ unreadConversationCount }} {{ unreadConversationCount === 1 ? 'conversation' : 'conversations' }}</p>
     </div>
 
   </section>
@@ -76,7 +79,7 @@
       <div class="panel-header">
         <div>
           <h3>Recent orders</h3>
-          <p>Your organization's latest material requests</p>
+          <p>Your organization's latest raw silk requests</p>
         </div>
         <a routerLink="/partner/orders" class="view-all">View all orders →</a>
       </div>
@@ -86,46 +89,36 @@
           <thead>
             <tr>
               <th>ORDER</th>
-              <th>MATERIALS</th>
+              <th>MATERIAL</th>
               <th>STATUS</th>
             </tr>
           </thead>
 
           <tbody>
-            <tr>
+            <tr *ngFor="let order of orders.slice(0, 4)">
               <td>
-                <strong>ORD-2026-0842</strong>
-                <small>12 Oct 2026</small>
+                <strong>{{ order.orderId }}</strong>
+                <small>{{ order.createdAt | date:'dd MMM yyyy' }}</small>
               </td>
               <td>
-                <strong>Silk cocoons + Silk yarn</strong>
-                <small>120 kg total</small>
+                <strong>{{ order.silkType }}</strong>
+                <small>{{ order.quantity | number:'1.0-2' }} kg</small>
               </td>
-              <td><span class="status-badge awaiting">Awaiting receipt</span></td>
+              <td>
+                <span class="status-badge" [ngClass]="getStatusClass(order.status)">
+                  {{ order.status }}
+                </span>
+              </td>
             </tr>
 
-            <tr>
-              <td>
-                <strong>ORD-2026-0856</strong>
-                <small>19 Oct 2026</small>
+            <tr *ngIf="!isLoading && orders.length === 0">
+              <td colspan="3" class="empty-state">
+                You haven't submitted any orders yet.
               </td>
-              <td>
-                <strong>Silk yarn</strong>
-                <small>30 kg · reeled silk</small>
-              </td>
-              <td><span class="status-badge scheduled">Scheduled</span></td>
             </tr>
 
-            <tr>
-              <td>
-                <strong>ORD-2026-0863</strong>
-                <small>21 Oct 2026</small>
-              </td>
-              <td>
-                <strong>Silk cocoons</strong>
-                <small>150 kg · dried</small>
-              </td>
-              <td><span class="status-badge preparing">Preparing</span></td>
+            <tr *ngIf="isLoading">
+              <td colspan="3" class="empty-state">Loading your orders...</td>
             </tr>
           </tbody>
         </table>
@@ -143,59 +136,82 @@
         <a routerLink="/partner/messages" class="view-all">Messages →</a>
       </div>
 
-      <div class="message-preview">
+      <div class="message-preview" *ngIf="latestMessage; else noMessages">
         <div class="sender-row">
-          <div class="sender-avatar">AS</div>
+          <div class="sender-avatar">PT</div>
           <div class="sender-info">
-            <strong>Ana Santos · PTRI Staff</strong>
-            <small>8:42 AM · Delivery coordination</small>
+            <strong>{{ latestMessageSender }}</strong>
+            <small>{{ latestMessage.createdAt | date:'MMM d, yyyy · h:mm a' }}</small>
           </div>
         </div>
 
-        <p class="message-text">
-          "Your materials have arrived. Please check the quantities and scan
-          the delivery QR to confirm receipt. Let us know if anything needs attention."
-        </p>
+        <p class="message-text">{{ latestMessage.text }}</p>
 
-        <span class="message-reference">▣ DEL-2026-0318</span>
+        <span class="message-reference" *ngIf="latestMessage.orderId">
+          ▣ {{ latestMessage.orderId }}
+        </span>
 
         <a routerLink="/partner/messages" class="reply-btn">
           ↶ Read and reply
         </a>
       </div>
 
+      <ng-template #noMessages>
+        <div class="empty-message">
+          <p>No messages from PTRI yet.</p>
+          <small>Your conversations will appear here.</small>
+        </div>
+      </ng-template>
+
     </div>
 
-    <!-- DELIVERY NEEDS YOUR ATTENTION -->
+    <!-- DELIVERY / DISPATCH ATTENTION -->
     <div class="dashboard-panel delivery-panel">
 
       <div class="panel-header">
         <div>
-          <h3>Delivery needs your attention</h3>
+          <h3>Orders in delivery process</h3>
+          <p>Orders currently being prepared for dispatch or transported</p>
         </div>
-        <a routerLink="/partner/deliveries" class="view-all">View delivery →</a>
+        <a routerLink="/partner/orders" class="view-all">View orders →</a>
       </div>
 
-      <div class="delivery-details">
+      <div class="delivery-details" *ngIf="latestDeliveryOrder; else noDeliveryOrders">
         <div class="delivery-icon">📦</div>
 
         <div class="delivery-info">
-          <strong>DEL-2026-0318</strong>
-          <p>Arrived today, 8:35 AM · ORD-2026-0842</p>
+          <strong>{{ latestDeliveryOrder.orderId }}</strong>
+          <p>
+            {{ latestDeliveryOrder.quantity | number:'1.0-2' }} kg ·
+            {{ latestDeliveryOrder.silkType }}
+          </p>
         </div>
 
-        <span class="status-badge awaiting">Awaiting receipt</span>
+        <span class="status-badge" [ngClass]="getStatusClass(latestDeliveryOrder.status)">
+          {{ latestDeliveryOrder.status }}
+        </span>
       </div>
 
-      <div class="delivery-bottom">
-        <p>
-          Check 100 kg silk cocoons and 20 kg silk yarn, then confirm
-          using the delivery QR.
-        </p>
+      <ng-template #noDeliveryOrders>
+        <div class="empty-delivery">
+          <div class="delivery-icon">📦</div>
+          <div>
+            <strong>No orders in delivery process</strong>
+            <p>Orders will appear here when they reach the dispatch stage.</p>
+          </div>
+        </div>
+      </ng-template>
 
-        <button type="button" class="confirm-btn">
-          ▦ Confirm receipt
-        </button>
+      <div class="delivery-bottom" *ngIf="latestDeliveryOrder">
+        <p>
+          Expected delivery:
+          <strong>
+            {{ latestDeliveryOrder.expectedDeliveryDate
+              ? (latestDeliveryOrder.expectedDeliveryDate | date:'dd MMM yyyy')
+              : 'Not yet specified' }}
+          </strong>
+        </p>
+        <a routerLink="/partner/orders" class="reply-btn">View order details</a>
       </div>
 
     </div>
@@ -206,25 +222,22 @@
       <div class="panel-header">
         <div>
           <h3>Recent updates</h3>
+          <p>Latest recorded order status changes</p>
         </div>
       </div>
 
-      <div class="update-item">
+      <div class="update-item" *ngFor="let update of recentUpdates">
         <div class="update-icon">▤</div>
         <div>
-          <strong>Delivery arrived</strong>
-          <p>DEL-2026-0318 is ready to receive.</p>
-          <small>Today · 8:35 AM</small>
+          <strong>{{ update.status }}</strong>
+          <p>{{ update.orderId }}</p>
+          <small>{{ update.updatedAt | date:'MMM d, yyyy · h:mm a' }}</small>
         </div>
       </div>
 
-      <div class="update-item">
-        <div class="update-icon">♧</div>
-        <div>
-          <strong>Delivery scheduled</strong>
-          <p>ORD-2026-0856 · 30 kg, at 9 AM–2 PM</p>
-          <small>Yesterday · 2:20 PM</small>
-        </div>
+      <div class="empty-updates" *ngIf="!isLoading && recentUpdates.length === 0">
+        <p>No order updates available yet.</p>
+        <small>Order status changes will appear here.</small>
       </div>
 
     </div>

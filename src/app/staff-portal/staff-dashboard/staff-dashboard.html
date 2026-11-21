@@ -1,4 +1,3 @@
-
 <div class="dashboard">
 
   <!-- PAGE HEADER -->
@@ -7,6 +6,7 @@
       <h1>Operations overview</h1>
       <p>A clear view of silk supply, partner demand and upcoming commitments.</p>
     </div>
+
     <div class="date-badge">
       <span>▦</span>
       {{ todayLabel }}
@@ -20,40 +20,46 @@
         <span>{{ stat.title }}</span>
         <span class="stat-icon" [ngClass]="stat.color">{{ stat.icon }}</span>
       </div>
+
       <h2>{{ stat.value }}</h2>
       <p>{{ stat.detail }}</p>
     </article>
   </section>
 
-  <!-- GRAPH AND ALERTS -->
+  <!-- GRAPH AND OPERATIONS CALENDAR -->
   <section class="overview-grid">
 
-    <!-- MONTHLY FARMER PRODUCTION -->
+    <!-- EXPECTED COCOON OUTPUT GRAPH -->
     <article class="panel chart-panel production-chart-panel">
+
       <div class="panel-header">
         <div>
-          <h3>Monthly Cocoon Production</h3>
-          <p>Total farmer production commitments per month</p>
+          <h3>Expected Cocoon Output by Month</h3>
+          <p>Farmer production commitments grouped by expected availability</p>
         </div>
+
         <span class="month-badge">● {{ productionGraphYear }}</span>
       </div>
 
       <div class="chart-legend">
-        <span><i class="legend-dot production-dot"></i> Committed production</span>
+        <span>
+          <i class="legend-dot production-dot"></i>
+          Expected cocoon output
+        </span>
+
         <small>kg · Monthly total</small>
       </div>
 
       <div class="monthly-chart" *ngIf="monthlyProduction.length > 0; else noProductionData">
 
         <div class="monthly-y-axis">
-          <span>100%</span>
-          <span>75%</span>
-          <span>50%</span>
-          <span>25%</span>
-          <span>0</span>
+          <span *ngFor="let label of monthlyAxisLabels">
+            {{ label | number:'1.0-0' }}
+          </span>
         </div>
 
         <div class="monthly-chart-area">
+
           <div class="monthly-grid-lines">
             <span></span>
             <span></span>
@@ -68,8 +74,9 @@
               *ngFor="let item of monthlyProduction; let i = index">
 
               <div class="monthly-bar-space">
+
                 <span class="monthly-bar-value" *ngIf="item.quantity > 0">
-                  {{ item.quantity | number:'1.0-2' }} kg
+                  {{ item.quantity | number:'1.0-2' }}
                 </span>
 
                 <div
@@ -77,6 +84,7 @@
                   [class.current-month-bar]="i === currentMonthIndex"
                   [style.height.%]="getMonthlyProductionBarHeight(item.quantity)">
                 </div>
+
               </div>
 
               <span
@@ -103,48 +111,162 @@
 
       <div class="chart-footer">
         <span class="footer-check">✓</span>
-        <span>Production totals are based on farmer expected availability dates.</span>
+        <span>
+          Production totals are based on farmer expected availability dates.
+          Values are displayed in kilograms.
+        </span>
       </div>
+
     </article>
 
-    <!-- NEEDS YOUR ATTENTION -->
-    <article class="panel attention-panel">
-      <div class="panel-header">
-        <div>
-          <h3>Needs your attention</h3>
-          <p>
-            {{ alerts.length }} item{{ alerts.length !== 1 ? 's' : '' }} to keep operations on track
-          </p>
+    <!-- PTRI OPERATIONS CALENDAR -->
+    <article class="panel calendar-panel">
+
+      <div class="calendar-header">
+
+        <div class="calendar-heading">
+          <div>
+            <h3>PTRI Operations Calendar</h3>
+            <p>Farmer pruning schedules and partner deliveries</p>
+          </div>
+
+          <button
+            type="button"
+            class="today-button"
+            (click)="goToToday()">
+            Today
+          </button>
         </div>
-        <button class="more-button" type="button" aria-label="More options">
-          •••
+
+        <div class="calendar-navigation">
+          <button
+            type="button"
+            class="calendar-nav-button"
+            aria-label="Previous month"
+            (click)="previousCalendarMonth()">
+            ‹
+          </button>
+
+          <strong>{{ calendarMonthLabel }}</strong>
+
+          <button
+            type="button"
+            class="calendar-nav-button"
+            aria-label="Next month"
+            (click)="nextCalendarMonth()">
+            ›
+          </button>
+        </div>
+
+      </div>
+
+      <!-- CALENDAR LEGEND -->
+      <div class="calendar-legend">
+        <span>
+          <i class="legend-pruning"></i>
+          Farmer Pruning
+        </span>
+
+        <span>
+          <i class="legend-delivery"></i>
+          Partner Delivery
+        </span>
+
+        <span>
+          <i class="legend-today"></i>
+          Today
+        </span>
+      </div>
+
+      <!-- CALENDAR GRID -->
+      <div class="calendar-grid">
+
+        <div class="calendar-weekday" *ngFor="let weekday of weekdays">
+          {{ weekday }}
+        </div>
+
+        <button
+          type="button"
+          class="calendar-day"
+          *ngFor="let day of calendarDays"
+          [class.other-month]="!day.inCurrentMonth"
+          [class.today]="day.isToday"
+          [class.selected]="day.isSelected"
+          (click)="selectCalendarDate(day.dateKey)">
+
+          <span class="calendar-day-number">
+            {{ day.dayNumber }}
+          </span>
+
+          <div class="calendar-day-events">
+
+            <span
+              *ngFor="let event of day.events | slice:0:2"
+              class="calendar-event"
+              [ngClass]="event.type"
+              [title]="event.title + ' - ' + event.description">
+              {{ event.label }}
+            </span>
+
+            <span
+              class="calendar-more"
+              *ngIf="day.events.length > 2">
+              +{{ day.events.length - 2 }} more
+            </span>
+
+          </div>
+
         </button>
+
       </div>
 
-      <div class="alert-list" *ngIf="alerts.length > 0; else noAlerts">
-        <a
-          class="alert-item"
-          *ngFor="let alert of alerts"
-          [routerLink]="alert.link">
+      <!-- SELECTED DATE DETAILS -->
+      <div class="selected-date-panel">
 
-          <div class="alert-icon" [ngClass]="alert.type">
-            {{ alert.icon }}
+        <div class="selected-date-heading">
+          <div>
+            <span class="selected-date-caption">SELECTED DATE</span>
+            <h4>{{ selectedDateLabel }}</h4>
           </div>
 
-          <div class="alert-content">
-            <h4>{{ alert.title }}</h4>
-            <p>{{ alert.description }}</p>
-            <span class="alert-action">{{ alert.action }} →</span>
-          </div>
-        </a>
-      </div>
-
-      <ng-template #noAlerts>
-        <div class="empty-state">
-          <h4>All caught up!</h4>
-          <p>There are currently no pending orders or farmer production records for review.</p>
+          <span class="event-count">
+            {{ selectedDateEvents.length }}
+            {{ selectedDateEvents.length === 1 ? 'Activity' : 'Activities' }}
+          </span>
         </div>
-      </ng-template>
+
+        <div
+          class="selected-event-list"
+          *ngIf="selectedDateEvents.length > 0; else noCalendarEvents">
+
+          <div
+            class="selected-event-item"
+            *ngFor="let event of selectedDateEvents">
+
+            <span
+              class="selected-event-indicator"
+              [ngClass]="event.type">
+            </span>
+
+            <div class="selected-event-info">
+              <strong>{{ event.title }}</strong>
+              <p>{{ event.description }}</p>
+              <small>Status: {{ event.status }}</small>
+            </div>
+
+          </div>
+
+        </div>
+
+        <ng-template #noCalendarEvents>
+          <div class="calendar-empty">
+            <span>▦</span>
+            <p>No scheduled activities for this date.</p>
+          </div>
+        </ng-template>
+
+      </div>
+
     </article>
 
   </section>
@@ -152,8 +274,9 @@
   <!-- BOTTOM SECTION -->
   <section class="bottom-grid">
 
-    <!-- RECENT ORDERS -->
+    <!-- RECENT PARTNER ORDERS -->
     <article class="panel orders-panel">
+
       <div class="panel-header table-panel-header">
         <h3>Recent partner orders</h3>
         <a routerLink="/staff/silk-orders" class="view-all">View all →</a>
@@ -172,14 +295,17 @@
           </thead>
 
           <tbody>
+
             <tr *ngFor="let order of recentOrders">
               <td>
                 <strong>{{ order.id }}</strong>
                 <span class="partner-name">{{ order.partner }}</span>
               </td>
+
               <td>{{ order.material }}</td>
               <td>{{ order.quantity }}</td>
               <td>{{ order.requested }}</td>
+
               <td>
                 <span class="status-badge" [ngClass]="order.status.toLowerCase()">
                   <i></i>
@@ -195,8 +321,11 @@
             </tr>
 
             <tr *ngIf="isLoading">
-              <td colspan="5" class="empty-table">Loading partner orders...</td>
+              <td colspan="5" class="empty-table">
+                Loading partner orders...
+              </td>
             </tr>
+
           </tbody>
         </table>
       </div>
@@ -204,17 +333,21 @@
       <div class="table-footer">
         {{ isLoading ? 'Loading records...' : 'Showing ' + recentOrders.length + ' recent order records' }}
       </div>
+
     </article>
 
     <!-- UPCOMING MOVEMENTS -->
     <article class="panel movements-panel">
+
       <div class="panel-header table-panel-header">
         <h3>Upcoming movements</h3>
         <a routerLink="/staff/supply-delivery" class="view-all">Schedule →</a>
       </div>
 
       <div class="movement-list" *ngIf="upcomingMovements.length > 0; else noMovements">
+
         <div class="movement-item" *ngFor="let movement of upcomingMovements">
+
           <div class="movement-date">
             <strong>{{ movement.day }}</strong>
             <span>{{ movement.weekday }}</span>
@@ -226,7 +359,9 @@
           </div>
 
           <span class="movement-time">{{ movement.time }}</span>
+
         </div>
+
       </div>
 
       <ng-template #noMovements>
@@ -235,13 +370,17 @@
           <p>Scheduled partner deliveries will appear here when available.</p>
         </div>
       </ng-template>
+
     </article>
 
   </section>
 
   <!-- FOOTER -->
   <footer class="dashboard-footer">
-    <span>{{ isLoading ? 'Loading dashboard data...' : 'Live data from PTRI system records' }}</span>
+    <span>
+      {{ isLoading ? 'Loading dashboard data...' : 'Live data from PTRI system records' }}
+    </span>
+
     <span>Philippine Standard Time · UTC+8</span>
   </footer>
 

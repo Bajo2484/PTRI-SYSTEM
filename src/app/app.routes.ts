@@ -144,13 +144,7 @@ export const routes: Routes = [
             (m) => m.SupplyDelivery
           )
       },
-      {
-        path: 'reports',
-        loadComponent: () =>
-          import('./staff-portal/reports/reports').then(
-            (m) => m.Reports
-          )
-      },
+     
       {
         path: 'profile',
         loadComponent: () =>
