@@ -300,3 +300,67 @@
 .pruning-modal-overlay,.pruning-modal-content{animation:none!important}
 .pruning-modal-content *{transition:none!important}
 }
+
+/* ===== FARMER PROFILE PHOTOS ===== */
+
+/* Farmer table thumbnail */
+.farmer-avatar {
+  width: 48px;
+  height: 52px;
+  flex-shrink: 0;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  background: #e8f1e3;
+  color: #24563a;
+  font-size: 19px;
+  font-weight: 800;
+}
+
+.farmer-avatar img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
+.farmer-avatar span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Larger photo in farmer details modal */
+.modal-avatar {
+  width: 82px;
+  height: 88px;
+  flex-shrink: 0;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 3px solid rgba(255,255,255,.85);
+  border-radius: 12px;
+  background: #e8f1e3;
+  color: #24563a;
+  font-size: 30px;
+  font-weight: 800;
+  box-shadow: 0 4px 12px rgba(0,0,0,.12);
+}
+
+.modal-avatar img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
+.modal-avatar span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

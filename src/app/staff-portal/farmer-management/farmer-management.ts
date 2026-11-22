@@ -4,7 +4,33 @@ import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { LucideAngularModule } from 'lucide-angular';
+import {
+  LucideAngularModule,
+  Plus,
+  Users,
+  User,
+  UserRound,
+  Search,
+  X,
+  ListFilter,
+  MapPin,
+  Phone,
+  Mail,
+  Eye,
+  Pencil,
+  MessageCircle,
+  ChevronLeft,
+  ChevronRight,
+  Info,
+  Sprout,
+  Map,
+  Leaf,
+  Camera,
+  Trash2,
+  AlertCircle,
+  LoaderCircle,
+  Save
+} from 'lucide-angular';
 import { FarmerAccount, FarmerAccountService } from '../../services/farmer-account.service';
 
 type Farmer = FarmerAccount;
@@ -12,7 +38,11 @@ type Farmer = FarmerAccount;
 @Component({
   selector: 'app-farmer-management',
   standalone: true,
-  imports: [CommonModule, FormsModule, LucideAngularModule],
+  imports: [
+    CommonModule,
+    FormsModule,
+    LucideAngularModule
+  ],
   templateUrl: './farmer-management.html',
   styleUrl: './farmer-management.css',
 })
@@ -41,6 +71,7 @@ export class FarmerManagement implements OnInit {
     void this.loadFarmers();
   }
 
+  // LOAD FARMER RECORDS
   async loadFarmers(showLoading = true): Promise<boolean> {
     this.isLoading = true;
     this.errorMessage = '';
@@ -74,6 +105,7 @@ export class FarmerManagement implements OnInit {
     }
   }
 
+  // SEARCH AND FILTER
   get filteredFarmers(): Farmer[] {
     const search = this.searchTerm.toLowerCase().trim();
 
@@ -83,7 +115,11 @@ export class FarmerManagement implements OnInit {
         farmer.locality.toLowerCase().includes(search) ||
         farmer.phone.toLowerCase().includes(search) ||
         farmer.email.toLowerCase().includes(search) ||
-        farmer.farmName.toLowerCase().includes(search);
+        farmer.farmName.toLowerCase().includes(search) ||
+        farmer.communityName?.toLowerCase().includes(search) ||
+        farmer.bio?.toLowerCase().includes(search) ||
+        farmer.farmingExperience?.toLowerCase().includes(search) ||
+        farmer.farmingPractices?.toLowerCase().includes(search);
 
       const matchesStatus =
         this.selectedStatus === 'All Status' ||
@@ -126,6 +162,97 @@ export class FarmerManagement implements OnInit {
     this.currentPage = 1;
   }
 
+  // PROFILE PICTURE
+  async onProfilePictureSelected(event: Event): Promise<void> {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      this.errorMessage = 'Please select a valid image file.';
+      input.value = '';
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      this.errorMessage = 'Image must not exceed 5 MB before compression.';
+      input.value = '';
+      return;
+    }
+
+    try {
+      const compressedImage = await this.compressImage(file);
+      this.farmerForm.profilePicture = compressedImage;
+      this.errorMessage = '';
+      this.cdr.detectChanges();
+    } catch (error) {
+      console.error('Error processing profile picture:', error);
+      this.errorMessage = 'Unable to process this image. Please choose another photo.';
+    } finally {
+      input.value = '';
+    }
+  }
+
+  private compressImage(file: File): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+
+      reader.onerror = () => reject(new Error('Unable to read image.'));
+
+      reader.onload = () => {
+        const image = new Image();
+
+        image.onerror = () => reject(new Error('Invalid image.'));
+
+        image.onload = () => {
+          const maxDimension = 400;
+          const scale = Math.min(
+            1,
+            maxDimension / Math.max(image.width, image.height)
+          );
+
+          const canvas = document.createElement('canvas');
+          canvas.width = Math.max(1, Math.round(image.width * scale));
+          canvas.height = Math.max(1, Math.round(image.height * scale));
+
+          const context = canvas.getContext('2d');
+
+          if (!context) {
+            reject(new Error('Canvas is not supported.'));
+            return;
+          }
+
+          context.drawImage(image, 0, 0, canvas.width, canvas.height);
+
+          let quality = 0.75;
+          let base64 = canvas.toDataURL('image/jpeg', quality);
+
+          while (base64.length > 180000 && quality > 0.35) {
+            quality -= 0.1;
+            base64 = canvas.toDataURL('image/jpeg', quality);
+          }
+
+          if (base64.length > 180000) {
+            reject(new Error('Image is still too large after compression.'));
+            return;
+          }
+
+          resolve(base64);
+        };
+
+        image.src = reader.result as string;
+      };
+
+      reader.readAsDataURL(file);
+    });
+  }
+
+  removeProfilePicture(): void {
+    this.farmerForm.profilePicture = '';
+  }
+
+  // MODAL
   openAddModal(): void {
     this.modalMode = 'add';
     this.farmerForm = this.emptyFarmer();
@@ -135,12 +262,68 @@ export class FarmerManagement implements OnInit {
     this.showFarmerModal = true;
   }
 
-  openViewModal(farmer: Farmer): void {
-    this.modalMode = 'view';
-    this.selectedFarmer = farmer;
-    this.farmerForm = this.toForm(farmer);
+  // VIEW FARMER - FETCH LATEST COMPLETE INFORMATION
+  async openViewModal(farmer: Farmer): Promise<void> {
+    if (Swal.isVisible()) return;
+
+    this.showFarmerModal = false;
     this.errorMessage = '';
-    this.showFarmerModal = true;
+
+    Swal.fire({
+      title: 'Loading Farmer Information',
+      text: 'Please wait while we retrieve the complete farmer details...',
+      allowOutsideClick: false,
+      allowEscapeKey: false,
+      showConfirmButton: false,
+      background: '#fffdf8',
+      color: '#493a2c',
+      didOpen: () => Swal.showLoading()
+    });
+
+    try {
+      const latestFarmer =
+        await this.farmerAccountService.getFarmerById(farmer.id);
+
+      this.selectedFarmer = latestFarmer;
+      this.farmerForm = this.toForm(latestFarmer);
+      this.modalMode = 'view';
+      this.errorMessage = '';
+
+      this.cdr.detectChanges();
+
+      Swal.close();
+
+      this.showFarmerModal = true;
+      this.cdr.detectChanges();
+
+    } catch (error: unknown) {
+      const firebaseError = error as {
+        code?: string;
+        message?: string;
+      };
+
+      console.error('FIRESTORE FARMER FETCH ERROR:', error);
+      console.error('Farmer ID:', farmer.id);
+      console.error('Firebase Error Code:', firebaseError?.code);
+      console.error('Firebase Error Message:', firebaseError?.message);
+
+      Swal.close();
+
+      await Swal.fire({
+        icon: 'error',
+        title: 'Unable to Load Farmer Information',
+        html: `
+          <p>${firebaseError?.code || 'Unknown Error'}</p>
+          <small>${firebaseError?.message || 'No additional error details available.'}</small>
+        `,
+        confirmButtonText: 'OK',
+        confirmButtonColor: '#245638',
+        background: '#fffdf8',
+        color: '#493a2c'
+      });
+
+      this.cdr.detectChanges();
+    }
   }
 
   openEditModal(farmer: Farmer): void {
@@ -158,10 +341,16 @@ export class FarmerManagement implements OnInit {
     this.errorMessage = '';
   }
 
+  // SAVE FARMER
   async saveFarmer(): Promise<void> {
     if (this.isSaving) return;
 
     const isAdding = this.modalMode === 'add';
+
+    if (isAdding && !this.farmerForm.profilePicture) {
+      this.errorMessage = 'Please upload the farmer profile picture.';
+      return;
+    }
 
     if (isAdding) {
       if (!this.farmerForm.username.trim()) {
@@ -194,9 +383,11 @@ export class FarmerManagement implements OnInit {
 
     if (
       this.farmerForm.farmerType === 'Community' &&
-      (!this.farmerForm.communityName?.trim() ||
+      (
+        !this.farmerForm.communityName?.trim() ||
         !Number.isFinite(Number(this.farmerForm.memberCount)) ||
-        Number(this.farmerForm.memberCount) < 1)
+        Number(this.farmerForm.memberCount) < 1
+      )
     ) {
       this.errorMessage = 'Please provide the community name and a valid member count.';
       return;
@@ -213,7 +404,8 @@ export class FarmerManagement implements OnInit {
       farmerType: this.farmerForm.farmerType || 'Individual',
       mulberryTreeCount: Number(this.farmerForm.mulberryTreeCount || 0),
       communityName: this.farmerForm.communityName?.trim() || '',
-      memberCount: Number(this.farmerForm.memberCount || 0)
+      memberCount: Number(this.farmerForm.memberCount || 0),
+      profilePicture: this.farmerForm.profilePicture || ''
     };
 
     this.isSaving = true;
@@ -275,6 +467,7 @@ export class FarmerManagement implements OnInit {
     } catch (error) {
       console.error('Error saving farmer:', error);
       Swal.close();
+
       this.errorMessage = 'Unable to save the farmer. Please check your Firebase permissions and try again.';
 
       await Swal.fire({
@@ -292,6 +485,7 @@ export class FarmerManagement implements OnInit {
     }
   }
 
+  // MESSAGE FARMER
   messageFarmer(farmer: Farmer): void {
     if (!farmer.authUid) {
       Swal.fire({
@@ -313,12 +507,14 @@ export class FarmerManagement implements OnInit {
     });
   }
 
+  // PAGINATION
   goToPage(page: number): void {
     if (page >= 1 && page <= this.totalPages) {
       this.currentPage = page;
     }
   }
 
+  // DEFAULT FARMER DATA
   private emptyFarmer(): Omit<Farmer, 'id'> {
     return {
       fullName: '',
@@ -332,10 +528,12 @@ export class FarmerManagement implements OnInit {
       memberCount: 0,
       farmArea: '',
       mulberryTreeCount: 0,
-      status: 'Pending'
+      status: 'Pending',
+      profilePicture: ''
     };
   }
 
+  // CONVERT FARMER RECORD TO FORM
   private toForm(farmer: Farmer): Omit<Farmer, 'id'> {
     const { id, ...data } = farmer;
 
@@ -344,7 +542,8 @@ export class FarmerManagement implements OnInit {
       farmerType: farmer.farmerType || 'Individual',
       communityName: farmer.communityName || '',
       memberCount: farmer.memberCount || 0,
-      mulberryTreeCount: farmer.mulberryTreeCount || 0
+      mulberryTreeCount: farmer.mulberryTreeCount || 0,
+      profilePicture: farmer.profilePicture || ''
     };
   }
 }

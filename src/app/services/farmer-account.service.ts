@@ -9,6 +9,7 @@ import {
   collection,
   addDoc,
   getDocs,
+  getDoc,
   doc,
   updateDoc,
   deleteDoc,
@@ -28,6 +29,10 @@ export interface FarmerAccount {
   email: string;
   username: string;
   authUid?: string;
+  profilePicture?: string;
+  bio?: string;
+farmingExperience?: string;
+farmingPractices?: string;
 
   farmerType: 'Individual' | 'Community';
   farmName: string;
@@ -163,4 +168,19 @@ export class FarmerAccountService {
         (farmer) => farmer.id !== id
       );
   }
+
+  // GET LATEST FARMER DETAILS DIRECTLY FROM FIRESTORE
+async getFarmerById(id: string): Promise<FarmerAccount> {
+  const farmerRef = doc(db, 'farmers', id);
+  const farmerSnapshot = await getDoc(farmerRef);
+
+  if (!farmerSnapshot.exists()) {
+    throw new Error('Farmer record not found.');
+  }
+
+  return {
+    id: farmerSnapshot.id,
+    ...farmerSnapshot.data()
+  } as FarmerAccount;
+}
 }

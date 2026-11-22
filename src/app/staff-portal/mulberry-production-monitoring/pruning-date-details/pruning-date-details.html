@@ -153,9 +153,19 @@
                 <tr>
                   <td>
                     <div class="farmer-cell">
-                      <div class="farmer-avatar">
-                        {{ (entry.farmer.fullName || 'F').charAt(0).toUpperCase() }}
-                      </div>
+                     <div class="farmer-avatar">
+  @if (entry.farmer.profilePicture) {
+    <img
+      [src]="entry.farmer.profilePicture"
+      [alt]="entry.farmer.fullName + ' profile picture'"
+      loading="lazy"
+    />
+  } @else {
+    <span>
+      {{ (entry.farmer.fullName || 'F').charAt(0).toUpperCase() }}
+    </span>
+  }
+</div>
                       <div class="farmer-info">
                         <strong>{{ entry.farmer.fullName }}</strong>
                         <span>{{ entry.farmer.farmName || 'Farm name not provided' }}</span>
@@ -266,29 +276,38 @@
             </span>
           </div>
 
-          <div class="modal-profile">
-            <div class="modal-avatar">
-<div class="modal-avatar">
-  {{ (entry.farmer.fullName || 'F').charAt(0).toUpperCase() }}
+         <div class="modal-profile">
+
+  <div class="modal-avatar">
+    @if (entry.farmer.profilePicture) {
+      <img
+        [src]="entry.farmer.profilePicture"
+        [alt]="entry.farmer.fullName + ' profile picture'"
+      />
+    } @else {
+      <span>
+        {{ (entry.farmer.fullName || 'F').charAt(0).toUpperCase() }}
+      </span>
+    }
+  </div>
+
+  <div class="modal-profile-text">
+    <h2 id="pruningModalTitle">
+      {{ entry.farmer.fullName || 'Farmer' }}
+    </h2>
+    <p>{{ entry.farmer.farmName || 'Farm name not provided' }}</p>
+  </div>
+
+  <div
+    class="modal-status"
+    [class.is-completed]="isCycleCompleted(entry)"
+    [class.is-active]="!isCycleCompleted(entry)"
+  >
+    <span class="modal-status-dot"></span>
+    {{ entry.record.status || 'In Progress' }}
+  </div>
+
 </div>
-            </div>
-
-            <div class="modal-profile-text">
-              <h2 id="pruningModalTitle">
-                {{ entry.farmer.fullName || 'Farmer' }}
-              </h2>
-              <p>{{ entry.farmer.farmName || 'Farm name not provided' }}</p>
-            </div>
-
-            <div
-              class="modal-status"
-              [class.is-completed]="isCycleCompleted(entry)"
-              [class.is-active]="!isCycleCompleted(entry)"
-            >
-              <span class="modal-status-dot"></span>
-              {{ entry.record.status || 'In Progress' }}
-            </div>
-          </div>
 
           <button
             type="button"

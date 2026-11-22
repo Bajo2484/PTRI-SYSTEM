@@ -1,4 +1,4 @@
-import { Component, OnInit, ElementRef, ViewChild, OnDestroy } from '@angular/core';
+import { Component, OnInit, ElementRef, ViewChild, OnDestroy,ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { QRCodeComponent } from 'angularx-qrcode';
@@ -59,10 +59,10 @@ export class CocoonCollection implements OnInit, OnDestroy {
 
   collections: CocoonReturnRecord[] = [];
 
-  constructor(
-    private cocoonService: CocoonProductionService
-  ) {}
-
+ constructor(
+  private cocoonService: CocoonProductionService,
+  private cdr: ChangeDetectorRef
+) {}
   ngOnInit(): void {
     this.loadCollections();
   }
@@ -70,32 +70,28 @@ export class CocoonCollection implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.stopScanner();
   }
+async loadCollections(): Promise<void> {
+  this.loading = true;
+  this.errorMessage = '';
+  this.cdr.detectChanges();
 
-  // =====================================
-  // LOAD FARMER COCOON RETURNS
-  // =====================================
+  try {
+    this.collections =
+      await this.cocoonService.getAllReturnRecordsForStaff();
 
-  async loadCollections(): Promise<void> {
-    this.loading = true;
-    this.errorMessage = '';
+  } catch (error) {
+    console.error('Failed to load cocoon returns:', error);
 
-    try {
-      this.collections =
-        await this.cocoonService.getAllReturnRecordsForStaff();
+    this.errorMessage =
+      error instanceof Error
+        ? error.message
+        : 'Unable to load cocoon return records. Please try again.';
 
-    } catch (error) {
-      console.error('Failed to load cocoon returns:', error);
-
-      this.errorMessage =
-        error instanceof Error
-          ? error.message
-          : 'Unable to load cocoon return records. Please try again.';
-
-    } finally {
-      this.loading = false;
-    }
+  } finally {
+    this.loading = false;
+    this.cdr.detectChanges();
   }
-
+}
   // =====================================
   // START QR CAMERA SCANNER
   // =====================================

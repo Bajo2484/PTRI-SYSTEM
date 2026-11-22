@@ -80,25 +80,33 @@
     <!-- FARMER CARD GALLERY -->
     <div class="farmer-card-grid">
       <article class="farmer-card" *ngFor="let request of filteredRequests">
+<!-- FARMER PHOTO AND STATUS -->
+<div class="farmer-photo">
 
-        <!-- FARMER PHOTO AND STATUS -->
-        <div class="farmer-photo">
-          <img
-            src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=500&h=300&fit=crop"
-            alt="Sample farmer profile"
-            loading="lazy"
-          />
+  <img
+    *ngIf="request.profilePicture; else farmerPhotoFallback"
+    [src]="request.profilePicture"
+    [alt]="request.farmerName + ' profile picture'"
+    loading="lazy"
+  />
 
-          <span
-            class="farmer-card-status"
-            [ngClass]="{
-              'pending': request.status === 'Pending',
-              'assigned': isAssigned(request)
-            }"
-          >
-            {{ request.status }}
-          </span>
-        </div>
+  <ng-template #farmerPhotoFallback>
+    <div class="farmer-photo-fallback">
+      <span>{{ request.farmerName.charAt(0) || 'F' }}</span>
+    </div>
+  </ng-template>
+
+  <span
+    class="farmer-card-status"
+    [ngClass]="{
+      'pending': request.status === 'Pending',
+      'assigned': isAssigned(request)
+    }"
+  >
+    {{ request.status }}
+  </span>
+
+</div>
 
         <!-- FARMER INFORMATION -->
         <div class="farmer-card-body">

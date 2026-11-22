@@ -4,6 +4,7 @@ import {
   provideBrowserGlobalErrorListeners,
   importProvidersFrom
 } from '@angular/core';
+
 import { provideRouter } from '@angular/router';
 import { LucideAngularModule } from 'lucide-angular';
 
@@ -30,8 +31,23 @@ import {
   Building2,
   ClipboardList,
   Clock,
-MessageSquare,
-Loader,
+  MessageSquare,
+  Loader,
+    CalendarDays,
+    BookOpen,
+      ShieldCheck,
+
+
+  // Farmer Management icons
+  User,
+  UserRound,
+  Map,
+  Leaf,
+  Camera,
+  Trash2,
+  AlertCircle,
+  LoaderCircle
+  
 } from 'lucide-angular';
 
 import { routes } from './app.routes';
@@ -40,6 +56,7 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
     provideRouter(routes),
+
     importProvidersFrom(
       LucideAngularModule.pick({
         Plus,
@@ -66,6 +83,19 @@ export const appConfig: ApplicationConfig = {
         Clock,
         MessageSquare,
         Loader,
+
+        // Farmer Management icons
+        User,
+        UserRound,
+        Map,
+        Leaf,
+        Camera,
+        Trash2,
+        AlertCircle,
+        LoaderCircle,
+        CalendarDays,
+        BookOpen,
+          ShieldCheck,
       })
     )
   ]

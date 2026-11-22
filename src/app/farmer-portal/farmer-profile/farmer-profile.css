@@ -92,3 +92,235 @@
   .profile-notice h3 { font-size:16px; }
   .profile-notice p { font-size:14px; }
 }
+.profile-avatar {
+  overflow: hidden;
+}
+
+.profile-picture {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}.profile-avatar {
+  width: 140px;
+  height: 140px;
+  min-width: 140px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 5px solid #ffffff;
+  background: #e8f0e9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 5px 18px rgba(0, 0, 0, 0.15);
+}
+
+.profile-picture {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* LARGE FARMER PROFILE PHOTO */
+.profile-avatar {
+  display:flex;
+  flex:0 0 140px;
+  align-items:center;
+  justify-content:center;
+  width:140px;
+  height:140px;
+  min-width:140px;
+  margin-top:-55px;
+  overflow:hidden;
+  border:5px solid #fff;
+  border-radius:50%;
+  background:#E8F0E9;
+  color:#245638;
+  box-shadow:0 5px 18px rgba(0,0,0,.15);
+}
+
+.profile-picture {
+  display:block;
+  width:100%;
+  height:100%;
+  object-fit:cover;
+}
+
+/* FARMER BIO */
+.farmer-bio-card {
+  margin-top:20px;
+}
+
+.bio-heading-row {
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:15px;
+}
+
+.bio-heading-row .section-heading {
+  flex:1;
+}
+
+.bio-edit-btn,
+.bio-save-btn,
+.bio-cancel-btn {
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  min-height:42px;
+  padding:10px 17px;
+  border:0;
+  border-radius:9px;
+  font-size:14px;
+  font-weight:800;
+  cursor:pointer;
+  transition:.2s ease;
+}
+
+.bio-edit-btn {
+  background:#EAF2E9;
+  color:#245638;
+}
+
+.bio-edit-btn:hover {
+  background:#DCEBDD;
+}
+
+.bio-description {
+  margin-bottom:24px;
+  padding:19px;
+  border:1px solid #E8DDC9;
+  border-radius:12px;
+  background:#FCFAF5;
+}
+
+.bio-description p {
+  margin:8px 0 0;
+  color:#493A2C;
+  font-size:15px;
+  line-height:1.8;
+  overflow-wrap:anywhere;
+  white-space:pre-line;
+}
+
+.bio-details {
+  padding-top:5px;
+}
+
+.bio-edit-form {
+  display:flex;
+  flex-direction:column;
+  gap:20px;
+}
+
+.bio-edit-form .form-group {
+  display:flex;
+  flex-direction:column;
+  gap:9px;
+}
+
+.bio-edit-form label {
+  color:#493A2C;
+  font-size:14px;
+  font-weight:800;
+}
+
+.bio-edit-form label span {
+  color:#B54736;
+}
+
+.bio-edit-form input,
+.bio-edit-form textarea {
+  width:100%;
+  padding:13px 14px;
+  border:1px solid #DCCFB9;
+  border-radius:9px;
+  outline:none;
+  background:#FFFEFB;
+  color:#493A2C;
+  font:inherit;
+  font-size:14px;
+  line-height:1.6;
+  resize:vertical;
+}
+
+.bio-edit-form input:focus,
+.bio-edit-form textarea:focus {
+  border-color:#47805A;
+  box-shadow:0 0 0 3px rgba(36,86,56,.09);
+}
+
+.bio-edit-form small {
+  color:#795F48;
+  font-size:12px;
+}
+
+.bio-form-actions {
+  display:flex;
+  justify-content:flex-end;
+  flex-wrap:wrap;
+  gap:10px;
+  padding-top:15px;
+  border-top:1px solid #EAE2D6;
+}
+
+.bio-cancel-btn {
+  border:1px solid #DCCFB9;
+  background:#fff;
+  color:#795F48;
+}
+
+.bio-save-btn {
+  background:#245638;
+  color:#fff;
+}
+
+.bio-save-btn:hover {
+  background:#173F2E;
+}
+
+.bio-edit-btn:disabled,
+.bio-save-btn:disabled,
+.bio-cancel-btn:disabled {
+  opacity:.6;
+  cursor:not-allowed;
+}
+
+/* MOBILE BIO */
+@media(max-width:600px) {
+  .profile-avatar {
+    flex-basis:110px;
+    width:110px;
+    height:110px;
+    min-width:110px;
+    margin-top:-35px;
+  }
+
+  .bio-heading-row {
+    flex-direction:column;
+    align-items:stretch;
+  }
+
+  .bio-edit-btn {
+    align-self:flex-start;
+  }
+
+  .bio-description {
+    padding:15px;
+  }
+
+  .bio-description p {
+    font-size:14px;
+  }
+
+  .bio-form-actions {
+    flex-direction:column-reverse;
+  }
+
+  .bio-form-actions button {
+    width:100%;
+  }
+}

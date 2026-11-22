@@ -23,6 +23,7 @@ interface FarmerRequestView extends SilkwormRequest {
   farmerRecordFound: boolean;
   farmName: string;
   communityName: string;
+  profilePicture: string;
 }
 
 @Component({
@@ -124,15 +125,16 @@ export class SilkwormBatches implements OnInit {
           item => item.authUid === request.farmerUid
         );
 
-        return {
-          ...request,
-          farmArea: farmer?.farmArea || '',
-          registeredMulberryTreeCount:
-            farmer ? Number(farmer.mulberryTreeCount || 0) : null,
-          farmerRecordFound: !!farmer,
-          farmName: farmer?.farmName || '',
-          communityName: farmer?.communityName || ''
-        };
+       return {
+  ...request,
+  farmArea: farmer?.farmArea || '',
+  registeredMulberryTreeCount:
+    farmer ? Number(farmer.mulberryTreeCount || 0) : null,
+  farmerRecordFound: !!farmer,
+  farmName: farmer?.farmName || '',
+  communityName: farmer?.communityName || '',
+  profilePicture: farmer?.profilePicture || ''
+};
       });
 
     } catch (error) {
@@ -567,4 +569,13 @@ export class SilkwormBatches implements OnInit {
     this.searchTerm = '';
     this.selectedStatus = 'All Requests';
   }
+  getFarmerInitials(name: string): string {
+  return (name || 'Farmer')
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map(part => part.charAt(0))
+    .join('')
+    .toUpperCase();
+}
 }
