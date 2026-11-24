@@ -40,6 +40,14 @@ export interface SilkwormRequest {
   linkedBatchIds: string[];
 }
 
+// Available silkworm developmental stages.
+export type SilkwormInstarStage =
+  | '1st Instar'
+  | '2nd Instar'
+  | '3rd Instar'
+  | '4th Instar'
+  | '5th Instar';
+
 export interface SilkwormBatch {
   id: string;
   batchNumber: string;
@@ -57,6 +65,7 @@ export interface SilkwormBatch {
   // Assigned silkworm details
   silkwormType: string;
   breed: string;
+  instarStage?: SilkwormInstarStage;
   trays: number;
   quantity: number;
   preparationDate: string;
@@ -72,6 +81,7 @@ export interface SilkwormBatch {
 export interface AssignWormsData {
   silkwormType: string;
   breed: string;
+  instarStage: SilkwormInstarStage;
   trays: number;
   quantity: number;
   preparationDate: string;
@@ -191,6 +201,30 @@ export class SilkwormRequestService {
       : null;
   }
 
+
+  // Retrieve one batch using its human-readable Batch Number.
+  async getBatchByNumber(
+    batchNumber: string
+  ): Promise<SilkwormBatch | null> {
+    if (!batchNumber.trim()) {
+      throw new Error('Invalid batch number.');
+    }
+
+    const batchQuery = query(
+      collection(db, this.batchCollectionName),
+      where('batchNumber', '==', batchNumber.trim())
+    );
+
+    const snapshot = await getDocs(batchQuery);
+
+    if (snapshot.empty) {
+      return null;
+    }
+
+    return snapshot.docs[0].data() as SilkwormBatch;
+  }
+
+
   // PTRI Staff: Directly assign worms and create the actual batch.
   async assignWorms(
     request: SilkwormRequest,
@@ -203,10 +237,11 @@ export class SilkwormRequestService {
     if (
       !data.silkwormType.trim() ||
       !data.breed.trim() ||
+      !data.instarStage ||
       !data.preparationDate ||
       !data.deliveryDate
     ) {
-      throw new Error('Please complete all required assignment details.');
+      throw new Error('Please complete all required assignment details, including the silkworm instar stage.');
     }
 
     if (
@@ -252,6 +287,7 @@ export class SilkwormRequestService {
 
       silkwormType: data.silkwormType.trim(),
       breed: data.breed.trim(),
+      instarStage: data.instarStage,
       trays: data.trays,
       quantity: data.quantity,
       preparationDate: data.preparationDate,
@@ -302,61 +338,62 @@ export class SilkwormRequestService {
 
     return newBatch;
   }
+
   // FARMER: Retrieve only batches assigned to the logged-in farmer.
-async getFarmerBatches(
-  farmerUid: string
-): Promise<SilkwormBatch[]> {
-  const batchQuery = query(
-    collection(db, this.batchCollectionName),
-    where('farmerUid', '==', farmerUid)
-  );
-
-  const snapshot = await getDocs(batchQuery);
-
-  return snapshot.docs
-    .map(document => document.data() as SilkwormBatch)
-    .sort(
-      (a, b) =>
-        new Date(b.assignedDate).getTime() -
-        new Date(a.assignedDate).getTime()
+  async getFarmerBatches(
+    farmerUid: string
+  ): Promise<SilkwormBatch[]> {
+    const batchQuery = query(
+      collection(db, this.batchCollectionName),
+      where('farmerUid', '==', farmerUid)
     );
-}
 
-// FARMER: Confirm receipt only after PTRI marks the batch as Delivered.
-async confirmBatchReceipt(
-  batchId: string,
-  farmerUid: string
-): Promise<void> {
-  if (!batchId.trim() || !farmerUid.trim()) {
-    throw new Error('Invalid batch information.');
+    const snapshot = await getDocs(batchQuery);
+
+    return snapshot.docs
+      .map(document => document.data() as SilkwormBatch)
+      .sort(
+        (a, b) =>
+          new Date(b.assignedDate).getTime() -
+          new Date(a.assignedDate).getTime()
+      );
   }
 
-  const batchRef = doc(
-    db,
-    this.batchCollectionName,
-    batchId
-  );
-
-  await runTransaction(db, async transaction => {
-    const snapshot = await transaction.get(batchRef);
-
-    if (!snapshot.exists()) {
-      throw new Error('The assigned batch could not be found.');
+  // FARMER: Confirm receipt only after PTRI marks the batch as Delivered.
+  async confirmBatchReceipt(
+    batchId: string,
+    farmerUid: string
+  ): Promise<void> {
+    if (!batchId.trim() || !farmerUid.trim()) {
+      throw new Error('Invalid batch information.');
     }
 
-    const batch = snapshot.data() as SilkwormBatch;
+    const batchRef = doc(
+      db,
+      this.batchCollectionName,
+      batchId
+    );
 
-    if (batch.farmerUid !== farmerUid) {
-      throw new Error('You are not authorized to confirm this batch.');
-    }
+    await runTransaction(db, async transaction => {
+      const snapshot = await transaction.get(batchRef);
 
-    if (batch.status !== 'Delivered') {
-      throw new Error('You can only confirm a batch after PTRI marks it as Delivered.');
-    }
+      if (!snapshot.exists()) {
+        throw new Error('The assigned batch could not be found.');
+      }
 
-    transaction.update(batchRef, {
-      status: 'Received'
+      const batch = snapshot.data() as SilkwormBatch;
+
+      if (batch.farmerUid !== farmerUid) {
+        throw new Error('You are not authorized to confirm this batch.');
+      }
+
+      if (batch.status !== 'Delivered') {
+        throw new Error('You can only confirm a batch after PTRI marks it as Delivered.');
+      }
+
+      transaction.update(batchRef, {
+        status: 'Received'
+      });
     });
-  });
-}
+  }
 }

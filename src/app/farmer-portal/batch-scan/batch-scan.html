@@ -1,0 +1,322 @@
+
+<div class="batch-scan-page">
+  <div class="page-heading">
+    <div class="heading-icon">
+      <i class="camera-symbol">📷</i>
+    </div>
+    <div>
+      <span class="eyebrow">FARMER PORTAL</span>
+      <h1>Scan Silkworm Batch</h1>
+      <p>Scan the PTRI batch QR code to view your assigned silkworm details.</p>
+    </div>
+  </div>
+
+  <section class="scanner-card">
+    <div class="section-heading">
+      <div>
+        <h2>Batch QR Scanner</h2>
+        <p>Position the batch QR code inside the camera frame.</p>
+      </div>
+      <span class="scanner-status" [class.active]="cameraActive">
+        <span class="status-dot"></span>
+        {{ cameraActive ? 'Camera Active' : 'Camera Inactive' }}
+      </span>
+    </div>
+
+    <div class="camera-container">
+      <video
+        #videoElement
+        class="camera-preview"
+        [class.camera-hidden]="!cameraActive && !cameraLoading"
+        autoplay
+        muted
+        playsinline
+      ></video>
+
+      @if (!cameraActive && !cameraLoading) {
+        <div class="camera-placeholder">
+          <div class="camera-placeholder-icon">📷</div>
+          <h3>Camera Scanner Ready</h3>
+          <p>Start your camera and point it toward the PTRI batch QR code.</p>
+        </div>
+      }
+
+      @if (cameraLoading) {
+        <div class="camera-loading">
+          <span class="loading-spinner"></span>
+          <strong>Starting camera...</strong>
+          <p>Please allow camera access when prompted.</p>
+        </div>
+      }
+
+      @if (cameraActive) {
+        <div class="scanner-frame">
+          <span class="corner top-left"></span>
+          <span class="corner top-right"></span>
+          <span class="corner bottom-left"></span>
+          <span class="corner bottom-right"></span>
+          <div class="scan-line"></div>
+        </div>
+      }
+    </div>
+
+    @if (cameraError) {
+      <div class="message-box error-message">
+        {{ cameraError }}
+      </div>
+    }
+
+    <div class="camera-actions">
+      @if (!cameraActive) {
+        <button
+          type="button"
+          class="primary-button"
+          (click)="startCamera()"
+          [disabled]="cameraLoading || !farmerUid"
+        >
+          <span>📷</span>
+          {{ cameraLoading ? 'Starting Camera...' : 'Start Camera Scanner' }}
+        </button>
+      } @else {
+        <button
+          type="button"
+          class="stop-button"
+          (click)="stopCamera()"
+        >
+          Stop Camera
+        </button>
+      }
+    </div>
+
+    <div class="scanner-instructions">
+      <span class="instruction-icon">ⓘ</span>
+      <p>
+        Make sure the QR code is clear, properly lit, and fully visible inside
+        the scanning frame.
+      </p>
+    </div>
+  </section>
+
+  <div class="manual-divider">
+    <span></span>
+    <p>OR ENTER BATCH INFORMATION MANUALLY</p>
+    <span></span>
+  </div>
+
+  <section class="manual-card">
+    <div class="manual-heading">
+      <div class="manual-icon">⌨</div>
+      <div>
+        <h2>Manual Batch Lookup</h2>
+        <p>Enter the Firestore Batch ID or existing PTRI batch QR value.</p>
+      </div>
+    </div>
+
+    <form (ngSubmit)="lookupManualBatch()">
+      <label for="batchValue">Batch ID / QR Value</label>
+
+      <div class="manual-input-group">
+        <input
+          id="batchValue"
+          type="text"
+          name="batchValue"
+          [(ngModel)]="manualBatchValue"
+          placeholder="Enter Batch ID or PTRI-BATCH:..."
+          [disabled]="loading"
+        />
+
+        <button
+          type="submit"
+          class="lookup-button"
+          [disabled]="loading || !manualBatchValue.trim()"
+        >
+          {{ loading ? 'Searching...' : 'Find Batch' }}
+        </button>
+      </div>
+    </form>
+  </section>
+
+  @if (loading) {
+    <div class="loading-card">
+      <span class="loading-spinner"></span>
+      <strong>Verifying your silkworm batch...</strong>
+      <p>Please wait while we retrieve your batch information.</p>
+    </div>
+  }
+
+  @if (errorMessage) {
+    <div class="message-box error-message result-message">
+      <strong>Unable to Display Batch</strong>
+      <p>{{ errorMessage }}</p>
+    </div>
+  }
+
+  @if (successMessage && batch) {
+    <div class="message-box success-message result-message">
+      <strong>✓ Batch Verified Successfully</strong>
+      <p>{{ successMessage }}</p>
+    </div>
+  }
+
+  @if (batch; as selectedBatch) {
+
+    @if (showBatchModal) {
+      <div
+        class="modal-overlay"
+        (click)="closeBatchModal()"
+      >
+        <div
+          class="batch-modal"
+          (click)="$event.stopPropagation()"
+        >
+          <button
+            type="button"
+            class="modal-close"
+            (click)="closeBatchModal()"
+            aria-label="Close batch details"
+          >
+            &times;
+          </button>
+
+          <section class="batch-details-card">
+            <div class="batch-details-header">
+              <div>
+                <span class="eyebrow">VERIFIED BATCH INFORMATION</span>
+                <h2>{{ selectedBatch.batchNumber }}</h2>
+                <p>Assigned to {{ selectedBatch.farmerName }}</p>
+              </div>
+
+              <span
+                class="batch-status"
+                [class.received]="selectedBatch.status === 'Received'"
+                [class.delivered]="selectedBatch.status === 'Delivered'"
+              >
+                {{ selectedBatch.status }}
+              </span>
+            </div>
+
+            <div class="instar-highlight">
+              <div class="instar-icon">🐛</div>
+              <div>
+                <span>INSTAR STAGE AT DELIVERY</span>
+                <strong>{{ selectedBatch.instarStage || 'Not recorded' }}</strong>
+                <p>Actual silkworm stage recorded by PTRI during delivery.</p>
+              </div>
+            </div>
+
+            <div class="details-section">
+              <h3>Silkworm Information</h3>
+
+              <div class="details-grid">
+                <div class="detail-item">
+                  <span>Silkworm Type</span>
+                  <strong>{{ selectedBatch.silkwormType || '—' }}</strong>
+                </div>
+
+                <div class="detail-item">
+                  <span>Silkworm Breed</span>
+                  <strong>{{ selectedBatch.breed || '—' }}</strong>
+                </div>
+
+                <div class="detail-item">
+                  <span>Number of Trays</span>
+                  <strong>{{ selectedBatch.trays }}</strong>
+                </div>
+
+                <div class="detail-item">
+                  <span>Silkworm Quantity</span>
+                  <strong>{{ selectedBatch.quantity | number }}</strong>
+                </div>
+              </div>
+            </div>
+
+            <div class="details-section">
+              <h3>Assignment Information</h3>
+
+              <div class="details-grid">
+                <div class="detail-item">
+                  <span>Request Number</span>
+                  <strong>{{ selectedBatch.requestNumber }}</strong>
+                </div>
+
+                <div class="detail-item">
+                  <span>Preparation Date</span>
+                  <strong>{{ selectedBatch.preparationDate | date:'MMM d, y' }}</strong>
+                </div>
+
+                <div class="detail-item">
+                  <span>Scheduled Delivery Date</span>
+                  <strong>{{ selectedBatch.deliveryDate | date:'MMM d, y' }}</strong>
+                </div>
+
+                <div class="detail-item">
+                  <span>Assigned Date</span>
+                  <strong>{{ selectedBatch.assignedDate | date:'MMM d, y' }}</strong>
+                </div>
+              </div>
+            </div>
+
+            <div class="details-section">
+              <h3>Farm Information at Assignment</h3>
+
+              <div class="details-grid">
+                <div class="detail-item">
+                  <span>Farm Area</span>
+                  <strong>{{ selectedBatch.farmArea || '—' }}</strong>
+                </div>
+
+                <div class="detail-item">
+                  <span>Registered Mulberry Hills</span>
+                  <strong>{{ selectedBatch.registeredMulberryTreeCount }}</strong>
+                </div>
+
+                <div class="detail-item">
+                  <span>Living Mulberry Hills</span>
+                  <strong>{{ selectedBatch.livingMulberryHills }}</strong>
+                </div>
+
+                <div class="detail-item">
+                  <span>Available Leaf Weight</span>
+                  <strong>{{ selectedBatch.availableLeafWeightKg }} kg</strong>
+                </div>
+              </div>
+            </div>
+
+            @if (selectedBatch.ptriRemarks) {
+              <div class="remarks-box">
+                <h3>PTRI Remarks</h3>
+                <p>{{ selectedBatch.ptriRemarks }}</p>
+              </div>
+            }
+
+            <div class="batch-footer">
+              <span>Batch ID: {{ selectedBatch.id }}</span>
+
+              <button
+                type="button"
+                class="reset-button"
+                (click)="resetScanner()"
+              >
+                Scan Another Batch
+              </button>
+            </div>
+          </section>
+        </div>
+      </div>
+    }
+
+    @if (!showBatchModal) {
+      <div class="view-batch-result">
+        <span>✓ Batch successfully verified.</span>
+
+        <button
+          type="button"
+          (click)="openBatchModal()"
+        >
+          View Batch Details
+        </button>
+      </div>
+    }
+
+  }
+</div>

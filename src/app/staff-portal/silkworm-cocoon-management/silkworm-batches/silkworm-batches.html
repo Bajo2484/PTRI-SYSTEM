@@ -80,33 +80,34 @@
     <!-- FARMER CARD GALLERY -->
     <div class="farmer-card-grid">
       <article class="farmer-card" *ngFor="let request of filteredRequests">
-<!-- FARMER PHOTO AND STATUS -->
-<div class="farmer-photo">
 
-  <img
-    *ngIf="request.profilePicture; else farmerPhotoFallback"
-    [src]="request.profilePicture"
-    [alt]="request.farmerName + ' profile picture'"
-    loading="lazy"
-  />
+        <!-- FARMER PHOTO AND STATUS -->
+        <div class="farmer-photo">
 
-  <ng-template #farmerPhotoFallback>
-    <div class="farmer-photo-fallback">
-      <span>{{ request.farmerName.charAt(0) || 'F' }}</span>
-    </div>
-  </ng-template>
+          <img
+            *ngIf="request.profilePicture; else farmerPhotoFallback"
+            [src]="request.profilePicture"
+            [alt]="request.farmerName + ' profile picture'"
+            loading="lazy"
+          />
 
-  <span
-    class="farmer-card-status"
-    [ngClass]="{
-      'pending': request.status === 'Pending',
-      'assigned': isAssigned(request)
-    }"
-  >
-    {{ request.status }}
-  </span>
+          <ng-template #farmerPhotoFallback>
+            <div class="farmer-photo-fallback">
+              <span>{{ request.farmerName.charAt(0) || 'F' }}</span>
+            </div>
+          </ng-template>
 
-</div>
+          <span
+            class="farmer-card-status"
+            [ngClass]="{
+              'pending': request.status === 'Pending',
+              'assigned': isAssigned(request)
+            }"
+          >
+            {{ request.status }}
+          </span>
+
+        </div>
 
         <!-- FARMER INFORMATION -->
         <div class="farmer-card-body">
@@ -143,6 +144,7 @@
             </div>
             <p>{{ batch.batchNumber }}</p>
             <small>{{ batch.trays }} tray(s) · {{ batch.silkwormType }}</small>
+            <small>Instar Stage: {{ batch.instarStage || 'Not recorded' }}</small>
           </div>
 
           <!-- MISSING FARMER RECORD -->
@@ -408,6 +410,11 @@
                 </div>
 
                 <div class="info-row">
+                  <span>Instar Stage at Delivery</span>
+                  <strong>{{ batch.instarStage || 'Not recorded' }}</strong>
+                </div>
+
+                <div class="info-row">
                   <span>Number of Trays</span>
                   <strong>{{ batch.trays | number }}</strong>
                 </div>
@@ -576,7 +583,7 @@
           <span class="section-number">02</span>
           <div>
             <h3>Silkworm Assignment Details</h3>
-            <p>Specify the type, breed, trays, and quantity to be prepared.</p>
+            <p>Specify the type, breed, instar stage, trays, and quantity to be prepared.</p>
           </div>
         </div>
 
@@ -620,6 +627,27 @@
               </optgroup>
             </select>
             <small class="resource-unit">Select the actual breed assigned by PTRI.</small>
+          </div>
+
+          <!-- INSTAR STAGE AT DELIVERY -->
+          <div class="form-group">
+            <label for="instarStage">Instar Stage at Delivery <span>*</span></label>
+            <select
+              id="instarStage"
+              name="instarStage"
+              [(ngModel)]="assignForm.instarStage"
+              required
+              [disabled]="isAssigning"
+            >
+              <option value="" disabled>Select instar stage</option>
+
+              <option *ngFor="let stage of instarStages" [value]="stage">
+                {{ stage }}
+              </option>
+            </select>
+            <small class="resource-unit">
+              Record the actual instar stage of the silkworms when delivered to the farmer.
+            </small>
           </div>
 
           <div class="form-group">
@@ -687,7 +715,9 @@
         <span>ⓘ</span>
         <p>
           Saving this assignment creates an actual Silkworm Batch with a unique
-          Batch ID and QR code. The request status will become
+          Batch ID and QR code. The selected instar stage will also be saved
+          as the actual stage recorded at delivery and can be viewed through
+          the batch details. The request status will become
           <strong>Worms Assigned</strong>. This does not mean the farmer has
           already received the silkworms. Receipt confirmation is recorded separately.
         </p>

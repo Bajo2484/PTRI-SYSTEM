@@ -22,14 +22,74 @@ import {
 import {
   SilkwormBatch
 } from '../../services/silkworm-request.service';
+import {
+  LucideAngularModule,
+  LUCIDE_ICONS,
+  LucideIconProvider,
+  Package,
+  Weight,
+  Clock,
+   PackageOpen,
+  CircleCheck,
+  Leaf,
+  Plus,
+  Truck,
+  ArrowRight,
+  Box,
+  QrCode,
+  Calendar,
+  ChevronRight,
+  Hand,
+  FileText,
+  X,
+  Info,
+  Check,
+  CircleAlert,
+  Send,
+  Download,
+  ShieldCheck,
+  ClipboardList
+} from 'lucide-angular';
 
 @Component({
   selector: 'app-cocoon-production',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [
+    CommonModule,
+    FormsModule,
+    LucideAngularModule
+  ],
+  providers: [
+  {
+    provide: LUCIDE_ICONS,
+    multi: true,
+    useValue: new LucideIconProvider({
+      Package,
+      PackageOpen,
+      Weight,
+      Clock,
+      CircleCheck,
+      Leaf,
+      Plus,
+      Truck,
+      ArrowRight,
+      QrCode,
+      Calendar,
+      ChevronRight,
+      Hand,
+      FileText,
+      X,
+      Info,
+      Check,
+      CircleAlert,
+      Send
+    })
+  }
+],
   templateUrl: './cocoon-production.html',
   styleUrl: './cocoon-production.css'
 })
+
 export class CocoonProduction implements OnInit {
 
   // =====================================

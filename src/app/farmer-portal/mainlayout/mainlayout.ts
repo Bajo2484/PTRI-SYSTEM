@@ -25,6 +25,7 @@ import {
   ChevronRight,
   Bell,
   Bug,
+   Camera,
    Settings as SettingsIcon,
 } from 'lucide-angular';
 import { signOut, onAuthStateChanged } from 'firebase/auth';
@@ -66,6 +67,7 @@ export class Mainlayout implements OnInit, OnDestroy {
   Sprout,
   Leaf,
   Bug,
+  Camera,
   Package,
   Truck,
   MessageCircle,

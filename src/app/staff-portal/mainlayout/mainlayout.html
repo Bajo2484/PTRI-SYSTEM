@@ -20,28 +20,42 @@
 
     <!-- NAVIGATION -->
     <nav class="sidebar-nav">
+
       <a class="menu-item" routerLink="/staff/dashboard" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}" (click)="closeMobileMenu()">
-        <span class="menu-icon">▦</span><span class="menu-item-label">Dashboard</span>
+        <span class="menu-icon">▦</span>
+        <span class="menu-item-label">Dashboard</span>
       </a>
+
       <a class="menu-item" routerLink="/staff/partners" routerLinkActive="active" (click)="closeMobileMenu()">
-        <span class="menu-icon">♙</span><span class="menu-item-label">Partner Management</span>
+        <span class="menu-icon">♙</span>
+        <span class="menu-item-label">Partner Management</span>
       </a>
+
       <a class="menu-item" routerLink="/staff/farmers" routerLinkActive="active" (click)="closeMobileMenu()">
-        <span class="menu-icon">♧</span><span class="menu-item-label">Farmer Management</span>
+        <span class="menu-icon">♧</span>
+        <span class="menu-item-label">Farmer Management</span>
       </a>
 
       <a class="menu-item" routerLink="/staff/mulberry-production-monitoring" routerLinkActive="active" (click)="closeMobileMenu()">
-  <span class="menu-icon">🌿</span>
-  <span class="menu-item-label">Mulberry Monitoring</span>
-</a>
+        <span class="menu-icon">🌿</span>
+        <span class="menu-item-label">Mulberry Monitoring</span>
+      </a>
 
-<a class="menu-item"
-   routerLink="/staff/silkworm-cocoon-management"
-   routerLinkActive="active"
-   (click)="closeMobileMenu()">
-  <span class="menu-icon">🐛</span>
-  <span class="menu-item-label">Silkworm &amp; Cocoon Management</span>
-</a>
+      <a class="menu-item" routerLink="/staff/silkworm-cocoon-management" routerLinkActive="active" (click)="closeMobileMenu()">
+        <span class="menu-icon">🐛</span>
+        <span class="menu-item-label">Silkworm &amp; Cocoon Management</span>
+      </a>
+
+      <!-- COCOON QR SCANNER -->
+      <a
+        class="menu-item"
+        routerLink="/staff/cocoon-scan"
+        routerLinkActive="active"
+        (click)="closeMobileMenu()"
+      >
+        <span class="menu-icon">📷</span>
+        <span class="menu-item-label">Scan Cocoon QR</span>
+      </a>
 
       <a class="menu-item" routerLink="/staff/messages" routerLinkActive="active" (click)="closeMobileMenu()">
         <span class="menu-icon">✉</span>
@@ -50,15 +64,12 @@
           {{ unreadNotificationCount > 99 ? '99+' : unreadNotificationCount }}
         </span>
       </a>
-      
-
 
       <a class="menu-item" routerLink="/staff/orders" routerLinkActive="active" (click)="closeMobileMenu()">
-        <span class="menu-icon">▤</span><span class="menu-item-label">Silk Orders</span>
+        <span class="menu-icon">▤</span>
+        <span class="menu-item-label">Silk Orders</span>
       </a>
-      <a class="menu-item" routerLink="/staff/deliveries" routerLinkActive="active" (click)="closeMobileMenu()">
-        <span class="menu-icon">⇄</span><span class="menu-item-label">Supply & Delivery</span>
-      </a>
+
     </nav>
 
     <!-- STAFF PROFILE -->

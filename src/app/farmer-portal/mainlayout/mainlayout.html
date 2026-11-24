@@ -213,6 +213,21 @@
   <span class="nav-label">Silkworm & Cocoon Production</span>
 </a>
 
+<a
+  routerLink="/farmer/batch-scan"
+  routerLinkActive="active"
+  (click)="closeMenu()"
+  title="Scan Silkworm Batch"
+>
+  <i-lucide
+    class="nav-icon"
+    [img]="icons.Camera"
+    [size]="21"
+    [strokeWidth]="1.8"
+  ></i-lucide>
+  <span class="nav-label">Scan QR Code</span>
+</a>
+
 
       <a
   routerLink="/farmer/messages"

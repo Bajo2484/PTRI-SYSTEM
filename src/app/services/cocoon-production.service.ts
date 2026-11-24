@@ -585,6 +585,62 @@ export class CocoonProductionService {
     return this.getReturnRecordByQr(qrValue, farmerUid);
   }
 
+
+  // =====================================
+  // STAFF: FIND COCOON RETURN BY RETURN NUMBER
+  // =====================================
+
+  async getReturnRecordByNumber(
+    returnNumber: string
+  ): Promise<CocoonReturnRecord | null> {
+
+    const value = returnNumber?.trim().toUpperCase();
+
+    if (!value) {
+      throw new Error('Please enter a cocoon return number.');
+    }
+
+    if (!/^CR-\d{4}-[A-Z0-9]+$/.test(value)) {
+      throw new Error('Invalid cocoon return number format.');
+    }
+
+    const returnQuery = query(
+      collection(db, this.returnCollection),
+      where('returnNumber', '==', value)
+    );
+
+    const snapshot = await getDocs(returnQuery);
+
+    if (snapshot.empty) {
+      return null;
+    }
+
+    if (snapshot.size > 1) {
+      throw new Error(
+        'Multiple cocoon return records matched this return number. Please contact the system administrator.'
+      );
+    }
+
+    const matchedDocument = snapshot.docs[0];
+    const data = matchedDocument.data();
+
+    if (
+      !data['farmerUid'] ||
+      !data['returnNumber'] ||
+      !data['harvestId']
+    ) {
+      throw new Error(
+        'The matched cocoon return record is incomplete.'
+      );
+    }
+
+    return {
+      ...data,
+      id: matchedDocument.id
+    } as CocoonReturnRecord;
+  }
+
+
   // =====================================
   // GET COCOON RETURN RECORD BY ID
   // =====================================

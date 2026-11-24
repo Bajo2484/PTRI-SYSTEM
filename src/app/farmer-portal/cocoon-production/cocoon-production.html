@@ -11,7 +11,7 @@
 
   <!-- ERROR -->
   <div *ngIf="!loading && errorMessage" class="error-state">
-    <i class="fas fa-exclamation-circle"></i>
+    <lucide-icon name="circle-alert"></lucide-icon>
     <p>{{ errorMessage }}</p>
     <button type="button" (click)="initializeFarmer()">Try Again</button>
   </div>
@@ -23,7 +23,7 @@
 
       <div class="summary-card">
         <div class="summary-icon harvest-icon">
-          <i class="fas fa-boxes-stacked"></i>
+          <lucide-icon name="package"></lucide-icon>
         </div>
         <div class="summary-info">
           <span>Total Harvests</span>
@@ -34,7 +34,7 @@
 
       <div class="summary-card">
         <div class="summary-icon weight-icon">
-          <i class="fas fa-weight-hanging"></i>
+          <lucide-icon name="weight"></lucide-icon>
         </div>
         <div class="summary-info">
           <span>Total Cocoon Weight</span>
@@ -45,7 +45,7 @@
 
       <div class="summary-card">
         <div class="summary-icon pending-icon">
-          <i class="fas fa-clock"></i>
+          <lucide-icon name="clock"></lucide-icon>
         </div>
         <div class="summary-info">
           <span>Pending Returns</span>
@@ -56,7 +56,7 @@
 
       <div class="summary-card">
         <div class="summary-icon confirmed-icon">
-          <i class="fas fa-circle-check"></i>
+           <lucide-icon name="circle-check"></lucide-icon>
         </div>
         <div class="summary-info">
           <span>Confirmed Returns</span>
@@ -72,7 +72,7 @@
 
       <div class="action-intro">
         <div class="action-icon">
-          <i class="fas fa-leaf"></i>
+          <lucide-icon name="leaf"></lucide-icon>
         </div>
         <div>
           <h2>Manage Cocoon Production</h2>
@@ -86,7 +86,7 @@
           type="button"
           class="harvest-btn"
           (click)="openHarvestModal()">
-          <i class="fas fa-plus"></i>
+         <lucide-icon name="plus"></lucide-icon>
           Record Harvest
         </button>
 
@@ -94,9 +94,9 @@
           type="button"
           class="return-btn"
           (click)="openReturnModal()">
-          <i class="fas fa-truck-ramp-box"></i>
+          <lucide-icon name="truck"></lucide-icon>
           Cocoon Return to PTRI
-          <i class="fas fa-arrow-right"></i>
+          <lucide-icon name="arrow-right"></lucide-icon>
         </button>
 
       </div>
@@ -115,7 +115,7 @@
           [class.active]="activeTab === 'harvest'"
           (click)="changeTab('harvest')">
 
-          <i class="fas fa-box-open"></i>
+          <lucide-icon name="package-open"></lucide-icon>
           <span>Cocoon Harvest Records</span>
           <span class="tab-count">{{ harvestRecords.length }}</span>
 
@@ -126,7 +126,7 @@
           [class.active]="activeTab === 'returns'"
           (click)="changeTab('returns')">
 
-          <i class="fas fa-truck-ramp-box"></i>
+          <lucide-icon name="truck"></lucide-icon>
           <span>Cocoon Return to PTRI</span>
           <span class="tab-count">{{ returnRecords.length }}</span>
 
@@ -163,7 +163,7 @@
 
             <div class="harvest-card-top">
               <div class="record-icon">
-                <i class="fas fa-box-open"></i>
+                <lucide-icon name="package-open"></lucide-icon>
               </div>
 
               <span
@@ -209,7 +209,7 @@
               class="view-record-btn"
               (click)="viewHarvestDetails(record)">
               View Harvest Details
-              <i class="fas fa-arrow-right"></i>
+             <lucide-icon name="arrow-right"></lucide-icon>
             </button>
 
           </article>
@@ -222,7 +222,7 @@
           class="empty-state">
 
           <div class="empty-icon">
-            <i class="fas fa-box-open"></i>
+           <lucide-icon name="package-open"></lucide-icon>
           </div>
 
           <h3>No Cocoon Harvest Records Yet</h3>
@@ -236,7 +236,7 @@
             type="button"
             (click)="openHarvestModal()"
             [disabled]="eligibleBatches.length === 0">
-            <i class="fas fa-plus"></i>
+            <lucide-icon name="plus"></lucide-icon>
             Record Your First Harvest
           </button>
 
@@ -273,7 +273,7 @@
 
             <div class="harvest-card-top">
               <div class="record-icon return-record-icon">
-                <i class="fas fa-qrcode"></i>
+                <lucide-icon name="qr-code"></lucide-icon>
               </div>
 
               <span
@@ -329,10 +329,10 @@
               class="view-record-btn return-qr-btn"
               (click)="viewReturnDetails(record)">
 
-              <i class="fas fa-qrcode"></i>
+              <lucide-icon name="qr-code"></lucide-icon>
               View Return Details & QR
 
-              <i class="fas fa-arrow-right"></i>
+              <lucide-icon name="arrow-right"></lucide-icon>
 
             </button>
 
@@ -346,7 +346,7 @@
           class="empty-state">
 
           <div class="empty-icon">
-            <i class="fas fa-qrcode"></i>
+            <lucide-icon name="qr-code"></lucide-icon>
           </div>
 
           <h3>No Cocoon Return Records Yet</h3>
@@ -360,7 +360,7 @@
             type="button"
             (click)="openReturnModal()"
             [disabled]="pendingReturns === 0">
-            <i class="fas fa-truck-ramp-box"></i>
+            <lucide-icon name="truck"></lucide-icon>
             Prepare Cocoon Return
           </button>
 
@@ -390,7 +390,7 @@
 
           <div class="modal-title-group">
             <div class="modal-heading-icon">
-              <i class="fas fa-leaf"></i>
+              <lucide-icon name="leaf"></lucide-icon>
             </div>
 
             <div>
@@ -416,7 +416,7 @@
           <div class="modal-body">
 
             <div class="form-notice">
-              <i class="fas fa-circle-info"></i>
+              <lucide-icon name="info"></lucide-icon>
               Assigned PTRI worm batches can be selected. Only record a harvest after the cocoons have actually been harvested.
             </div>
 
@@ -565,7 +565,7 @@
               class="primary-btn"
               [disabled]="submitting || eligibleBatches.length === 0">
 
-              <i class="fas fa-check"></i>
+              <lucide-icon name="check"></lucide-icon>
               {{ submitting ? 'Submitting...' : 'Submit Harvest' }}
 
             </button>
@@ -597,7 +597,7 @@
 
           <div class="modal-title-group">
             <div class="modal-heading-icon">
-              <i class="fas fa-file-lines"></i>
+              <lucide-icon name="file-text"></lucide-icon>
             </div>
 
             <div>
@@ -683,7 +683,7 @@
           </div>
 
           <div class="return-information-note">
-            <i class="fas fa-info-circle"></i>
+            <lucide-icon name="info"></lucide-icon>
             <div>
               <strong>Cocoon Return Information</strong>
               <p>
@@ -730,7 +730,7 @@
 
           <div class="modal-title-group">
             <div class="modal-heading-icon return-heading-icon">
-              <i class="fas fa-truck-ramp-box"></i>
+               <lucide-icon name="truck"></lucide-icon>
             </div>
 
             <div>
@@ -780,7 +780,7 @@
 
                 <div class="return-record-top">
                   <strong>{{ record.harvestNumber }}</strong>
-                  <i class="fas fa-chevron-right"></i>
+                  <lucide-icon name="chevron-right"></lucide-icon>
                 </div>
 
                 <span>
@@ -790,7 +790,7 @@
                 <div class="return-record-meta">
 
                   <span>
-                    <i class="fas fa-calendar"></i>
+                    <lucide-icon name="calendar"></lucide-icon>
                     {{ formatDate(record.harvestDate) }}
                   </span>
 
@@ -810,7 +810,7 @@
               *ngIf="getReturnEligibleRecordsForDisplay().length === 0"
               class="return-empty">
 
-              <i class="fas fa-circle-check"></i>
+              <lucide-icon name="circle-check"></lucide-icon>
 
               <h4>No Pending Returns</h4>
 
@@ -831,7 +831,7 @@
               class="select-record-prompt">
 
               <div class="prompt-icon">
-                <i class="fas fa-hand-pointer"></i>
+                <lucide-icon name="hand"></lucide-icon>
               </div>
 
               <h3>Select a Harvest Record</h3>
@@ -893,7 +893,7 @@
               </div>
 
               <div class="return-notice">
-                <i class="fas fa-info-circle"></i>
+                <lucide-icon name="info"></lucide-icon>
 
                 <p>
                   By submitting, you are creating a cocoon return record
@@ -908,7 +908,7 @@
                 class="submit-return-btn"
                 [disabled]="submitting">
 
-                <i class="fas fa-paper-plane"></i>
+                <lucide-icon name="send"></lucide-icon>
 
                 {{ submitting ? 'Submitting...' : 'Submit Cocoon Return' }}
 

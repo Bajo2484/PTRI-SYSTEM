@@ -1,4 +1,13 @@
-import { Component, OnInit, ElementRef, ViewChild, OnDestroy,ChangeDetectorRef } from '@angular/core';
+
+import {
+  Component,
+  OnInit,
+  ElementRef,
+  ViewChild,
+  OnDestroy,
+  ChangeDetectorRef
+} from '@angular/core';
+
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { QRCodeComponent } from 'angularx-qrcode';
@@ -40,7 +49,12 @@ export class CocoonCollection implements OnInit, OnDestroy {
   scannerLoading = false;
   scannerError = '';
 
+  cameraDevices: MediaDeviceInfo[] = [];
+  selectedCameraIndex = 0;
+  activeCameraLabel = '';
+
   private scanner = new BrowserMultiFormatReader();
+
   private scannerControls: { stop: () => void } | null = null;
   private processingScan = false;
 
@@ -59,39 +73,52 @@ export class CocoonCollection implements OnInit, OnDestroy {
 
   collections: CocoonReturnRecord[] = [];
 
- constructor(
-  private cocoonService: CocoonProductionService,
-  private cdr: ChangeDetectorRef
-) {}
+  constructor(
+    private cocoonService: CocoonProductionService,
+    private cdr: ChangeDetectorRef
+  ) {}
+
   ngOnInit(): void {
     this.loadCollections();
   }
 
   ngOnDestroy(): void {
-    this.stopScanner();
+    this.stopScanner(false, false);
   }
-async loadCollections(): Promise<void> {
-  this.loading = true;
-  this.errorMessage = '';
-  this.cdr.detectChanges();
 
-  try {
-    this.collections =
-      await this.cocoonService.getAllReturnRecordsForStaff();
+  // =====================================
+  // LOAD COCOON RETURN RECORDS
+  // =====================================
 
-  } catch (error) {
-    console.error('Failed to load cocoon returns:', error);
+  async loadCollections(): Promise<void> {
 
-    this.errorMessage =
-      error instanceof Error
-        ? error.message
-        : 'Unable to load cocoon return records. Please try again.';
+    this.loading = true;
+    this.errorMessage = '';
 
-  } finally {
-    this.loading = false;
     this.cdr.detectChanges();
+
+    try {
+
+      this.collections =
+        await this.cocoonService.getAllReturnRecordsForStaff();
+
+    } catch (error) {
+
+      console.error('Failed to load cocoon returns:', error);
+
+      this.errorMessage =
+        error instanceof Error
+          ? error.message
+          : 'Unable to load cocoon return records. Please try again.';
+
+    } finally {
+
+      this.loading = false;
+      this.cdr.detectChanges();
+
+    }
   }
-}
+
   // =====================================
   // START QR CAMERA SCANNER
   // =====================================
@@ -106,10 +133,97 @@ async loadCollections(): Promise<void> {
     this.scannerError = '';
     this.processingScan = false;
 
+    this.cameraDevices = [];
+    this.selectedCameraIndex = 0;
+    this.activeCameraLabel = '';
+
+    // Render the scanner modal and video element.
+    this.cdr.detectChanges();
+
     try {
 
-      // Allow Angular to render the video element.
+      // Wait for Angular to render the video element.
       await new Promise(resolve => setTimeout(resolve, 200));
+
+      // Check browser camera support.
+      if (!navigator.mediaDevices?.getUserMedia) {
+        throw new Error(
+          'Camera access is not supported by this browser. Please use a supported browser over HTTPS or localhost.'
+        );
+      }
+
+      // Request temporary camera permission.
+      // This also helps reveal camera labels when enumerating devices.
+      const permissionStream =
+        await navigator.mediaDevices.getUserMedia({
+          video: true,
+          audio: false
+        });
+
+      // Release the temporary permission stream.
+      permissionStream.getTracks().forEach(track => track.stop());
+
+      // Get available cameras.
+      this.cameraDevices =
+  await BrowserMultiFormatReader.listVideoInputDevices();
+
+      if (this.cameraDevices.length === 0) {
+        throw new Error(
+          'No camera was detected. Please connect or enable a camera and try again.'
+        );
+      }
+
+      // Prefer the rear camera when available.
+      const rearCameraIndex = this.cameraDevices.findIndex(device =>
+        /back|rear|environment/i.test(device.label)
+      );
+
+      // Use rear camera if found; otherwise use the first available camera.
+      this.selectedCameraIndex =
+        rearCameraIndex >= 0 ? rearCameraIndex : 0;
+
+      const selectedCamera =
+        this.cameraDevices[this.selectedCameraIndex];
+
+      this.activeCameraLabel =
+        selectedCamera.label ||
+        `Camera ${this.selectedCameraIndex + 1}`;
+
+      // Start the selected camera.
+      await this.startCamera(selectedCamera.deviceId);
+
+    } catch (error) {
+
+      console.error('QR scanner failed:', error);
+
+      this.stopScanner(false, false);
+
+      this.scannerLoading = false;
+      this.showScanner = true;
+
+      this.scannerError =
+        error instanceof Error
+          ? error.message
+          : 'Unable to access the camera. Please check your camera permission.';
+
+      this.cdr.detectChanges();
+
+    }
+  }
+
+  // =====================================
+  // START SELECTED CAMERA
+  // =====================================
+
+  private async startCamera(deviceId: string): Promise<void> {
+
+    this.scannerLoading = true;
+    this.scannerError = '';
+    this.processingScan = false;
+
+    this.cdr.detectChanges();
+
+    try {
 
       const video = this.scannerVideo?.nativeElement;
 
@@ -119,9 +233,10 @@ async loadCollections(): Promise<void> {
         );
       }
 
+      // Start the selected camera and decode QR codes.
       this.scannerControls =
         await this.scanner.decodeFromVideoDevice(
-          undefined,
+          deviceId,
           video,
           async result => {
 
@@ -139,29 +254,88 @@ async loadCollections(): Promise<void> {
               return;
             }
 
-            // Stop the camera after detecting a QR code.
+            // Stop the camera and close the scanner modal.
             this.stopScanner();
 
             // Find the actual cocoon return record.
             await this.findScannedCollection(scannedValue);
+
           }
         );
 
       this.scannerLoading = false;
+      this.cdr.detectChanges();
 
     } catch (error) {
 
-      console.error('QR scanner failed:', error);
+      console.error('Camera startup failed:', error);
 
-      this.stopScanner(false);
+      this.stopScanner(false, false);
 
       this.scannerLoading = false;
-      this.showScanner = true;
 
       this.scannerError =
         error instanceof Error
           ? error.message
-          : 'Unable to access the camera. Please check your camera permission.';
+          : 'Unable to start the selected camera. Please try another camera.';
+
+      this.cdr.detectChanges();
+
+    }
+  }
+
+  // =====================================
+  // SWITCH BETWEEN FRONT AND BACK CAMERA
+  // =====================================
+
+  async switchCamera(): Promise<void> {
+
+    // Switching is unavailable if only one camera exists.
+    if (this.cameraDevices.length < 2 || this.scannerLoading) {
+      return;
+    }
+
+    // Select the next available camera.
+    this.selectedCameraIndex =
+      (this.selectedCameraIndex + 1) % this.cameraDevices.length;
+
+    const selectedCamera =
+      this.cameraDevices[this.selectedCameraIndex];
+
+    this.activeCameraLabel =
+      selectedCamera.label ||
+      `Camera ${this.selectedCameraIndex + 1}`;
+
+    // Stop the current camera without closing the scanner modal.
+    this.stopScanner(false, false);
+
+    this.showScanner = true;
+    this.scannerError = '';
+    this.scannerLoading = true;
+
+    this.cdr.detectChanges();
+
+    try {
+
+      // Give the previous camera stream time to release.
+      await new Promise(resolve => setTimeout(resolve, 150));
+
+      // Start the newly selected camera.
+      await this.startCamera(selectedCamera.deviceId);
+
+    } catch (error) {
+
+      console.error('Camera switching failed:', error);
+
+      this.stopScanner(false, false);
+
+      this.scannerLoading = false;
+      this.scannerError =
+        error instanceof Error
+          ? error.message
+          : 'Unable to switch camera. Please try again.';
+
+      this.cdr.detectChanges();
 
     }
   }
@@ -170,7 +344,10 @@ async loadCollections(): Promise<void> {
   // STOP QR CAMERA
   // =====================================
 
-  stopScanner(hidePanel = true): void {
+  stopScanner(
+    hideModal = true,
+    detectChanges = true
+  ): void {
 
     // Stop ZXing camera controls.
     if (this.scannerControls) {
@@ -182,15 +359,23 @@ async loadCollections(): Promise<void> {
     const video = this.scannerVideo?.nativeElement;
 
     if (video?.srcObject instanceof MediaStream) {
+
       video.srcObject.getTracks().forEach(track => track.stop());
+
       video.srcObject = null;
     }
 
     this.scannerLoading = false;
 
-    if (hidePanel) {
+    if (hideModal) {
       this.showScanner = false;
       this.scannerError = '';
+      this.activeCameraLabel = '';
+      this.processingScan = false;
+    }
+
+    if (detectChanges) {
+      this.cdr.detectChanges();
     }
   }
 
@@ -201,6 +386,7 @@ async loadCollections(): Promise<void> {
   async findScannedCollection(qrValue: string): Promise<void> {
 
     this.errorMessage = '';
+    this.cdr.detectChanges();
 
     try {
 
@@ -208,14 +394,16 @@ async loadCollections(): Promise<void> {
         throw new Error('The scanned QR code is empty.');
       }
 
-      // The service extracts the original token,
-      // hashes it, and searches the actual Firestore record.
+      // Extract and validate the original QR token through the service.
       const record =
         await this.cocoonService.getReturnRecordByQr(qrValue.trim());
 
       if (!record) {
+
         this.errorMessage =
           'No matching cocoon return record was found. Please check the QR code.';
+
+        this.cdr.detectChanges();
         return;
       }
 
@@ -225,14 +413,20 @@ async loadCollections(): Promise<void> {
       );
 
       if (existingIndex !== -1) {
+
         this.collections[existingIndex] = record;
+
       } else {
+
         this.collections = [record, ...this.collections];
+
       }
 
       // Open the actual matched cocoon return details.
       this.selectedCollection = record;
       this.showViewModal = true;
+
+      this.cdr.detectChanges();
 
     } catch (error) {
 
@@ -243,10 +437,11 @@ async loadCollections(): Promise<void> {
           ? error.message
           : 'Unable to find the scanned cocoon return record.';
 
+      this.cdr.detectChanges();
+
     }
   }
 
-  
   // =====================================
   // OVERVIEW CARD VALUES
   // =====================================
@@ -254,36 +449,43 @@ async loadCollections(): Promise<void> {
   get totalCollections(): number {
     return this.collections.length;
   }
+get totalWeightCollected(): number {
 
-  get totalWeightCollected(): number {
-    return this.collections.reduce(
-      (total, item) => {
-        const weight = Number(
-          item.actualReceivedWeight ?? item.cocoonWeight ?? 0
-        );
+  return this.collections.reduce(
+    (total, item) => {
 
-        return total + (Number.isFinite(weight) ? weight : 0);
-      },
-      0
-    );
-  }
+      // Count the cocoon weight submitted by the farmer.
+      const weight = Number(item.cocoonWeight ?? 0);
 
+      return total + (Number.isFinite(weight) ? weight : 0);
+
+    },
+    0
+  );
+}
   get totalFarmers(): number {
+
     return new Set(
       this.collections.map(item => item.farmerUid)
     ).size;
+
   }
 
   get pendingReturns(): number {
-    return 0;
-  }
 
-  get receivedReturns(): number {
     return this.collections.filter(
       item => item.status === 'Submitted'
     ).length;
+
   }
 
+  get receivedReturns(): number {
+
+    return this.collections.filter(
+      item => item.status === 'Received'
+    ).length;
+
+  }
 
   // =====================================
   // SEARCH FILTER
@@ -304,6 +506,7 @@ async loadCollections(): Promise<void> {
       (item.harvestNumber || '').toLowerCase().includes(search) ||
       (item.requestNumber || '').toLowerCase().includes(search)
     );
+
   }
 
   // =====================================
@@ -317,6 +520,8 @@ async loadCollections(): Promise<void> {
 
     this.selectedCollection = collection;
     this.showViewModal = true;
+
+    this.cdr.detectChanges();
   }
 
   // =====================================
@@ -330,6 +535,8 @@ async loadCollections(): Promise<void> {
 
     this.showViewModal = false;
     this.selectedCollection = null;
+
+    this.cdr.detectChanges();
   }
 
   // =====================================
@@ -351,7 +558,10 @@ async loadCollections(): Promise<void> {
       if (!updatedRecord) {
         this.closeViewModal();
       }
+
     }
+
+    this.cdr.detectChanges();
   }
 
   // =====================================
@@ -370,6 +580,7 @@ async loadCollections(): Promise<void> {
 
       default:
         return 'status-default';
+
     }
   }
 

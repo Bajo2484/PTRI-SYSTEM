@@ -9,7 +9,8 @@ import {
   SilkwormRequest,
   SilkwormRequestService,
   SilkwormBatch,
-  AssignWormsData
+  AssignWormsData,
+  SilkwormInstarStage
 } from '../../../services/silkworm-request.service';
 
 import {
@@ -50,6 +51,15 @@ export class SilkwormBatches implements OnInit {
   farmers: FarmerAccount[] = [];
   batches: SilkwormBatch[] = [];
 
+  // Available silkworm instar stages.
+  instarStages: SilkwormInstarStage[] = [
+    '1st Instar',
+    '2nd Instar',
+    '3rd Instar',
+    '4th Instar',
+    '5th Instar'
+  ];
+
   isLoading = false;
   isAssigning = false;
   isGeneratingQr = false;
@@ -79,6 +89,7 @@ export class SilkwormBatches implements OnInit {
     return {
       silkwormType: '',
       breed: '',
+      instarStage: '' as SilkwormInstarStage,
       trays: 0,
       quantity: 0,
       preparationDate: '',
@@ -125,16 +136,16 @@ export class SilkwormBatches implements OnInit {
           item => item.authUid === request.farmerUid
         );
 
-       return {
-  ...request,
-  farmArea: farmer?.farmArea || '',
-  registeredMulberryTreeCount:
-    farmer ? Number(farmer.mulberryTreeCount || 0) : null,
-  farmerRecordFound: !!farmer,
-  farmName: farmer?.farmName || '',
-  communityName: farmer?.communityName || '',
-  profilePicture: farmer?.profilePicture || ''
-};
+        return {
+          ...request,
+          farmArea: farmer?.farmArea || '',
+          registeredMulberryTreeCount:
+            farmer ? Number(farmer.mulberryTreeCount || 0) : null,
+          farmerRecordFound: !!farmer,
+          farmName: farmer?.farmName || '',
+          communityName: farmer?.communityName || '',
+          profilePicture: farmer?.profilePicture || ''
+        };
       });
 
     } catch (error) {
@@ -332,13 +343,14 @@ export class SilkwormBatches implements OnInit {
     if (
       !form.silkwormType.trim() ||
       !form.breed.trim() ||
+      !form.instarStage ||
       !form.preparationDate ||
       !form.deliveryDate
     ) {
       await Swal.fire({
         icon: 'warning',
         title: 'Incomplete Assignment Details',
-        text: 'Please complete the silkworm type, breed, preparation date, and delivery date.',
+        text: 'Please complete the silkworm type, breed, instar stage, preparation date, and delivery date.',
         confirmButtonColor: '#245638',
         background: '#fffdf8',
         color: '#493a2c'
@@ -378,7 +390,10 @@ export class SilkwormBatches implements OnInit {
     const confirmation = await Swal.fire({
       icon: 'question',
       title: 'Assign Silkworm Batch?',
-      html: `You are assigning <strong>${Number(form.trays)} tray(s)</strong> to <strong>${request.farmerName}</strong>.`,
+      html: `
+        <p>You are assigning <strong>${Number(form.trays)} tray(s)</strong> to <strong>${request.farmerName}</strong>.</p>
+        <p><strong>Instar Stage:</strong> ${form.instarStage}</p>
+      `,
       showCancelButton: true,
       confirmButtonText: 'Yes, Assign & Save',
       cancelButtonText: 'Go Back',
@@ -411,6 +426,7 @@ export class SilkwormBatches implements OnInit {
           ...form,
           trays: Number(form.trays),
           quantity: Number(form.quantity),
+          instarStage: form.instarStage,
           registeredMulberryTreeCount:
             Number(form.registeredMulberryTreeCount || 0)
         }
@@ -430,6 +446,7 @@ export class SilkwormBatches implements OnInit {
         html: `
           <p>The batch for <strong>${savedBatch.farmerName}</strong> has been saved successfully.</p>
           <p><strong>Batch ID:</strong> ${savedBatch.batchNumber}</p>
+          <p><strong>Instar Stage:</strong> ${savedBatch.instarStage || 'Not recorded'}</p>
           <p><strong>Status:</strong> Assigned</p>
         `,
         confirmButtonText: 'View Batch & QR Code',
@@ -569,13 +586,14 @@ export class SilkwormBatches implements OnInit {
     this.searchTerm = '';
     this.selectedStatus = 'All Requests';
   }
+
   getFarmerInitials(name: string): string {
-  return (name || 'Farmer')
-    .trim()
-    .split(/\s+/)
-    .slice(0, 2)
-    .map(part => part.charAt(0))
-    .join('')
-    .toUpperCase();
-}
+    return (name || 'Farmer')
+      .trim()
+      .split(/\s+/)
+      .slice(0, 2)
+      .map(part => part.charAt(0))
+      .join('')
+      .toUpperCase();
+  }
 }

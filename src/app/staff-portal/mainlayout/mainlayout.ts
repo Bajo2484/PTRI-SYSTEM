@@ -144,6 +144,13 @@ export class Mainlayout implements OnInit, OnDestroy {
     this.isMobileMenuOpen = false;
   }
 
+  // OPEN COCOON QR SCANNER
+  openCocoonScanner(): void {
+    this.closeMobileMenu();
+    this.closeDropdowns();
+    this.router.navigateByUrl('/staff/cocoon-scan');
+  }
+
   // LOGOUT
   async logout(): Promise<void> {
     try {

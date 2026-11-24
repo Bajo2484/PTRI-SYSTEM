@@ -93,6 +93,13 @@ export const routes: Routes = [
           )
       },
       {
+  path: 'cocoon-scan',
+  loadComponent: () =>
+    import('./staff-portal/cocoon-scan/cocoon-scan').then(
+      (m) => m.CocoonScan
+    )
+},
+      {
         path: 'silkworm-cocoon-management/production-history',
         loadComponent: () =>
           import('./staff-portal/silkworm-cocoon-management/production-history/production-history').then(
@@ -254,6 +261,20 @@ export const routes: Routes = [
             (m) => m.SilkwormRequestsBatches
           )
       },
+      {
+  path: 'batch-scan',
+  loadComponent: () =>
+    import('./farmer-portal/batch-scan/batch-scan').then(
+      (m) => m.BatchScan
+    )
+},
+{
+  path: 'batch-scan/:batchId',
+  loadComponent: () =>
+    import('./farmer-portal/batch-scan/batch-scan').then(
+      (m) => m.BatchScan
+    )
+},
       {
         path: 'cocoon-production',
         loadComponent: () =>
