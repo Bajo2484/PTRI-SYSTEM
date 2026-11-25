@@ -21,9 +21,13 @@ import {
 @Component({
   selector: 'app-cocoon-collection',
   standalone: true,
-  imports: [CommonModule, FormsModule, QRCodeComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    QRCodeComponent
+  ],
   templateUrl: './cocoon-collection.html',
-  styleUrl: './cocoon-collection.css',
+  styleUrl: './cocoon-collection.css'
 })
 export class CocoonCollection implements OnInit, OnDestroy {
 
@@ -78,6 +82,10 @@ export class CocoonCollection implements OnInit, OnDestroy {
     private cdr: ChangeDetectorRef
   ) {}
 
+  // =====================================
+  // INITIALIZATION
+  // =====================================
+
   ngOnInit(): void {
     this.loadCollections();
   }
@@ -126,7 +134,7 @@ export class CocoonCollection implements OnInit, OnDestroy {
   async startScanner(): Promise<void> {
 
     // Stop any previous camera session.
-    this.stopScanner(false);
+    this.stopScanner(false, false);
 
     this.showScanner = true;
     this.scannerLoading = true;
@@ -153,7 +161,6 @@ export class CocoonCollection implements OnInit, OnDestroy {
       }
 
       // Request temporary camera permission.
-      // This also helps reveal camera labels when enumerating devices.
       const permissionStream =
         await navigator.mediaDevices.getUserMedia({
           video: true,
@@ -165,7 +172,7 @@ export class CocoonCollection implements OnInit, OnDestroy {
 
       // Get available cameras.
       this.cameraDevices =
-  await BrowserMultiFormatReader.listVideoInputDevices();
+        await BrowserMultiFormatReader.listVideoInputDevices();
 
       if (this.cameraDevices.length === 0) {
         throw new Error(
@@ -257,7 +264,7 @@ export class CocoonCollection implements OnInit, OnDestroy {
             // Stop the camera and close the scanner modal.
             this.stopScanner();
 
-            // Find the actual cocoon return record.
+            // Look up the actual return record using the scanned QR value.
             await this.findScannedCollection(scannedValue);
 
           }
@@ -394,7 +401,15 @@ export class CocoonCollection implements OnInit, OnDestroy {
         throw new Error('The scanned QR code is empty.');
       }
 
-      // Extract and validate the original QR token through the service.
+      /*
+       * The new Farmer QR contains the permanent cocoon-return
+       * document ID in its URL.
+       *
+       * The service handles the QR value and retrieves the
+       * corresponding Firestore cocoon-return record.
+       *
+       * Legacy token-based QR records are also handled by the service.
+       */
       const record =
         await this.cocoonService.getReturnRecordByQr(qrValue.trim());
 
@@ -422,7 +437,7 @@ export class CocoonCollection implements OnInit, OnDestroy {
 
       }
 
-      // Open the actual matched cocoon return details.
+      // Open the exact matched cocoon return record.
       this.selectedCollection = record;
       this.showViewModal = true;
 
@@ -449,20 +464,25 @@ export class CocoonCollection implements OnInit, OnDestroy {
   get totalCollections(): number {
     return this.collections.length;
   }
-get totalWeightCollected(): number {
 
-  return this.collections.reduce(
-    (total, item) => {
+  get totalWeightCollected(): number {
 
-      // Count the cocoon weight submitted by the farmer.
-      const weight = Number(item.cocoonWeight ?? 0);
+    return this.collections.reduce(
+      (total, item) => {
 
-      return total + (Number.isFinite(weight) ? weight : 0);
+        // This is the weight declared in the Farmer return record.
+        const weight = Number(item.cocoonWeight ?? 0);
 
-    },
-    0
-  );
-}
+        return total + (
+          Number.isFinite(weight) ? weight : 0
+        );
+
+      },
+      0
+    );
+
+  }
+
   get totalFarmers(): number {
 
     return new Set(
@@ -594,7 +614,13 @@ get totalWeightCollected(): number {
       return 'Not recorded';
     }
 
-    return `${Number(weight).toFixed(2)} kg`;
+    const numericWeight = Number(weight);
+
+    if (!Number.isFinite(numericWeight)) {
+      return 'Not recorded';
+    }
+
+    return `${numericWeight.toFixed(2)} kg`;
   }
 
 }

@@ -4,16 +4,32 @@ import {
   ElementRef,
   ViewChild,
   OnDestroy,
+  AfterViewInit,
   ChangeDetectorRef
 } from '@angular/core';
 
 import { CommonModule } from '@angular/common';
-import { BrowserMultiFormatReader } from '@zxing/browser';
+
+import {
+  BrowserMultiFormatReader,
+  IScannerControls
+} from '@zxing/browser';
 
 import {
   CocoonProductionService,
-  CocoonReturnRecord
+  CocoonReturnRecord,
+  CocoonHarvestRecord
 } from '../../services/cocoon-production.service';
+
+import {
+  SilkwormRequestService,
+  SilkwormBatch
+} from '../../services/silkworm-request.service';
+
+import {
+  FarmerAccountService,
+  FarmerAccount
+} from '../../services/farmer-account.service';
 
 @Component({
   selector: 'app-cocoon-scan',
@@ -22,41 +38,191 @@ import {
   templateUrl: './cocoon-scan.html',
   styleUrl: './cocoon-scan.css'
 })
-export class CocoonScan implements OnDestroy {
+export class CocoonScan implements AfterViewInit, OnDestroy {
 
+  // =====================================
   // PAGE STATE
+  // =====================================
+
   loading = false;
   errorMessage = '';
   successMessage = '';
 
+  // =====================================
   // MANUAL RETURN NUMBER INPUT
+  // =====================================
+
   manualQrValue = '';
 
+  // =====================================
   // CAMERA SCANNER
+  // =====================================
+
   showScanner = false;
   scannerLoading = false;
   scannerError = '';
 
-  cameraDevices: MediaDeviceInfo[] = [];
-  selectedCameraIndex = 0;
-  activeCameraLabel = '';
+  private codeReader = new BrowserMultiFormatReader();
+  private scannerControls: IScannerControls | null = null;
 
-  private scanner = new BrowserMultiFormatReader();
-  private scannerControls: { stop: () => void } | null = null;
   private processingScan = false;
   private destroyed = false;
+  private viewReady = false;
 
   @ViewChild('scannerVideo')
-  scannerVideo?: ElementRef<HTMLVideoElement>;
+  videoElement!: ElementRef<HTMLVideoElement>;
 
+  // =====================================
   // COCOON RETURN DETAILS
+  // =====================================
+
   selectedCollection: CocoonReturnRecord | null = null;
   showDetailsModal = false;
 
+  // Related information loaded from Firestore.
+  detailsLoading = false;
+
+  selectedHarvest: CocoonHarvestRecord | null = null;
+  selectedBatch: SilkwormBatch | null = null;
+  selectedFarmer: FarmerAccount | null = null;
+
+  totalReturnedCocoons: number | null = null;
+  remainingCocoons: number | null = null;
+
+  private detailsLoadToken = 0;
+
   constructor(
     private cocoonService: CocoonProductionService,
+    private silkwormRequestService: SilkwormRequestService,
+    private farmerAccountService: FarmerAccountService,
     private cdr: ChangeDetectorRef
   ) {}
+
+  // =====================================
+  // VIEW INITIALIZATION
+  // =====================================
+
+  ngAfterViewInit(): void {
+    this.viewReady = true;
+  }
+
+  // =====================================
+  // OPEN VERIFIED RETURN DETAILS
+  // =====================================
+
+  private async openCollectionDetails(
+    record: CocoonReturnRecord
+  ): Promise<void> {
+
+    this.detailsLoadToken++;
+    const currentToken = this.detailsLoadToken;
+
+    this.selectedCollection = record;
+
+    this.selectedHarvest = null;
+    this.selectedBatch = null;
+    this.selectedFarmer = null;
+
+    this.totalReturnedCocoons = null;
+    this.remainingCocoons = null;
+
+    this.detailsLoading = true;
+    this.showDetailsModal = true;
+
+    this.cdr.detectChanges();
+
+    try {
+
+      const [
+        harvest,
+        batch,
+        farmers,
+        returnRecords
+      ] = await Promise.all([
+
+        this.cocoonService
+          .getHarvestRecordById(record.harvestId)
+          .catch(error => {
+            console.error('Unable to load harvest details:', error);
+            return null;
+          }),
+
+        this.silkwormRequestService
+          .getBatchById(record.batchId)
+          .catch(error => {
+            console.error('Unable to load silkworm batch:', error);
+            return null;
+          }),
+
+        this.farmerAccountService
+          .getFarmers()
+          .catch(error => {
+            console.error('Unable to load farmer accounts:', error);
+            return [];
+          }),
+
+        this.cocoonService
+          .getAllReturnRecordsForStaff()
+          .catch(error => {
+            console.error('Unable to load cocoon return records:', error);
+            return [];
+          })
+
+      ]);
+
+      // Ignore outdated results if another record was opened.
+      if (
+        this.destroyed ||
+        currentToken !== this.detailsLoadToken
+      ) {
+        return;
+      }
+
+      this.selectedHarvest = harvest;
+      this.selectedBatch = batch;
+
+      // farmerUid is the Firebase Authentication UID.
+      // Match it against FarmerAccount.authUid, not FarmerAccount.id.
+      this.selectedFarmer = farmers.find(
+        farmer => farmer.authUid === record.farmerUid
+      ) ?? null;
+
+      // Calculate total cocoon pieces returned for this harvest.
+      const relatedReturns = returnRecords.filter(
+        item => item.harvestId === record.harvestId
+      );
+
+      this.totalReturnedCocoons = relatedReturns.reduce(
+        (total, item) => total + (Number(item.cocoonQuantity) || 0),
+        0
+      );
+
+      // Calculate remaining pieces using the recorded harvest quantity.
+      if (
+        harvest &&
+        Number.isFinite(Number(harvest.cocoonQuantity))
+      ) {
+        this.remainingCocoons = Math.max(
+          0,
+          Number(harvest.cocoonQuantity) - this.totalReturnedCocoons
+        );
+      }
+
+    } catch (error) {
+
+      console.error('Unable to load cocoon return details:', error);
+
+    } finally {
+
+      if (
+        !this.destroyed &&
+        currentToken === this.detailsLoadToken
+      ) {
+        this.detailsLoading = false;
+        this.cdr.detectChanges();
+      }
+    }
+  }
 
   // =====================================
   // MANUAL COCOON RETURN NUMBER LOOKUP
@@ -64,13 +230,10 @@ export class CocoonScan implements OnDestroy {
 
   async findManualCollection(): Promise<void> {
 
-    const returnNumber =
-      this.manualQrValue.trim().toUpperCase();
+    const returnNumber = this.manualQrValue.trim().toUpperCase();
 
     if (!returnNumber) {
-      this.errorMessage =
-        'Please enter a cocoon return number first.';
-
+      this.errorMessage = 'Please enter a cocoon return number first.';
       this.successMessage = '';
       this.cdr.detectChanges();
       return;
@@ -86,11 +249,8 @@ export class CocoonScan implements OnDestroy {
 
     try {
 
-      // Search using the actual Cocoon Return Number.
       const record =
-        await this.cocoonService.getReturnRecordByNumber(
-          returnNumber
-        );
+        await this.cocoonService.getReturnRecordByNumber(returnNumber);
 
       if (this.destroyed) return;
 
@@ -100,19 +260,14 @@ export class CocoonScan implements OnDestroy {
         );
       }
 
-      // Display the same details modal used by camera scanning.
-      this.selectedCollection = record;
-      this.showDetailsModal = true;
+      await this.openCollectionDetails(record);
 
       this.successMessage =
         'Cocoon return record successfully found.';
 
     } catch (error) {
 
-      console.error(
-        'Cocoon return number lookup failed:',
-        error
-      );
+      console.error('Cocoon return number lookup failed:', error);
 
       if (this.destroyed) return;
 
@@ -135,12 +290,19 @@ export class CocoonScan implements OnDestroy {
   }
 
   // =====================================
-  // START CAMERA SCANNER
+  // START SCANNER
   // =====================================
 
   async startScanner(): Promise<void> {
 
-    if (this.scannerLoading || this.loading || this.destroyed) return;
+    if (
+      this.scannerLoading ||
+      this.loading ||
+      this.destroyed ||
+      !this.viewReady
+    ) {
+      return;
+    }
 
     this.stopScanner(false, false);
 
@@ -151,91 +313,30 @@ export class CocoonScan implements OnDestroy {
     this.successMessage = '';
     this.processingScan = false;
 
-    this.cameraDevices = [];
-    this.selectedCameraIndex = 0;
-    this.activeCameraLabel = '';
-
     this.cdr.detectChanges();
 
-    try {
+    // Wait for Angular to render the scanner video element.
+    await new Promise(resolve => setTimeout(resolve, 200));
 
-      await new Promise(resolve => setTimeout(resolve, 200));
+    if (this.destroyed) return;
 
-      if (this.destroyed) return;
-
-      if (!navigator.mediaDevices?.getUserMedia) {
-        throw new Error(
-          'Camera access is not supported. Please use HTTPS or localhost.'
-        );
-      }
-
-      // Request camera permission.
-      const permissionStream =
-        await navigator.mediaDevices.getUserMedia({
-          video: true,
-          audio: false
-        });
-
-      permissionStream.getTracks().forEach(track => track.stop());
-
-      if (this.destroyed) return;
-
-      // Get available cameras.
-      this.cameraDevices =
-        await BrowserMultiFormatReader.listVideoInputDevices();
-
-      if (this.destroyed) return;
-
-      if (this.cameraDevices.length === 0) {
-        throw new Error(
-          'No camera was detected. Please connect or enable a camera.'
-        );
-      }
-
-      // Prefer the rear camera if available.
-      const rearCameraIndex = this.cameraDevices.findIndex(device =>
-        /back|rear|environment/i.test(device.label)
-      );
-
-      this.selectedCameraIndex =
-        rearCameraIndex >= 0 ? rearCameraIndex : 0;
-
-      const selectedCamera =
-        this.cameraDevices[this.selectedCameraIndex];
-
-      this.activeCameraLabel =
-        selectedCamera.label ||
-        `Camera ${this.selectedCameraIndex + 1}`;
-
-      await this.startCamera(selectedCamera.deviceId);
-
-    } catch (error) {
-
-      console.error('Cocoon QR scanner error:', error);
-
-      this.stopScanner(false, false);
-
-      this.scannerLoading = false;
-      this.showScanner = true;
-
-      this.scannerError =
-        error instanceof Error
-          ? error.message
-          : 'Unable to access the camera. Please check camera permissions.';
-
-      if (!this.destroyed) {
-        this.cdr.detectChanges();
-      }
-    }
+    await this.startCamera();
   }
 
   // =====================================
-  // START SELECTED CAMERA
+  // START CAMERA
   // =====================================
 
-  private async startCamera(deviceId: string): Promise<void> {
+  private async startCamera(): Promise<void> {
 
-    if (this.destroyed) return;
+    if (
+      this.destroyed ||
+      this.processingScan ||
+      !this.viewReady ||
+      !this.videoElement?.nativeElement
+    ) {
+      return;
+    }
 
     this.scannerLoading = true;
     this.scannerError = '';
@@ -245,39 +346,26 @@ export class CocoonScan implements OnDestroy {
 
     try {
 
-      const video = this.scannerVideo?.nativeElement;
-
-      if (!video) {
-        throw new Error(
-          'Camera preview could not be found. Please try again.'
-        );
-      }
-
       this.scannerControls =
-        await this.scanner.decodeFromVideoDevice(
-          deviceId,
-          video,
-          async result => {
+        await this.codeReader.decodeFromVideoDevice(
+          undefined,
+          this.videoElement.nativeElement,
+          (result) => {
 
-            if (
-              !result ||
-              this.processingScan ||
-              this.destroyed
-            ) {
-              return;
+            if (result && !this.processingScan && !this.destroyed) {
+
+              this.processingScan = true;
+
+              const scannedValue = result.getText();
+
+              this.cdr.detectChanges();
+
+              // Stop camera before processing the scanned QR.
+              void this.stopScanner();
+
+              // Verify the original Cocoon Return QR.
+              void this.findScannedCollection(scannedValue);
             }
-
-            const scannedValue = result.getText().trim();
-
-            if (!scannedValue) return;
-
-            this.processingScan = true;
-
-            // Stop the camera before processing the QR.
-            this.stopScanner();
-
-            // Camera continues using original secure QR verification.
-            await this.findScannedCollection(scannedValue);
           }
         );
 
@@ -292,76 +380,17 @@ export class CocoonScan implements OnDestroy {
 
     } catch (error) {
 
-      console.error('Camera startup error:', error);
+      console.error('Cocoon camera startup error:', error);
 
       this.stopScanner(false, false);
 
       this.scannerLoading = false;
+      this.showScanner = true;
 
       this.scannerError =
         error instanceof Error
           ? error.message
-          : 'Unable to start the selected camera.';
-
-      if (!this.destroyed) {
-        this.cdr.detectChanges();
-      }
-    }
-  }
-
-  // =====================================
-  // SWITCH CAMERA
-  // =====================================
-
-  async switchCamera(): Promise<void> {
-
-    if (
-      this.cameraDevices.length < 2 ||
-      this.scannerLoading ||
-      this.destroyed
-    ) {
-      return;
-    }
-
-    this.selectedCameraIndex =
-      (this.selectedCameraIndex + 1) %
-      this.cameraDevices.length;
-
-    const selectedCamera =
-      this.cameraDevices[this.selectedCameraIndex];
-
-    this.activeCameraLabel =
-      selectedCamera.label ||
-      `Camera ${this.selectedCameraIndex + 1}`;
-
-    this.stopScanner(false, false);
-
-    this.showScanner = true;
-    this.scannerLoading = true;
-    this.scannerError = '';
-
-    this.cdr.detectChanges();
-
-    try {
-
-      await new Promise(resolve => setTimeout(resolve, 150));
-
-      if (this.destroyed) return;
-
-      await this.startCamera(selectedCamera.deviceId);
-
-    } catch (error) {
-
-      console.error('Camera switching error:', error);
-
-      this.stopScanner(false, false);
-
-      this.scannerLoading = false;
-
-      this.scannerError =
-        error instanceof Error
-          ? error.message
-          : 'Unable to switch camera.';
+          : 'Unable to start the camera. Please check camera permissions.';
 
       if (!this.destroyed) {
         this.cdr.detectChanges();
@@ -383,10 +412,13 @@ export class CocoonScan implements OnDestroy {
       this.scannerControls = null;
     }
 
-    const video = this.scannerVideo?.nativeElement;
+    const video = this.videoElement?.nativeElement;
 
     if (video?.srcObject instanceof MediaStream) {
-      video.srcObject.getTracks().forEach(track => track.stop());
+      video.srcObject
+        .getTracks()
+        .forEach(track => track.stop());
+
       video.srcObject = null;
     }
 
@@ -395,7 +427,6 @@ export class CocoonScan implements OnDestroy {
     if (hideModal) {
       this.showScanner = false;
       this.scannerError = '';
-      this.activeCameraLabel = '';
       this.processingScan = false;
     }
 
@@ -405,8 +436,7 @@ export class CocoonScan implements OnDestroy {
   }
 
   // =====================================
-  // VERIFY ORIGINAL QR TOKEN
-  // USED BY CAMERA SCANNER
+  // VERIFY ORIGINAL COCOON RETURN QR
   // =====================================
 
   async findScannedCollection(qrValue: string): Promise<void> {
@@ -425,11 +455,10 @@ export class CocoonScan implements OnDestroy {
         throw new Error('The QR code value is empty.');
       }
 
-      // Uses the existing SHA-256 token verification.
+      // Preserve the original Cocoon Return QR lookup.
+      // Do not replace this with Silkworm Batch ID lookup.
       const record =
-        await this.cocoonService.getReturnRecordByQr(
-          qrValue.trim()
-        );
+        await this.cocoonService.getReturnRecordByQr(qrValue.trim());
 
       if (this.destroyed) return;
 
@@ -439,8 +468,7 @@ export class CocoonScan implements OnDestroy {
         );
       }
 
-      this.selectedCollection = record;
-      this.showDetailsModal = true;
+      await this.openCollectionDetails(record);
 
       this.successMessage =
         'Cocoon return QR successfully verified.';
@@ -475,8 +503,18 @@ export class CocoonScan implements OnDestroy {
 
   closeDetailsModal(): void {
 
+    this.detailsLoadToken++;
+
     this.showDetailsModal = false;
     this.selectedCollection = null;
+
+    this.selectedHarvest = null;
+    this.selectedBatch = null;
+    this.selectedFarmer = null;
+
+    this.totalReturnedCocoons = null;
+    this.remainingCocoons = null;
+    this.detailsLoading = false;
 
     this.cdr.detectChanges();
   }
@@ -517,9 +555,7 @@ export class CocoonScan implements OnDestroy {
     });
   }
 
-  formatWeight(
-    weight: number | null | undefined
-  ): string {
+  formatWeight(weight: number | null | undefined): string {
 
     if (weight === null || weight === undefined) {
       return 'Not recorded';
@@ -532,6 +568,21 @@ export class CocoonScan implements OnDestroy {
     }
 
     return `${parsedWeight.toFixed(2)} kg`;
+  }
+
+  formatQuantity(quantity: number | null | undefined): string {
+
+    if (quantity === null || quantity === undefined) {
+      return 'Not recorded';
+    }
+
+    const parsedQuantity = Number(quantity);
+
+    if (!Number.isFinite(parsedQuantity)) {
+      return 'Not recorded';
+    }
+
+    return `${parsedQuantity.toLocaleString('en-PH')} pcs`;
   }
 
   getStatusClass(status: string): string {
@@ -556,6 +607,8 @@ export class CocoonScan implements OnDestroy {
   ngOnDestroy(): void {
 
     this.destroyed = true;
+    this.detailsLoadToken++;
+
     this.stopScanner(false, false);
   }
 }

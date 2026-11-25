@@ -56,7 +56,7 @@ export class FarmerManagement implements OnInit {
   searchTerm = '';
   selectedStatus = 'All Status';
   currentPage = 1;
-  pageSize = 5;
+  pageSize = 6;
   showFarmerModal = false;
   modalMode: 'view' | 'add' | 'edit' = 'view';
   selectedFarmer: Farmer | null = null;

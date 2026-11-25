@@ -19,9 +19,8 @@ import {
   CocoonReturnRecord
 } from '../../services/cocoon-production.service';
 
-import {
-  SilkwormBatch
-} from '../../services/silkworm-request.service';
+import { SilkwormBatch } from '../../services/silkworm-request.service';
+
 import {
   LucideAngularModule,
   LUCIDE_ICONS,
@@ -29,7 +28,7 @@ import {
   Package,
   Weight,
   Clock,
-   PackageOpen,
+  PackageOpen,
   CircleCheck,
   Leaf,
   Plus,
@@ -60,36 +59,35 @@ import {
     LucideAngularModule
   ],
   providers: [
-  {
-    provide: LUCIDE_ICONS,
-    multi: true,
-    useValue: new LucideIconProvider({
-      Package,
-      PackageOpen,
-      Weight,
-      Clock,
-      CircleCheck,
-      Leaf,
-      Plus,
-      Truck,
-      ArrowRight,
-      QrCode,
-      Calendar,
-      ChevronRight,
-      Hand,
-      FileText,
-      X,
-      Info,
-      Check,
-      CircleAlert,
-      Send
-    })
-  }
-],
+    {
+      provide: LUCIDE_ICONS,
+      multi: true,
+      useValue: new LucideIconProvider({
+        Package,
+        PackageOpen,
+        Weight,
+        Clock,
+        CircleCheck,
+        Leaf,
+        Plus,
+        Truck,
+        ArrowRight,
+        QrCode,
+        Calendar,
+        ChevronRight,
+        Hand,
+        FileText,
+        X,
+        Info,
+        Check,
+        CircleAlert,
+        Send
+      })
+    }
+  ],
   templateUrl: './cocoon-production.html',
   styleUrl: './cocoon-production.css'
 })
-
 export class CocoonProduction implements OnInit {
 
   // =====================================
@@ -285,10 +283,11 @@ export class CocoonProduction implements OnInit {
   }
 
   get confirmedReturns(): number {
-  return this.returnRecords.filter(
-    record => record.status === 'Received'
-  ).length;
-}
+    return this.returnRecords.filter(
+      record => record.status === 'Received'
+    ).length;
+  }
+
   get totalAssignedBatches(): number {
     return this.eligibleBatches.length;
   }
@@ -297,17 +296,14 @@ export class CocoonProduction implements OnInit {
   // TAB RECORDS
   // =====================================
 
-  // Tab 1: All cocoon harvest records
   getHarvestRecordsForDisplay(): CocoonHarvestRecord[] {
     return this.harvestRecords;
   }
 
-  // Tab 2: All submitted cocoon return records
   getSubmittedReturnRecordsForDisplay(): CocoonReturnRecord[] {
     return this.returnRecords;
   }
 
-  // Records eligible for return action
   getReturnEligibleRecordsForDisplay(): CocoonHarvestRecord[] {
     return this.harvestRecords.filter(
       record => record.returnStatus === 'Pending Return'
@@ -553,8 +549,7 @@ export class CocoonProduction implements OnInit {
 
   // =====================================
   // SUBMIT COCOON RETURN
-  // Calls the secure Cloud Function through
-  // CocoonProductionService.
+  // DIRECT FIRESTORE TRANSACTION
   // =====================================
 
   async submitReturn(): Promise<void> {
@@ -620,7 +615,6 @@ export class CocoonProduction implements OnInit {
 
       await this.loadCocoonData();
 
-      // Automatically switch to the second tab.
       this.activeTab = 'returns';
       this.cdr.detectChanges();
 
@@ -664,13 +658,11 @@ export class CocoonProduction implements OnInit {
 
   // =====================================
   // VIEW COCOON RETURN DETAILS AND QR
-  // Uses the secure URL returned during
-  // the initial Cloud Function submission.
+  // QR VALUE IS REGENERATED FROM SAVED RECORD ID
   // =====================================
 
   async viewReturnDetails(record: CocoonReturnRecord): Promise<void> {
     try {
-      // Retrieve the saved return record and verify ownership.
       const savedRecord = await this.cocoonService.getReturnRecordById(
         record.id,
         this.farmerUid
@@ -687,15 +679,14 @@ export class CocoonProduction implements OnInit {
         return;
       }
 
-      // qrValue is returned by the Cloud Function after submission.
-      // It is intentionally not stored as plain text in Firestore.
-      const qrValue = record.qrValue;
+      // Always use the QR value from the freshly loaded Firestore record.
+      const qrValue = savedRecord.qrValue;
 
       if (!qrValue) {
         await Swal.fire({
-          icon: 'info',
-          title: 'QR Code Needs to Be Reissued',
-          text: 'The secure QR token is not available in this session. A secure QR reissue feature is still needed to regenerate it.',
+          icon: 'error',
+          title: 'QR Code Generation Failed',
+          text: 'The permanent QR value could not be generated. Please try again.',
           confirmButtonColor: '#39794d'
         });
 

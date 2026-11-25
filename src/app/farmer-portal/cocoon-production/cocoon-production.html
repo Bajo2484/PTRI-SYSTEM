@@ -1,8 +1,6 @@
 
 <div class="cocoon-page">
 
-
-
   <!-- LOADING -->
   <div *ngIf="loading" class="loading-state">
     <div class="loader"></div>
@@ -56,7 +54,7 @@
 
       <div class="summary-card">
         <div class="summary-icon confirmed-icon">
-           <lucide-icon name="circle-check"></lucide-icon>
+          <lucide-icon name="circle-check"></lucide-icon>
         </div>
         <div class="summary-info">
           <span>Confirmed Returns</span>
@@ -86,7 +84,7 @@
           type="button"
           class="harvest-btn"
           (click)="openHarvestModal()">
-         <lucide-icon name="plus"></lucide-icon>
+          <lucide-icon name="plus"></lucide-icon>
           Record Harvest
         </button>
 
@@ -102,10 +100,7 @@
       </div>
     </section>
 
-    <!-- ================================= -->
     <!-- TWO-TAB NAVIGATION -->
-    <!-- ================================= -->
-
     <section class="records-section">
 
       <div class="production-tabs">
@@ -114,30 +109,23 @@
           type="button"
           [class.active]="activeTab === 'harvest'"
           (click)="changeTab('harvest')">
-
           <lucide-icon name="package-open"></lucide-icon>
           <span>Cocoon Harvest Records</span>
           <span class="tab-count">{{ harvestRecords.length }}</span>
-
         </button>
 
         <button
           type="button"
           [class.active]="activeTab === 'returns'"
           (click)="changeTab('returns')">
-
           <lucide-icon name="truck"></lucide-icon>
           <span>Cocoon Return to PTRI</span>
           <span class="tab-count">{{ returnRecords.length }}</span>
-
         </button>
 
       </div>
 
-      <!-- ================================= -->
       <!-- TAB 1: COCOON HARVEST RECORDS -->
-      <!-- ================================= -->
-
       <div *ngIf="activeTab === 'harvest'">
 
         <div class="section-heading">
@@ -209,7 +197,7 @@
               class="view-record-btn"
               (click)="viewHarvestDetails(record)">
               View Harvest Details
-             <lucide-icon name="arrow-right"></lucide-icon>
+              <lucide-icon name="arrow-right"></lucide-icon>
             </button>
 
           </article>
@@ -222,7 +210,7 @@
           class="empty-state">
 
           <div class="empty-icon">
-           <lucide-icon name="package-open"></lucide-icon>
+            <lucide-icon name="package-open"></lucide-icon>
           </div>
 
           <h3>No Cocoon Harvest Records Yet</h3>
@@ -244,10 +232,7 @@
 
       </div>
 
-      <!-- ================================= -->
       <!-- TAB 2: COCOON RETURN TO PTRI -->
-      <!-- ================================= -->
-
       <div *ngIf="activeTab === 'returns'">
 
         <div class="section-heading">
@@ -328,12 +313,9 @@
               type="button"
               class="view-record-btn return-qr-btn"
               (click)="viewReturnDetails(record)">
-
               <lucide-icon name="qr-code"></lucide-icon>
               View Return Details & QR
-
               <lucide-icon name="arrow-right"></lucide-icon>
-
             </button>
 
           </article>
@@ -370,10 +352,7 @@
 
     </section>
 
-    <!-- ================================= -->
     <!-- RECORD HARVEST MODAL -->
-    <!-- ================================= -->
-
     <div
       class="modal-overlay"
       *ngIf="showHarvestModal"
@@ -577,10 +556,7 @@
       </section>
     </div>
 
-    <!-- ================================= -->
     <!-- HARVEST DETAILS MODAL -->
-    <!-- ================================= -->
-
     <div
       class="modal-overlay"
       *ngIf="showDetailsModal && selectedRecord"
@@ -710,10 +686,7 @@
       </section>
     </div>
 
-    <!-- ================================= -->
     <!-- COCOON RETURN MODAL -->
-    <!-- ================================= -->
-
     <div
       class="modal-overlay return-overlay"
       *ngIf="showReturnModal"
@@ -730,7 +703,7 @@
 
           <div class="modal-title-group">
             <div class="modal-heading-icon return-heading-icon">
-               <lucide-icon name="truck"></lucide-icon>
+              <lucide-icon name="truck"></lucide-icon>
             </div>
 
             <div>
@@ -898,8 +871,10 @@
                 <p>
                   By submitting, you are creating a cocoon return record
                   linked to your original harvest and PTRI-assigned worm batch.
-                  PTRI staff will verify the actual received quantity and quality.
-                  A unique QR code will be generated for this return record.
+                  PTRI staff will verify the actual received weight, quantity,
+                  and quality. After successful submission, a unique QR code
+                  will be generated for this return record. You can view it
+                  again from your Cocoon Return History.
                 </p>
               </div>
 

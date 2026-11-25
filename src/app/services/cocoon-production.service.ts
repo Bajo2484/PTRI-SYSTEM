@@ -1,4 +1,3 @@
-
 import { Injectable } from '@angular/core';
 import {
   collection,
@@ -9,8 +8,7 @@ import {
   where,
   runTransaction
 } from 'firebase/firestore';
-import { httpsCallable } from 'firebase/functions';
-import { db, functions } from './firebase';
+import { db } from './firebase';
 import {
   SilkwormRequestService,
   SilkwormBatch
@@ -327,6 +325,29 @@ export class CocoonProductionService {
   }
 
   // =====================================
+  // CREATE QR VALUE FROM PERMANENT RETURN ID
+  // =====================================
+
+  private createQrValue(returnId: string): string {
+
+    return `${window.location.origin}/cocoon-return/${encodeURIComponent(returnId)}`;
+  }
+
+  // =====================================
+  // ATTACH QR VALUE WHEN LOADING A RECORD
+  // =====================================
+
+  private attachQrValue(
+    record: CocoonReturnRecord
+  ): CocoonReturnRecord {
+
+    return {
+      ...record,
+      qrValue: this.createQrValue(record.id)
+    };
+  }
+
+  // =====================================
   // GET FARMER'S COCOON RETURN HISTORY
   // =====================================
 
@@ -344,7 +365,7 @@ export class CocoonProductionService {
     const snapshot = await getDocs(returnQuery);
 
     return snapshot.docs
-      .map(document => ({
+      .map(document => this.attachQrValue({
         ...document.data(),
         id: document.id
       } as CocoonReturnRecord))
@@ -367,7 +388,7 @@ export class CocoonProductionService {
     const snapshot = await getDocs(returnQuery);
 
     return snapshot.docs
-      .map(document => ({
+      .map(document => this.attachQrValue({
         ...document.data(),
         id: document.id
       } as CocoonReturnRecord))
@@ -378,130 +399,14 @@ export class CocoonProductionService {
   }
 
   // =====================================
-  // SUBMIT COCOON RETURN
-  // PRESERVES THE ORIGINAL SECURE TOKEN
-  // =====================================
-
-  async submitReturn(
-    harvestId: string,
-    farmerUid: string,
-    returnDate: string
-  ): Promise<CocoonReturnRecord> {
-
-    if (
-      !harvestId?.trim() ||
-      !farmerUid?.trim() ||
-      !returnDate
-    ) {
-      throw new Error('Please provide valid cocoon return information.');
-    }
-
-    const submitCocoonReturnCall = httpsCallable<
-      {
-        harvestId: string;
-        returnDate: string;
-      },
-      {
-        success: boolean;
-        token: string;
-        returnRecord: Omit<CocoonReturnRecord, 'qrValue'>;
-      }
-    >(functions, 'submitCocoonReturn');
-
-    const response = await submitCocoonReturnCall({
-      harvestId,
-      returnDate
-    });
-
-    const result = response.data;
-
-    if (
-      !result.success ||
-      !result.token ||
-      !result.returnRecord
-    ) {
-      throw new Error('Unable to submit the cocoon return. Please try again.');
-    }
-
-    if (!/^[a-f0-9]{64}$/i.test(result.token)) {
-      throw new Error('The secure QR token returned by PTRI is invalid.');
-    }
-
-    const qrValue = this.createQrValue(result.token);
-
-    return {
-      ...result.returnRecord,
-      qrValue
-    };
-  }
-
-  // =====================================
-  // CREATE FARMER QR VALUE
-  // =====================================
-
-  private createQrValue(token: string): string {
-    return `${window.location.origin}/cocoon-return/${token}`;
-  }
-
-  // =====================================
-  // EXTRACT ORIGINAL TOKEN FROM QR
-  // =====================================
-
-  private extractTokenFromQrValue(qrValue: string): string | null {
-
-    const value = qrValue.trim();
-
-    if (!value) return null;
-
-    // Raw token.
-    if (/^[a-f0-9]{64}$/i.test(value)) {
-      return value.toLowerCase();
-    }
-
-    try {
-      const parsedUrl = new URL(value, window.location.origin);
-
-      // Query token format.
-      const queryToken = parsedUrl.searchParams.get('token');
-
-      if (queryToken && /^[a-f0-9]{64}$/i.test(queryToken)) {
-        return queryToken.toLowerCase();
-      }
-
-      // Path token format.
-      const pathParts = parsedUrl.pathname
-        .split('/')
-        .filter(Boolean);
-
-      const returnIndex = pathParts.findIndex(
-        part => part.toLowerCase() === 'cocoon-return'
-      );
-
-      if (returnIndex >= 0) {
-        const pathToken = pathParts[returnIndex + 1];
-
-        if (pathToken && /^[a-f0-9]{64}$/i.test(pathToken)) {
-          return pathToken.toLowerCase();
-        }
-      }
-
-    } catch {
-      return null;
-    }
-
-    return null;
-  }
-
-  // =====================================
-  // HASH ORIGINAL TOKEN USING SHA-256
+  // HASH OLD QR TOKEN USING SHA-256
+  // FOR EXISTING LEGACY QR RECORDS
   // =====================================
 
   private async hashQrToken(token: string): Promise<string> {
 
     if (!globalThis.crypto?.subtle) {
-      throw new Error(
-        'Secure QR scanning requires HTTPS or localhost.'
-      );
+      throw new Error('Secure QR processing requires HTTPS or localhost.');
     }
 
     const encodedToken = new TextEncoder().encode(token);
@@ -517,6 +422,111 @@ export class CocoonProductionService {
   }
 
   // =====================================
+  // EXTRACT QR PAYLOAD
+  // SUPPORTS NEW RETURN ID QR AND OLD TOKEN QR
+  // =====================================
+
+  private extractQrPayload(
+    qrValue: string
+  ): { type: 'return-id' | 'legacy-token'; value: string } | null {
+
+    const value = qrValue.trim();
+
+    if (!value) return null;
+
+    // Old QR format: raw 64-character token.
+    if (/^[a-f0-9]{64}$/i.test(value)) {
+      return {
+        type: 'legacy-token',
+        value: value.toLowerCase()
+      };
+    }
+
+    // Also accept a raw Firestore document ID.
+    if (
+      !value.includes('/') &&
+      !value.includes('?') &&
+      !value.includes(':')
+    ) {
+      return {
+        type: 'return-id',
+        value
+      };
+    }
+
+    try {
+      const parsedUrl = new URL(value, window.location.origin);
+
+      // Old QR format: token stored in the URL query.
+      const queryToken = parsedUrl.searchParams.get('token');
+
+      if (queryToken && /^[a-f0-9]{64}$/i.test(queryToken)) {
+        return {
+          type: 'legacy-token',
+          value: queryToken.toLowerCase()
+        };
+      }
+
+      // New QR format: permanent return document ID.
+      const pathParts = parsedUrl.pathname
+        .split('/')
+        .filter(Boolean);
+
+      const returnIndex = pathParts.findIndex(
+        part => part.toLowerCase() === 'cocoon-return'
+      );
+
+      if (returnIndex >= 0) {
+        const payload = pathParts[returnIndex + 1];
+
+        if (!payload) return null;
+
+        if (/^[a-f0-9]{64}$/i.test(payload)) {
+          return {
+            type: 'legacy-token',
+            value: payload.toLowerCase()
+          };
+        }
+
+        return {
+          type: 'return-id',
+          value: decodeURIComponent(payload)
+        };
+      }
+
+    } catch {
+      return null;
+    }
+
+    return null;
+  }
+
+  // =====================================
+  // VALIDATE RETURN RECORD DATA
+  // =====================================
+
+  private validateReturnRecord(
+    data: Record<string, any>,
+    recordId: string
+  ): CocoonReturnRecord {
+
+    if (
+      !data['farmerUid'] ||
+      !data['returnNumber'] ||
+      !data['harvestId']
+    ) {
+      throw new Error(
+        'The scanned QR matched an incomplete cocoon return record.'
+      );
+    }
+
+    return this.attachQrValue({
+      ...data,
+      id: recordId
+    } as CocoonReturnRecord);
+  }
+
+  // =====================================
   // STAFF: FIND ACTUAL RETURN USING QR
   // =====================================
 
@@ -529,13 +539,35 @@ export class CocoonProductionService {
       throw new Error('No QR code value was detected.');
     }
 
-    const token = this.extractTokenFromQrValue(qrValue);
+    const payload = this.extractQrPayload(qrValue);
 
-    if (!token) {
+    if (!payload) {
       throw new Error('Invalid cocoon return QR code.');
     }
 
-    const tokenHash = await this.hashQrToken(token);
+    // NEW QR FORMAT: Look up the exact Firestore document by ID.
+    if (payload.type === 'return-id') {
+
+      const returnRef = doc(
+        db,
+        this.returnCollection,
+        payload.value
+      );
+
+      const snapshot = await getDoc(returnRef);
+
+      if (!snapshot.exists()) {
+        return null;
+      }
+
+      return this.validateReturnRecord(
+        snapshot.data(),
+        snapshot.id
+      );
+    }
+
+    // LEGACY QR FORMAT: Look up using the stored SHA-256 token hash.
+    const tokenHash = await this.hashQrToken(payload.value);
 
     const returnQuery = query(
       collection(db, this.returnCollection),
@@ -555,22 +587,11 @@ export class CocoonProductionService {
     }
 
     const matchedDocument = snapshot.docs[0];
-    const data = matchedDocument.data();
 
-    if (
-      !data['farmerUid'] ||
-      !data['returnNumber'] ||
-      !data['harvestId']
-    ) {
-      throw new Error(
-        'The scanned QR matched an incomplete cocoon return record.'
-      );
-    }
-
-    return {
-      ...data,
-      id: matchedDocument.id
-    } as CocoonReturnRecord;
+    return this.validateReturnRecord(
+      matchedDocument.data(),
+      matchedDocument.id
+    );
   }
 
   // =====================================
@@ -585,9 +606,8 @@ export class CocoonProductionService {
     return this.getReturnRecordByQr(qrValue, farmerUid);
   }
 
-
   // =====================================
-  // STAFF: FIND COCOON RETURN BY RETURN NUMBER
+  // STAFF: FIND COCOON RETURN BY NUMBER
   // =====================================
 
   async getReturnRecordByNumber(
@@ -622,24 +642,12 @@ export class CocoonProductionService {
     }
 
     const matchedDocument = snapshot.docs[0];
-    const data = matchedDocument.data();
 
-    if (
-      !data['farmerUid'] ||
-      !data['returnNumber'] ||
-      !data['harvestId']
-    ) {
-      throw new Error(
-        'The matched cocoon return record is incomplete.'
-      );
-    }
-
-    return {
-      ...data,
-      id: matchedDocument.id
-    } as CocoonReturnRecord;
+    return this.validateReturnRecord(
+      matchedDocument.data(),
+      matchedDocument.id
+    );
   }
-
 
   // =====================================
   // GET COCOON RETURN RECORD BY ID
@@ -666,7 +674,7 @@ export class CocoonProductionService {
       throw new Error('You are not authorized to view this cocoon return.');
     }
 
-    return record;
+    return this.attachQrValue(record);
   }
 
   // =====================================
@@ -692,5 +700,104 @@ export class CocoonProductionService {
       );
   }
 
+  // =====================================
+  // SUBMIT COCOON RETURN
+  // DIRECT FIRESTORE TRANSACTION
+  // =====================================
 
+  async submitReturn(
+    harvestId: string,
+    farmerUid: string,
+    returnDate: string
+  ): Promise<CocoonReturnRecord> {
+
+    if (
+      !harvestId?.trim() ||
+      !farmerUid?.trim() ||
+      !returnDate ||
+      !/^\d{4}-\d{2}-\d{2}$/.test(returnDate) ||
+      Number.isNaN(Date.parse(`${returnDate}T00:00:00`))
+    ) {
+      throw new Error('Please provide valid cocoon return information.');
+    }
+
+    const harvestRef = doc(db, this.harvestCollection, harvestId);
+    const returnRef = doc(collection(db, this.returnCollection));
+
+    const now = new Date().toISOString();
+
+    let newReturn!: CocoonReturnRecord;
+
+    await runTransaction(db, async transaction => {
+
+      const harvestSnapshot = await transaction.get(harvestRef);
+
+      if (!harvestSnapshot.exists()) {
+        throw new Error('The cocoon harvest record could not be found.');
+      }
+
+      const harvest = harvestSnapshot.data() as CocoonHarvestRecord;
+
+      if (harvest.farmerUid !== farmerUid) {
+        throw new Error('You are not authorized to return this cocoon harvest.');
+      }
+
+      if (harvest.returnStatus !== 'Pending Return') {
+        throw new Error('This harvest has already been submitted for return.');
+      }
+
+      if (returnDate < harvest.harvestDate) {
+        throw new Error('Return date cannot be earlier than the harvest date.');
+      }
+
+      const returnNumber =
+        `CR-${new Date().getFullYear()}-${returnRef.id.slice(-6).toUpperCase()}`;
+
+      newReturn = {
+        id: returnRef.id,
+        returnNumber,
+
+        harvestId: harvest.id,
+        harvestNumber: harvest.harvestNumber,
+
+        batchId: harvest.batchId,
+        batchNumber: harvest.batchNumber,
+        requestId: harvest.requestId,
+        requestNumber: harvest.requestNumber,
+
+        farmerUid: harvest.farmerUid,
+        farmerName: harvest.farmerName,
+
+        harvestDate: harvest.harvestDate,
+        returnDate,
+        cocoonWeight: harvest.harvestedWeight,
+        cocoonQuantity: harvest.cocoonQuantity ?? 0,
+        cocoonCondition: harvest.cocoonCondition,
+        farmerRemarks: harvest.remarks || '',
+
+        status: 'Submitted',
+        actualReceivedWeight: null,
+        actualReceivedQuantity: null,
+        ptriRemarks: '',
+
+        createdAt: now
+      };
+
+      // Save the return record using its permanent Firestore document ID.
+      // The QR value is recreated from this ID whenever the record is loaded.
+      transaction.set(returnRef, newReturn);
+
+      transaction.update(harvestRef, {
+        returnStatus: 'Submitted',
+        returnRecordIds: [
+          ...(Array.isArray(harvest.returnRecordIds)
+            ? harvest.returnRecordIds
+            : []),
+          returnRef.id
+        ]
+      });
+    });
+
+    return this.attachQrValue(newReturn);
+  }
 }

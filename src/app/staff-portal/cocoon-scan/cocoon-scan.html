@@ -27,7 +27,8 @@
     </div>
 
     <div class="manual-input-content">
-      <label for="manualQrValue">QR Code Value / Token</label>
+      <label for="manualQrValue">QR Code Value / Return Record URL</label>
+
       <input
         id="manualQrValue"
         type="text"
@@ -54,7 +55,7 @@
       </button>
 
       <p class="manual-hint">
-        Enter the original QR value or paste the QR code URL. The system will verify it against the existing farmer return record.
+        Enter the QR code value or paste the QR code URL. The system will locate the matching existing farmer return record.
       </p>
     </div>
   </section>
@@ -78,6 +79,7 @@
           <span class="corner bottom-right"></span>
           <div class="qr-symbol"><span>▦</span></div>
         </div>
+
         <h3>Ready to Verify</h3>
         <p>Position the farmer's cocoon return QR code in front of your camera.</p>
       </div>
@@ -122,14 +124,22 @@
     </div>
   </section>
 
-  <!-- SECURITY NOTE -->
+  <!-- QR RECORD VERIFICATION NOTE -->
   <div class="security-note">
     <span class="security-icon">✓</span>
     <div>
-      <strong>Secure QR Verification</strong>
-      <p>The system verifies the original farmer QR token and retrieves its matching cocoon return record. Scanning or manual lookup does not automatically change the return status.</p>
+      <strong>QR Record Verification</strong>
+      <p>The system uses the QR code's record reference to retrieve the matching cocoon return information. Scanning or manual lookup does not automatically change the return status.</p>
     </div>
   </div>
+
+  <!-- SUCCESS MESSAGE -->
+  @if (successMessage) {
+    <div class="message success-message">
+      <span>✓</span>
+      {{ successMessage }}
+    </div>
+  }
 
   <!-- ERROR MESSAGE -->
   @if (errorMessage) {
@@ -142,179 +152,341 @@
 </div>
 
 <!-- CAMERA SCANNER MODAL -->
-@if (showScanner) {
-  <div class="modal-overlay scanner-overlay">
-    <div class="scanner-modal">
-      <div class="modal-header">
-        <div>
-          <span class="modal-eyebrow">QR VERIFICATION</span>
-          <h2>Scan Cocoon QR Code</h2>
-          <p>{{ activeCameraLabel || 'Camera Scanner' }}</p>
-        </div>
-        <button type="button" class="close-btn" (click)="stopScanner()" aria-label="Close scanner">×</button>
+<div
+  class="modal-overlay scanner-overlay"
+  [class.scanner-hidden]="!showScanner"
+  [attr.aria-hidden]="!showScanner"
+>
+  <div class="scanner-modal">
+
+    <div class="modal-header">
+      <div>
+        <span class="modal-eyebrow">QR VERIFICATION</span>
+        <h2>Scan Cocoon QR Code</h2>
+        <p>Camera Scanner</p>
       </div>
 
-      <div class="camera-container">
-        <video #scannerVideo class="scanner-video" autoplay muted playsinline></video>
+      <button
+        type="button"
+        class="close-btn"
+        (click)="stopScanner()"
+        aria-label="Close scanner"
+      >
+        ×
+      </button>
+    </div>
 
-        @if (scannerLoading) {
-          <div class="camera-overlay">
-            <div class="loading-spinner"></div>
-            <strong>Preparing camera...</strong>
-            <p>Please wait while the camera starts.</p>
-          </div>
-        }
+    <div class="camera-container">
 
-        <div class="scan-guide">
-          <span class="scan-corner top-left"></span>
-          <span class="scan-corner top-right"></span>
-          <span class="scan-corner bottom-left"></span>
-          <span class="scan-corner bottom-right"></span>
-          <div class="scan-line"></div>
-        </div>
-      </div>
+      <video
+        #scannerVideo
+        class="scanner-video"
+        autoplay
+        muted
+        playsinline
+      ></video>
 
-      @if (scannerError) {
-        <div class="scanner-error">
-          <strong>Camera Error</strong>
-          <p>{{ scannerError }}</p>
-          <button type="button" class="retry-btn" (click)="startScanner()">Try Again</button>
+      @if (scannerLoading) {
+        <div class="camera-overlay">
+          <div class="loading-spinner"></div>
+          <strong>Preparing camera...</strong>
+          <p>Please wait while the camera starts.</p>
         </div>
       }
 
-      <div class="scanner-footer">
-        <div class="scanner-hint">
-          <span>ⓘ</span>
-          Keep the QR code inside the scanning frame.
-        </div>
-        <div class="scanner-actions">
-          @if (cameraDevices.length > 1) {
-            <button type="button" class="switch-camera-btn" (click)="switchCamera()" [disabled]="scannerLoading">Switch Camera</button>
-          }
-          <button type="button" class="cancel-btn" (click)="stopScanner()">Cancel</button>
-        </div>
+      <div class="scan-guide">
+        <span class="scan-corner top-left"></span>
+        <span class="scan-corner top-right"></span>
+        <span class="scan-corner bottom-left"></span>
+        <span class="scan-corner bottom-right"></span>
+        <div class="scan-line"></div>
+      </div>
+
+    </div>
+
+    @if (scannerError) {
+      <div class="scanner-error">
+        <strong>Camera Error</strong>
+        <p>{{ scannerError }}</p>
+
+        <button
+          type="button"
+          class="retry-btn"
+          (click)="startScanner()"
+          [disabled]="scannerLoading"
+        >
+          Try Again
+        </button>
+      </div>
+    }
+
+    <div class="scanner-footer">
+      <div class="scanner-hint">
+        <span>ⓘ</span>
+        Keep the QR code inside the scanning frame.
+      </div>
+
+      <div class="scanner-actions">
+        <button
+          type="button"
+          class="cancel-btn"
+          (click)="stopScanner()"
+        >
+          Cancel
+        </button>
       </div>
     </div>
-  </div>
-}
 
-<!-- COCOON RETURN DETAILS MODAL -->
+  </div>
+</div>
+
+<!-- COCOON PRODUCTION DETAILS MODAL -->
 @if (showDetailsModal) {
   @if (selectedCollection; as selected) {
+
     <div class="modal-overlay details-overlay" (click)="closeDetailsModal()">
+
       <div class="details-modal" (click)="$event.stopPropagation()">
 
+        <!-- MODAL HEADER -->
         <div class="details-header">
           <div class="verified-icon">✓</div>
+
           <div class="details-heading">
-            <span class="modal-eyebrow">QR VERIFIED SUCCESSFULLY</span>
-            <h2>Cocoon Return Details</h2>
-            <p>Actual information retrieved from the farmer's record.</p>
+            <span class="modal-eyebrow">QR RECORD MATCHED SUCCESSFULLY</span>
+            <h2>Cocoon Production Details</h2>
+            <p>Verified farmer information and cocoon production record.</p>
           </div>
-          <button type="button" class="close-btn details-close" (click)="closeDetailsModal()" aria-label="Close details">×</button>
+
+          <button
+            type="button"
+            class="close-btn details-close"
+            (click)="closeDetailsModal()"
+            aria-label="Close details"
+          >
+            ×
+          </button>
         </div>
 
         <div class="details-body">
 
+          <!-- DETAILS LOADING -->
+          @if (detailsLoading) {
+            <div class="details-loading">
+              <div class="loading-spinner"></div>
+              <strong>Loading production information...</strong>
+              <p>Retrieving farmer, delivery, and harvest details.</p>
+            </div>
+          }
+
+          <!-- RETURN SUMMARY -->
           <section class="return-summary">
-            <div>
+            <div class="return-number-info">
               <span class="field-label">RETURN NUMBER</span>
               <h3>{{ selected.returnNumber }}</h3>
             </div>
-            <span class="status-badge" [ngClass]="getStatusClass(selected.status)">
+
+            <span
+              class="status-badge"
+              [ngClass]="getStatusClass(selected.status)"
+            >
               {{ selected.status }}
             </span>
           </section>
 
+          <!-- 01 FARMER INFORMATION -->
           <section class="information-section">
-            <h3 class="section-title">Farmer Information</h3>
+            <h3 class="section-title">
+              <span class="section-icon">👤</span>
+              01. Farmer Information
+            </h3>
+
             <div class="information-grid">
               <div class="information-item">
                 <span>Farmer Name</span>
                 <strong>{{ selected.farmerName || 'Not recorded' }}</strong>
               </div>
+
               <div class="information-item">
-                <span>Farmer Account ID</span>
-                <strong>{{ selected.farmerUid || 'Not recorded' }}</strong>
+                <span>Farm Location</span>
+                <strong>{{ selectedFarmer?.locality || 'Not recorded' }}</strong>
+              </div>
+
+              <div class="information-item">
+                <span>Farm Name</span>
+                <strong>{{ selectedFarmer?.farmName || 'Not recorded' }}</strong>
+              </div>
+
+              <div class="information-item">
+                <span>Farm Area</span>
+                <strong>{{ selectedBatch?.farmArea || selectedFarmer?.farmArea || 'Not recorded' }}</strong>
               </div>
             </div>
           </section>
 
+          <!-- 02 SILKWORM DELIVERY INFORMATION -->
           <section class="information-section">
-            <h3 class="section-title">Production Information</h3>
+            <h3 class="section-title">
+              <span class="section-icon">🐛</span>
+              02. Silkworm Delivery Information
+            </h3>
+
             <div class="information-grid">
-              <div class="information-item">
-                <span>Worm Batch Number</span>
-                <strong>{{ selected.batchNumber || 'Not recorded' }}</strong>
+
+              <div class="information-item highlight-item">
+                <span>Assigned Silkworm Trays</span>
+                <strong>
+                  {{ selectedHarvest?.assignedTrays ?? selectedBatch?.trays ?? 'Not recorded' }}
+                  @if (selectedHarvest || selectedBatch) {
+                    Trays
+                  }
+                </strong>
               </div>
-              <div class="information-item">
-                <span>Request Number</span>
-                <strong>{{ selected.requestNumber || 'Not recorded' }}</strong>
+
+              <div class="information-item highlight-item">
+                <span>Assigned Silkworm Quantity</span>
+                <strong>
+                  {{ selectedHarvest?.assignedQuantity ?? selectedBatch?.quantity ?? 'Not recorded' }}
+                  @if (selectedHarvest || selectedBatch) {
+                    Silkworms
+                  }
+                </strong>
               </div>
+
               <div class="information-item">
-                <span>Harvest Number</span>
-                <strong>{{ selected.harvestNumber || 'Not recorded' }}</strong>
+                <span>Dead Silkworms</span>
+                <strong>Not recorded</strong>
               </div>
+
               <div class="information-item">
-                <span>Harvest Date</span>
-                <strong>{{ formatDate(selected.harvestDate) }}</strong>
+                <span>PTRI Delivery Date</span>
+                <strong>{{ formatDate(selectedBatch?.deliveryDate) }}</strong>
               </div>
-              <div class="information-item">
-                <span>Return Date</span>
-                <strong>{{ formatDate(selected.returnDate) }}</strong>
-              </div>
+
             </div>
           </section>
 
+          <!-- 03 COCOON PRODUCTION INFORMATION -->
           <section class="information-section">
-            <h3 class="section-title">Cocoon Information</h3>
+            <h3 class="section-title">
+              <span class="section-icon">🧺</span>
+              03. Cocoon Production Information
+            </h3>
+
             <div class="information-grid">
+
+              <div class="production-stat-card">
+                <span class="stat-icon">🥚</span>
+                <span class="stat-label">Total Cocoons Produced</span>
+                <strong>
+                  {{ selectedHarvest ? formatQuantity(selectedHarvest.cocoonQuantity) : 'Not recorded' }}
+                </strong>
+                <small>pieces</small>
+              </div>
+
+              <div class="production-stat-card">
+                <span class="stat-icon">📦</span>
+                <span class="stat-label">Cocoons Returned</span>
+                <strong>
+                  {{ totalReturnedCocoons !== null ? formatQuantity(totalReturnedCocoons) : 'Not recorded' }}
+                </strong>
+                <small>pieces</small>
+              </div>
+
+              <div class="production-stat-card remaining-stat-card">
+                <span class="stat-icon">♻</span>
+                <span class="stat-label">Remaining Cocoons</span>
+                <strong>
+                  {{ remainingCocoons !== null ? formatQuantity(remainingCocoons) : 'Not recorded' }}
+                </strong>
+                <small>pieces</small>
+              </div>
+
+            </div>
+
+            <div class="information-grid cocoon-extra-info">
+
+              <div class="information-item highlight-item">
+                <span>Total Cocoon Output Weight</span>
+                <strong>
+                  {{ selectedHarvest ? formatWeight(selectedHarvest.harvestedWeight) : 'Not recorded' }}
+                </strong>
+              </div>
+
               <div class="information-item highlight-item">
                 <span>Submitted Cocoon Weight</span>
                 <strong>{{ formatWeight(selected.cocoonWeight) }}</strong>
               </div>
-              <div class="information-item highlight-item">
-                <span>Cocoon Quantity</span>
-                <strong>{{ selected.cocoonQuantity }}</strong>
-              </div>
+
               <div class="information-item">
                 <span>Cocoon Condition</span>
                 <strong>{{ selected.cocoonCondition || 'Not recorded' }}</strong>
               </div>
+
             </div>
           </section>
 
+          <!-- 04 HARVEST AND RETURN SCHEDULE -->
           <section class="information-section">
-            <h3 class="section-title">PTRI Receiving Information</h3>
+            <h3 class="section-title">
+              <span class="section-icon">📅</span>
+              04. Harvest and Return Schedule
+            </h3>
+
             <div class="information-grid">
-              <div class="information-item">
-                <span>Actual Received Weight</span>
-                <strong>{{ formatWeight(selected.actualReceivedWeight) }}</strong>
+
+              <div class="schedule-card">
+                <span class="schedule-icon">🌱</span>
+                <div>
+                  <span>Harvest Date</span>
+                  <strong>{{ formatDate(selected.harvestDate) }}</strong>
+                </div>
               </div>
-              <div class="information-item">
-                <span>Actual Received Quantity</span>
-                <strong>{{ selected.actualReceivedQuantity ?? 'Not recorded' }}</strong>
+
+              <div class="schedule-card">
+                <span class="schedule-icon">📅</span>
+                <div>
+                  <span>Cocoon Return Date</span>
+                  <strong>{{ formatDate(selected.returnDate) }}</strong>
+                </div>
               </div>
-            </div>
-            <div class="remarks-block">
-              <span>PTRI Remarks</span>
-              <p>{{ selected.ptriRemarks || 'No PTRI remarks recorded.' }}</p>
+
             </div>
           </section>
 
-          <section class="remarks-block farmer-remarks">
-            <span>Farmer Remarks</span>
-            <p>{{ selected.farmerRemarks || 'No farmer remarks provided.' }}</p>
+          <!-- 05 FARMER REMARKS -->
+          <section class="information-section remarks-section">
+            <h3 class="section-title">
+              <span class="section-icon">💬</span>
+              05. Farmer Remarks
+            </h3>
+
+            <div class="remarks-block farmer-remarks">
+              <p>{{ selected.farmerRemarks || 'No farmer remarks provided.' }}</p>
+            </div>
           </section>
+
         </div>
 
+        <!-- MODAL FOOTER -->
         <div class="details-footer">
-          <span class="footer-security">✓ Original QR token verified</span>
-          <button type="button" class="scan-another-btn" (click)="scanAnother()">Scan Another QR</button>
+          <span class="footer-security">
+            ✓ Original QR record matched
+          </span>
+
+          <button
+            type="button"
+            class="scan-another-btn"
+            (click)="scanAnother()"
+          >
+            <span>⌕</span>
+            Scan Another QR
+          </button>
         </div>
 
       </div>
     </div>
+
   }
 }
 
